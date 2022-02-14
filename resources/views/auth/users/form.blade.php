@@ -14,7 +14,7 @@
                 <x-form-label>이름</x-form-label>
                 <x-form-item>
                     {!! xInputText()
-                        ->setWire('model.defer',"form.name")
+                        ->setWire('model.defer',"forms.name")
                         ->setWidth("standard")
                     !!}
                 </x-form-item>
@@ -24,7 +24,7 @@
                 <x-form-label>이메일</x-form-label>
                 <x-form-item>
                     {!! xInputText()
-                        ->setWire('model.defer',"form.email")
+                        ->setWire('model.defer',"forms.email")
                         ->setWidth("standard")
                     !!}
                 </x-form-item>
@@ -34,7 +34,7 @@
                 <x-form-label>패스워드</x-form-label>
                 <x-form-item>
                     {!! xInputText()
-                        ->setWire('model.defer',"form.password")
+                        ->setWire('model.defer',"forms.password")
                         ->setWidth("standard")
                     !!}
                 </x-form-item>

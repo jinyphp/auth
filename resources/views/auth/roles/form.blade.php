@@ -13,7 +13,7 @@
                 <x-form-label>활성화</x-form-label>
                 <x-form-item>
                     {!! xCheckbox()
-                        ->setWire('model.defer',"form.enable")
+                        ->setWire('model.defer',"forms.enable")
                     !!}
                 </x-form-item>
             </x-form-hor>
@@ -23,7 +23,17 @@
                 <x-form-label>역할명</x-form-label>
                 <x-form-item>
                     {!! xInputText()
-                        ->setWire('model.defer',"form.name")
+                        ->setWire('model.defer',"forms.name")
+                        ->setWidth("standard")
+                    !!}
+                </x-form-item>
+            </x-form-hor>
+
+            <x-form-hor>
+                <x-form-label>관리자</x-form-label>
+                <x-form-item>
+                    {!! xInputText()
+                        ->setWire('model.defer',"forms.manager")
                         ->setWidth("standard")
                     !!}
                 </x-form-item>
@@ -37,16 +47,14 @@
                 <span class="d-none d-md-block">메모</span>
             </x-navtab-link>
 
-            {{--
             <x-form-hor>
                 <x-form-label>메모</x-form-label>
                 <x-form-item>
                     {!! xTextarea()
-                        ->setWire('model.defer',"form.description")
+                        ->setWire('model.defer',"forms.description")
                     !!}
                 </x-form-item>
             </x-form-hor>
-            --}}
 
         </x-navtab-item>
 

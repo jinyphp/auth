@@ -18,7 +18,7 @@ use App\Models\Role;
 use Jiny\Table\Http\Controllers\ResourceController;
 class UserController extends ResourceController
 {
-    const MENU_PATH = "menus";
+    //const MENU_PATH = "menus";
     public function __construct()
     {
         parent::__construct();
@@ -36,29 +36,10 @@ class UserController extends ResourceController
         $this->actions['view_list'] = "jinyauth::auth.users.list";
         $this->actions['view_form'] = "jinyauth::auth.users.form";
         */
-
-        // 메뉴 설정
-        $user = Auth::user();
-        if(isset($user->menu)) {
-            ## 사용자 지정메뉴 우선설정
-            xMenu()->setPath($user->menu);
-        } else {
-            ## 설정에서 적용한 메뉴
-            if(isset($this->actions['menu'])) {
-                $menuid = _getKey($this->actions['menu']);
-                xMenu()->setPath(self::MENU_PATH.DIRECTORY_SEPARATOR.$menuid.".json");
-            }
-        }
-
     }
 
     public function index(Request $request)
     {
-        //$user = Auth::user();
-        //$Role = new \Jiny\Auth\Roles($user->id);
-        //dd($Role->is("user"));
-
-
         return parent::index($request);
     }
 
@@ -66,13 +47,13 @@ class UserController extends ResourceController
      * Livewire 동작후 실행되는 메서드ed
      */
     ## 목록 데이터 fetch후 호출 됩니다.
-    public function hookIndexed($rows)
+    public function hookIndexed($wire, $rows)
     {
-
+        return $rows;
     }
 
     ## 생성폼이 실행될때 호출됩니다.
-    public function hookCreating()
+    public function hookCreating($wire)
     {
         ## Role 목록
         $roles = Role::all();
@@ -165,10 +146,6 @@ class UserController extends ResourceController
 
     }
 
-    ## 선택항목 삭제 후킹
-    public function hookCheckDelete($selected)
-    {
 
-    }
 
 }

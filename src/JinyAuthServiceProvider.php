@@ -6,6 +6,7 @@ use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Facades\Blade;
 use Illuminate\View\Compilers\BladeCompiler;
 use Livewire\Livewire;
+use Laravel\Fortify\Fortify;
 
 class JinyAuthServiceProvider extends ServiceProvider
 {
@@ -19,12 +20,15 @@ class JinyAuthServiceProvider extends ServiceProvider
         // 데이터베이스
         $this->loadMigrationsFrom(__DIR__.'/../database/migrations');
 
+        $config = config('jiny.auth.setting');
+        //dd($config);
+
+
     }
 
     public function register()
     {
         /* 라이브와이어 컴포넌트 등록 */
-
         $this->app->afterResolving(BladeCompiler::class, function () {
 
         });

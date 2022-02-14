@@ -38,7 +38,7 @@
                     wire:model="selected">
                 </td>
                 <td width="50">{{$item->id}}</td>
-                <td width="200"><a href="{{route('admin.users.list.profile.index',[ $item->id ])}}">{{$item->name}}</a></td>
+                <td width="200">{{$item->name}}</td>
                 <td>
                     {!! $popupEdit($item, $item->email) !!}
                 </td>

@@ -13,7 +13,7 @@
                 <x-form-label>활성화</x-form-label>
                 <x-form-item>
                     {!! xCheckbox()
-                        ->setWire('model.defer',"form.enable")
+                        ->setWire('model.defer',"forms.enable")
                     !!}
                 </x-form-item>
             </x-form-hor>
@@ -23,7 +23,7 @@
                 <x-form-label>이메일</x-form-label>
                 <x-form-item>
                     {!! xInputText()
-                        ->setWire('model.defer',"form.email")
+                        ->setWire('model.defer',"forms.email")
                         ->setWidth("standard")
                     !!}
                 </x-form-item>
@@ -33,7 +33,7 @@
                 <x-form-label>이름</x-form-label>
                 <x-form-item>
                     {!! xInputText()
-                        ->setWire('model.defer',"form.name")
+                        ->setWire('model.defer',"forms.name")
                         ->setWidth("standard")
                     !!}
                 </x-form-item>
@@ -43,7 +43,7 @@
                 <x-form-label>white ip</x-form-label>
                 <x-form-item>
                     {!! xInputText()
-                        ->setWire('model.defer',"form.white_ip")
+                        ->setWire('model.defer',"forms.white_ip")
                         ->setWidth("standard")
                     !!}
                 </x-form-item>
@@ -53,7 +53,7 @@
                 <x-form-label>black ip</x-form-label>
                 <x-form-item>
                     {!! xInputText()
-                        ->setWire('model.defer',"form.black_ip")
+                        ->setWire('model.defer',"forms.black_ip")
                         ->setWidth("standard")
                     !!}
                 </x-form-item>
@@ -72,7 +72,7 @@
                 <x-form-label>메모</x-form-label>
                 <x-form-item>
                     {!! xTextarea()
-                        ->setWire('model.defer',"form.description")
+                        ->setWire('model.defer',"forms.description")
                     !!}
                 </x-form-item>
             </x-form-hor>

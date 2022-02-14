@@ -13,7 +13,7 @@
                 <x-form-label>user_id</x-form-label>
                 <x-form-item>
                     {!! xInputText()
-                        ->setWire('model.defer',"form.user_id")
+                        ->setWire('model.defer',"forms.user_id")
                     !!}
                 </x-form-item>
             </x-form-hor>
@@ -23,7 +23,7 @@
                 <x-form-label>팀명</x-form-label>
                 <x-form-item>
                     {!! xInputText()
-                        ->setWire('model.defer',"form.name")
+                        ->setWire('model.defer',"forms.name")
                         ->setWidth("standard")
                     !!}
                 </x-form-item>
@@ -33,7 +33,7 @@
                 <x-form-label>personal_team</x-form-label>
                 <x-form-item>
                     {!! xInputText()
-                        ->setWire('model.defer',"form.personal_team")
+                        ->setWire('model.defer',"forms.personal_team")
                         ->setWidth("standard")
                     !!}
                 </x-form-item>
@@ -52,7 +52,7 @@
                 <x-form-label>메모</x-form-label>
                 <x-form-item>
                     {!! xTextarea()
-                        ->setWire('model.defer',"form.description")
+                        ->setWire('model.defer',"forms.description")
                     !!}
                 </x-form-item>
             </x-form-hor>
