@@ -17,7 +17,7 @@ class ConfirmablePasswordController extends Controller
      */
     public function show()
     {
-        return view('auth.confirm-password');
+        return view('theme.default.laravel.'.'auth.confirm-password');
     }
 
     /**

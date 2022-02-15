@@ -15,7 +15,7 @@ class PasswordResetLinkController extends Controller
      */
     public function create()
     {
-        return view('auth.forgot-password');
+        return view('theme.default.laravel.'.'auth.forgot-password');
     }
 
     /**
