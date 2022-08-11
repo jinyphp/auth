@@ -11,19 +11,22 @@ use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Schema;
 
-use Jiny\Table\Http\Controllers\ConfigController;
-class SettingController extends ConfigController
+use Jiny\Table\Http\Controllers\ResourceController;
+class AdminTestController extends ResourceController
 {
     public function __construct()
     {
         parent::__construct();
         $this->setVisit($this);
-
-        ##
-        $this->actions['filename'] = "jiny/auth/setting"; // 설정파일명(경로)
-        $this->actions['view_form'] = "jinyauth::admin.setting.form";
-
-        // 테마설정
-        setTheme("admin/sidebar");
     }
+
+    public function index(Request $request)
+    {
+
+
+        return "test";
+    }
+
+
+
 }

@@ -39,6 +39,8 @@ class PasswordResetLinkController extends Controller
             $request->only('email')
         );
 
+        session()->flash('status',"이메일 변경설정 메일을 발송하였습니다.");
+
         return $status == Password::RESET_LINK_SENT
                     ? back()->with('status', __($status))
                     : back()->withInput($request->only('email'))

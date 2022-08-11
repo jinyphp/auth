@@ -9,12 +9,11 @@
                 </th>
                 <th width='50'>Id</th>
                 <th width='150'>
-
-
                     Name
                 </th>
                 <th width='100'>user</th>
                 <th>설명</th>
+                <th width='100'>redirect</th>
                 <th width='100'>manager</th>
                 <th width='200'>등록일자</th>
             </tr>
@@ -43,6 +42,7 @@
                 </td>
                 <td width='100'>{{$item->cnt}}</td>
                 <td>{{$item->description}}</td>
+                <td width='100'>{{$item->redirect}}</td>
                 <td width='100'>{{$item->manager}}</td>
                 <td width='200'>{{$item->created_at}}</td>
             </tr>

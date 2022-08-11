@@ -9,6 +9,25 @@
             </x-navtab-link>
 
             <x-form-hor>
+                <x-form-label>활성화</x-form-label>
+                <x-form-item>
+                    {!! xCheckbox()
+                        ->setWire('model.defer',"forms.enable")
+                    !!}
+                </x-form-item>
+            </x-form-hor>
+
+
+
+        </x-navtab-item>
+
+        <!-- tab start -->
+        <x-navtab-item >
+            <x-navtab-link class="rounded-0">
+                <span class="d-none d-md-block">로그인</span>
+            </x-navtab-link>
+
+            <x-form-hor>
                 <x-form-label>로그인 허용</x-form-label>
                 <x-form-item>
                     {!! xCheckbox()
@@ -16,18 +35,6 @@
                     !!}
                 </x-form-item>
             </x-form-hor>
-
-            <x-form-hor>
-                <x-form-label>회원가입 허용</x-form-label>
-                <x-form-item>
-                    {!! xCheckbox()
-                        ->setWire('model.defer',"forms.register")
-                    !!}
-                </x-form-item>
-            </x-form-hor>
-
-
-            <hr>
 
             <x-form-hor>
                 <x-form-label>로그인 View</x-form-label>
@@ -53,7 +60,7 @@
 
 
             <x-form-hor>
-                <x-form-label>logout uri</x-form-label>
+                <x-form-label>logout 이동</x-form-label>
                 <x-form-item>
                     {!! xInputText()
                         ->setWire('model.defer',"forms.logout")
@@ -62,18 +69,32 @@
                 </x-form-item>
             </x-form-hor>
 
+        </x-navtab-item>
+        <!-- tab end -->
+
+        <!-- tab start -->
+        <x-navtab-item >
+            <x-navtab-link class="rounded-0">
+                <span class="d-none d-md-block">회원가입</span>
+            </x-navtab-link>
+
             <x-form-hor>
-                <x-form-label>logout redirect uri</x-form-label>
+                <x-form-label>회원가입 허용</x-form-label>
                 <x-form-item>
-                    {!! xInputText()
-                        ->setWire('model.defer',"forms.logout_redirect")
-                        ->setWidth("standard")
+                    {!! xCheckbox()
+                        ->setWire('model.defer',"forms.register")
                     !!}
-                    <p>로그아웃후 이동되는 기본 경로입니다.</p>
                 </x-form-item>
             </x-form-hor>
 
-            <hr>
+            <x-form-hor>
+                <x-form-label>약관동의</x-form-label>
+                <x-form-item>
+                    {!! xCheckbox()
+                        ->setWire('model.defer',"forms.agreement")
+                    !!}
+                </x-form-item>
+            </x-form-hor>
 
             <x-form-hor>
                 <x-form-label>회원가입 View</x-form-label>
@@ -85,52 +106,12 @@
                 </x-form-item>
             </x-form-hor>
 
-            <x-form-hor>
-                <x-form-label>활성화</x-form-label>
-                <x-form-item>
-                    {!! xCheckbox()
-                        ->setWire('model.defer',"forms.enable")
-                    !!}
-                </x-form-item>
-            </x-form-hor>
-
-            <x-form-hor>
-                <x-form-label>은행명</x-form-label>
-                <x-form-item>
-                    {!! xInputText()
-                        ->setWire('model.defer',"forms.name")
-                        ->setWidth("standard")
-                    !!}
-                </x-form-item>
-            </x-form-hor>
-
-            <x-form-hor>
-                <x-form-label>예금주</x-form-label>
-                <x-form-item>
-                    {!! xInputText()
-                        ->setWire('model.defer',"forms.user")
-                        ->setWidth("standard")
-                    !!}
-                </x-form-item>
-            </x-form-hor>
-
-            <x-form-hor>
-                <x-form-label>계좌번호</x-form-label>
-                <x-form-item>
-                    {!! xInputText()
-                        ->setWire('model.defer',"forms.account")
-                        ->setWidth("standard")
-                    !!}
-                </x-form-item>
-            </x-form-hor>
-
         </x-navtab-item>
+        <!-- tab end -->
 
 
 
-
-
-        <!-- formTab -->
+        <!-- tab start -->
         <x-navtab-item >
             <x-navtab-link class="rounded-0">
                 <span class="d-none d-md-block">메모</span>
@@ -146,6 +127,7 @@
             </x-form-hor>
 
         </x-navtab-item>
+        <!-- tab end -->
 
     </x-navtab>
 </div>

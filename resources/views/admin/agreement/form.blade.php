@@ -29,12 +29,33 @@
                 </x-form-item>
             </x-form-hor>
 
+
+
             <x-form-hor>
                 <x-form-label>순서</x-form-label>
                 <x-form-item>
                     {!! xInputText()
                         ->setWire('model.defer',"forms.pos")
                         ->setWidth("standard")
+                    !!}
+                </x-form-item>
+            </x-form-hor>
+
+
+
+        </x-navtab-item>
+
+        <!-- Tab start -->
+        <x-navtab-item >
+            <x-navtab-link class="rounded-0">
+                <span class="d-none d-md-block">내용</span>
+            </x-navtab-link>
+
+            <x-form-hor>
+                <x-form-label>동의여부</x-form-label>
+                <x-form-item>
+                    {!! xCheckbox()
+                        ->setWire('model.defer',"forms.required")
                     !!}
                 </x-form-item>
             </x-form-hor>
@@ -49,13 +70,14 @@
             </x-form-hor>
 
         </x-navtab-item>
+        <!-- Tab end -->
 
-        <!-- formTab -->
+
+        <!-- Tab start -->
         <x-navtab-item >
             <x-navtab-link class="rounded-0">
                 <span class="d-none d-md-block">메모</span>
             </x-navtab-link>
-
 
             <x-form-hor>
                 <x-form-label>메모</x-form-label>
@@ -66,8 +88,8 @@
                 </x-form-item>
             </x-form-hor>
 
-
         </x-navtab-item>
+        <!-- Tab end -->
 
     </x-navtab>
 </div>

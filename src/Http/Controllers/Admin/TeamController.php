@@ -1,6 +1,6 @@
 <?php
 
-namespace Jiny\Auth\Http\Controllers\Auth;
+namespace Jiny\Auth\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
@@ -21,35 +21,19 @@ class TeamController extends ResourceController
         $this->setVisit($this);
 
         ##
-        /*
         $this->actions['table'] = "teams"; // 테이블 정보
-
         $this->actions['paging'] = 10; // 페이지 기본값
-
-        //$this->actions['view_main'] = "jinyauth::auth.teams.main";
-        //$this->actions['view_title'] = "jinyauth::auth.teams.title";
-        //$this->actions['view_filter'] = "jinyauth::auth.teams.filter";
 
         $this->actions['view_list'] = "jinyauth::auth.teams.list";
         $this->actions['view_form'] = "jinyauth::auth.teams.form";
+
+        /*
+        //$this->actions['view_main'] = "jinyauth::auth.teams.main";
+        //$this->actions['view_title'] = "jinyauth::auth.teams.title";
+        //$this->actions['view_filter'] = "jinyauth::auth.teams.filter";
         */
 
-
-        // 메뉴 설정
-        // 메뉴 설정
-        $user = Auth::user();
-        if(isset($user->menu)) {
-            ## 사용자 지정메뉴 우선설정
-            xMenu()->setPath($user->menu);
-        } else {
-            ## 설정에서 적용한 메뉴
-            if(isset($this->actions['menu'])) {
-                $menuid = _getKey($this->actions['menu']);
-                xMenu()->setPath(self::MENU_PATH.DIRECTORY_SEPARATOR.$menuid.".json");
-            }
-        }
     }
-
 
 
 }

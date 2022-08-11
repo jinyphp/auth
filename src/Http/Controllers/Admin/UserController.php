@@ -1,6 +1,6 @@
 <?php
 
-namespace Jiny\Auth\Http\Controllers\Auth;
+namespace Jiny\Auth\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
@@ -12,8 +12,8 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Schema;
 
-use App\Models\User;
-use App\Models\Role;
+use Jiny\Auth\Models\User;
+use Jiny\Auth\Models\Role;
 
 use Jiny\Table\Http\Controllers\ResourceController;
 class UserController extends ResourceController
@@ -25,16 +25,17 @@ class UserController extends ResourceController
         $this->setVisit($this);
 
         ##
-        /*
         $this->actions['table'] = "users"; // 테이블 정보
-
         $this->actions['paging'] = 10; // 페이지 기본값
 
+        $this->actions['view_list'] = "jinyauth::admin.users.list";
+        $this->actions['view_form'] = "jinyauth::admin.users.form";
+
+        /*
         //$this->actions['view_main'] = "jinyauth::auth.users.main";
         //$this->actions['view_title'] = "jinyauth::auth.users.title";
         //$this->actions['view_filter'] = "jinyauth::auth.users.filter";
-        $this->actions['view_list'] = "jinyauth::auth.users.list";
-        $this->actions['view_form'] = "jinyauth::auth.users.form";
+
         */
     }
 
@@ -53,7 +54,7 @@ class UserController extends ResourceController
     }
 
     ## 생성폼이 실행될때 호출됩니다.
-    public function hookCreating($wire)
+    public function hookCreating($wire, $value)
     {
         ## Role 목록
         $roles = Role::all();
@@ -66,7 +67,7 @@ class UserController extends ResourceController
     }
 
     ## 신규 데이터 DB 삽입전에 호출됩니다.
-    public function hookStoring($form)
+    public function hookStoring($wire,$form)
     {
         $user = User::where('email', $form['email'])->first();
         if ($user) {
@@ -82,9 +83,8 @@ class UserController extends ResourceController
     }
 
     ## 수정폼이 실행될때 호출됩니다.
-    public function hookEdited($form)
+    public function hookEdited($wire, $form)
     {
-
         // M:N Role 권환
         $user = User::find($form['id']);
         $userRoles = $user->roles->pluck('id')->toArray();

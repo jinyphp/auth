@@ -1,6 +1,6 @@
 <?php
 
-namespace Jiny\Auth\Http\Controllers\Auth;
+namespace Jiny\Auth\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
@@ -18,6 +18,15 @@ class RoleController extends ResourceController
     {
         parent::__construct();
         $this->setVisit($this);
+
+        ##
+        $this->actions['table'] = "roles";
+        $this->actions['paging'] =  "10";
+
+        $this->actions['view_list'] = "jinyauth::admin.roles.list";
+        $this->actions['view_form'] = "jinyauth::admin.roles.form";
+
+        //$this->actions['role'] = true;
     }
 
     // role당 사용자 수 계산출력
