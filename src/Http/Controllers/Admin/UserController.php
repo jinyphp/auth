@@ -30,13 +30,6 @@ class UserController extends ResourceController
 
         $this->actions['view_list'] = "jinyauth::admin.users.list";
         $this->actions['view_form'] = "jinyauth::admin.users.form";
-
-        /*
-        //$this->actions['view_main'] = "jinyauth::auth.users.main";
-        //$this->actions['view_title'] = "jinyauth::auth.users.title";
-        //$this->actions['view_filter'] = "jinyauth::auth.users.filter";
-
-        */
     }
 
     public function index(Request $request)
@@ -69,17 +62,32 @@ class UserController extends ResourceController
     ## 신규 데이터 DB 삽입전에 호출됩니다.
     public function hookStoring($wire,$form)
     {
-        $user = User::where('email', $form['email'])->first();
-        if ($user) {
-            // 중복, 등록된 이메일
-            return null;
-        } else {
+
+        if(isset($form['email']) && $form['email']) {
+            $user = User::where('email', $form['email'])->first();
+            if ($user) {
+                // 중복, 등록된 이메일
+                session()->flash('error',$form['email']."는 중복된 이메일 입니다.");
+                return null;
+            }
+
+            // reserved, blacklist 여부 검사
+            $reserved = DB::table('user_reserved')->where('email',$form['email'])->first();
+            if ($reserved) {
+                // 중복, 등록된 이메일
+                session()->flash('error',$form['email']."는 예약된 이메일 입니다.");
+                return null;
+            }
+
             // 패스워드 암호화
             if(isset($form['password']) && $form['password']) {
-                $form['password'] = Hash::make($form['password']);
+                $form['password'] = bcrypt($form['password']);
             }
+
             return $form;
         }
+
+        return null;
     }
 
     ## 수정폼이 실행될때 호출됩니다.
@@ -113,37 +121,58 @@ class UserController extends ResourceController
     }
 
     ## 수정된 데이터가 DB에 적용되기 전에 호출됩니다.
-    public function hookUpdating($form)
+    public function hookUpdating($wire, $form, $old)
     {
-        $user = User::where('email', $form['email'])->get();
+        // 이메일 변경여부 체크
+        if($form['email'] != $old['email']) {
+            $user = User::where('email', $form['email'])->first();
+            if ($user) {
+                // 중복, 등록된 이메일
+                session()->flash('error',$form['email']."는 중복된 이메일 입니다.");
+                return null;
+            }
+            $_email = $form['email'];
+        } else {
+            $_email = $old['email'];
+        }
 
-        if (count($user) == 1) {
-            // 권한 필터
+        // 패스워드 암호화
+        if(isset($form['password']) && $form['password']) {
+            //$form['password'] = Hash::make($form['password']);
+            $form['password'] = bcrypt($form['password']);
+        } else {
+            unset($form['password']);
+        }
+
+        // 권환설정
+        /*
+        // 권한 필터
             $roles = [];
             foreach ($this->wire->roles as $key => $item) {
                 if($item['checked']) array_push($roles,$key);
             }
             $user = User::find($form['id']);
             $user->roles()->sync($roles);
+        */
 
-            // 패스워드 암호화
-            if(isset($form['password']) && $form['password']) {
-                $form['password'] = Hash::make($form['password']);
-            }
-
-            return $form;
-        } else {
-            // 중복, 등록된 이메일
-            session()->flash('message',$form['email']."는 중복된 이메일 입니다.");
-            return null;
-        }
+        return $form; // 정상
     }
 
+    ## delete hook
     ## 데이터가 삭제되기 전에 호출됩니다.
-    public function hookDeleted()
+    public function hookDeleting($wire, $row)
     {
-        // 데이터 삭제
+        $id = $row['id'];
+        DB::table('role_user')->where('user_id',$id)->delete(); // role 정보 삭제
 
+        // 프로파일 정보 및 이미지 삭제
+        $profile = DB::table('user_profile')->where('user_id',$id)->first();
+        if($profile) {
+            $image = storage_path('app/'.$profile->image);
+            unlink($image);
+            DB::table('user_profile')->where('user_id',$id)->delete();
+        }
+        return $row;
     }
 
 

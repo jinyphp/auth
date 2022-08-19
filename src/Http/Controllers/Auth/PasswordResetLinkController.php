@@ -1,22 +1,46 @@
 <?php
-
+/**
+ * 비밀번호 찾기
+ */
 namespace Jiny\Auth\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Password;
+use Illuminate\Support\Facades\View;
 
 class PasswordResetLinkController extends Controller
 {
     /**
-     * Display the password reset link request view.
-     *
-     * @return \Illuminate\View\View
+     * 비밀번호 찾기
      */
     public function create()
     {
-        return view('theme.default.laravel.'.'auth.forgot-password');
+        $setting = config("jiny.auth.setting");
+        $viewfile = $this->getForgetView($setting);
+
+        if (View::exists($viewfile)) {
+            return view($viewfile);
+        }
+
+        return $viewfile." 가입폼 view를 찾을 수 없습니다.";
     }
+
+
+    private function getForgetView($setting)
+    {
+        if(isset($setting['view']) && isset($setting['view']['forget'])) {
+            $viewfile = $setting['view']['forget'];
+            if(!$viewfile) {
+                $viewfile = 'jinyauth::forgot-password'; // 기본값
+            }
+        } else {
+            $viewfile = 'jinyauth::forgot-password'; // 기본값
+        }
+
+        return $viewfile;
+    }
+
 
     /**
      * Handle an incoming password reset link request.

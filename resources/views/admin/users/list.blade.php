@@ -12,13 +12,15 @@
                     <input type='checkbox' class="form-check-input" wire:model="selectedall">
                 </th>
                 <th width="50">Id</th>
-                <th width="200">Name</th>
-                <th>Email</th>
-                <th width="200">Roles</th>
+                <th width="100">국가</th>
+
+                <th>이름/이메일</th>
+                <th width="200">역할</th>
                 <th width="200">Varified</th>
                 <th width="200">2FA</th>
-                <th width="200">Expire</th>
-                <th width="200">regdate</th>
+                <th width="100">승인</th>
+                <th width="100">휴면계정</th>
+                <th width="200">등록/만료 일자</th>
             </tr>
         </thead>
         <tbody>
@@ -38,9 +40,11 @@
                     wire:model="selected">
                 </td>
                 <td width="50">{{$item->id}}</td>
-                <td width="200">{{$item->name}}</td>
+                <td width="100">{{$item->country}}</td>
+
                 <td>
-                    {!! $popupEdit($item, $item->email) !!}
+                    <div>{{$item->name}}</div>
+                    <div>{!! $popupEdit($item, $item->email) !!}</div>
                 </td>
                 <td width="200">
                     Role
@@ -51,10 +55,16 @@
                 <td width="200">
                     2FA
                 </td>
-                <td width="200">
-                    Expire
+                <td width="100">
+                    {{$item->auth}}
                 </td>
-                <td width="200">{{$item->created_at}}</td>
+                <td width="100">
+                    {{$item->sleeper}}
+                </td>
+                <td width="200">
+                    <div class="text-gray-600">{{$item->created_at}} ~</div>
+                    <div>{{$item->expire}}</div>
+                </td>
             </tr>
             @endforeach
         @endif

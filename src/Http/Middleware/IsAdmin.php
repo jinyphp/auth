@@ -22,6 +22,8 @@ class IsAdmin
             return $next($request);
        }
 
-       return redirect('/_admin')->with('error','You have not admin access');
+       // 권한이 없는 사용자는 루트로 이동
+       // 경로 숨기기
+       return redirect('/'); // ->with('error','You have not admin access');
     }
 }

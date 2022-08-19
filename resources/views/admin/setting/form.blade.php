@@ -5,25 +5,6 @@
         <x-navtab-item class="show active" >
 
             <x-navtab-link class="rounded-0 active">
-                <span class="d-none d-md-block">기본정보</span>
-            </x-navtab-link>
-
-            <x-form-hor>
-                <x-form-label>활성화</x-form-label>
-                <x-form-item>
-                    {!! xCheckbox()
-                        ->setWire('model.defer',"forms.enable")
-                    !!}
-                </x-form-item>
-            </x-form-hor>
-
-
-
-        </x-navtab-item>
-
-        <!-- tab start -->
-        <x-navtab-item >
-            <x-navtab-link class="rounded-0">
                 <span class="d-none d-md-block">로그인</span>
             </x-navtab-link>
 
@@ -43,9 +24,11 @@
                         ->setWire('model.defer',"forms.view_login")
                         ->setWidth("standard")
                     !!}
+                    <p>지정한 양식의 blade 파일을 사용합니다.</p>
                 </x-form-item>
             </x-form-hor>
 
+            <hr>
 
             <x-form-hor>
                 <x-form-label>dashboard</x-form-label>
@@ -54,10 +37,12 @@
                         ->setWire('model.defer',"forms.dashboard")
                         ->setWidth("standard")
                     !!}
-                    <p>로그인 성공시 이동하는 uri</p>
+                    <p>로그인 성공시 지정한 uri로 리다이렉션 합니다.</p>
                 </x-form-item>
             </x-form-hor>
 
+
+            <hr>
 
             <x-form-hor>
                 <x-form-label>logout 이동</x-form-label>
@@ -66,11 +51,13 @@
                         ->setWire('model.defer',"forms.logout")
                         ->setWidth("standard")
                     !!}
+                    <p>로그아웃시 지정한 url로 리다이렉션 합니다.</p>
                 </x-form-item>
             </x-form-hor>
 
         </x-navtab-item>
         <!-- tab end -->
+
 
         <!-- tab start -->
         <x-navtab-item >
@@ -84,8 +71,24 @@
                     {!! xCheckbox()
                         ->setWire('model.defer',"forms.register")
                     !!}
+
+                    <p>사이트내 회원가입 폼을 활성화 할 것인지를 선택합니다. 비활성화 되는 경우 사용자가 직접 회원양식을 통한 가입이 제한됩니다.</p>
+
                 </x-form-item>
             </x-form-hor>
+
+            <x-form-hor>
+                <x-form-label>회원가입 View</x-form-label>
+                <x-form-item>
+                    {!! xInputText()
+                        ->setWire('model.defer',"forms.view.register")
+                        ->setWidth("standard")
+                    !!}
+                    <p>지정한 양식의 blade 파일을 사용합니다.</p>
+                </x-form-item>
+            </x-form-hor>
+
+            <hr>
 
             <x-form-hor>
                 <x-form-label>약관동의</x-form-label>
@@ -97,19 +100,78 @@
             </x-form-hor>
 
             <x-form-hor>
-                <x-form-label>회원가입 View</x-form-label>
+                <x-form-label>동의서 View</x-form-label>
                 <x-form-item>
                     {!! xInputText()
-                        ->setWire('model.defer',"forms.view_regist")
+                        ->setWire('model.defer',"forms.view.agreement")
                         ->setWidth("standard")
                     !!}
+                    <p>지정한 양식의 blade 파일을 사용합니다.</p>
                 </x-form-item>
             </x-form-hor>
 
         </x-navtab-item>
-        <!-- tab end -->
 
 
+        <x-navtab-item >
+            <x-navtab-link class="rounded-0">
+                <span class="d-none d-md-block">승인</span>
+            </x-navtab-link>
+
+
+            <x-form-hor>
+                <x-form-label>승인된 회원만 접속</x-form-label>
+                <x-form-item>
+                    {!! xCheckbox()
+                        ->setWire('model.defer',"forms.auth.enable")
+                    !!}
+                    <p>관리자의 승인을 얻은 회원만 로그인을 할 수 있도록 설정을 합니다.</p>
+                </x-form-item>
+            </x-form-hor>
+
+            <x-form-hor>
+                <x-form-label>자동승인</x-form-label>
+                <x-form-item>
+                    {!! xCheckbox()
+                        ->setWire('model.defer',"forms.auth.auto")
+                    !!}
+                    <p>회원 가입시 자동으로 승인 여부를 처리합니다.</p>
+                </x-form-item>
+            </x-form-hor>
+
+        </x-navtab-item>
+
+        <!-- tab start -->
+        <x-navtab-item >
+            <x-navtab-link class="rounded-0">
+                <span class="d-none d-md-block">비밀번호</span>
+            </x-navtab-link>
+
+            <x-form-hor>
+                <x-form-label>최소 글자수</x-form-label>
+                <x-form-item>
+                    {!! xInputText()
+                        ->setWire('model.defer',"forms.password.min")
+                        ->setWidth("standard")
+                    !!}
+                    <p>패스워드 입력 최소 글자수 지정</p>
+                </x-form-item>
+            </x-form-hor>
+
+            <hr>
+
+            <x-form-hor>
+                <x-form-label>Forget View</x-form-label>
+                <x-form-item>
+                    {!! xInputText()
+                        ->setWire('model.defer',"forms.view.forget")
+                        ->setWidth("standard")
+                    !!}
+                    <p>지정한 양식의 blade 파일을 사용합니다.</p>
+                </x-form-item>
+            </x-form-hor>
+
+        </x-navtab-item>
 
         <!-- tab start -->
         <x-navtab-item >

@@ -20,6 +20,7 @@ Route::post('/logout', [AuthenticatedSessionController::class, 'destroy'])
     ->name('logout');
 
 
+
 // 회원가입
 use Jiny\Auth\Http\Controllers\Auth\RegisteredUserController;
 Route::get('/register', [RegisteredUserController::class, 'create'])
@@ -27,6 +28,7 @@ Route::get('/register', [RegisteredUserController::class, 'create'])
     ->name('register');
 Route::post('/register', [RegisteredUserController::class, 'store'])
     ->middleware(['web', 'guest']);
+
 
 
 // 비밀번호 찾기
@@ -40,6 +42,7 @@ Route::post('/forgot-password', [PasswordResetLinkController::class, 'store'])
     ->name('password.email');
 
 
+
 // 페스워드 재설정 링크
 use Jiny\Auth\Http\Controllers\Auth\NewPasswordController;
 Route::get('/reset-password/{token}', [NewPasswordController::class, 'create'])
@@ -50,6 +53,14 @@ Route::post('/reset-password', [NewPasswordController::class, 'store'])
     ->middleware(['web', 'guest'])
     ->name('password.update');
 
+
+// 약관동의
+use Jiny\Auth\Http\Controllers\Auth\AgreementController;
+Route::get('/register/agree', [AgreementController::class, 'create'])
+    ->middleware(['web', 'guest'])
+    ->name('agreement');
+Route::post('/register/agree', [AgreementController::class, 'store'])
+    ->middleware(['web', 'guest']);
 
 
 use Jiny\Auth\Http\Controllers\Auth\ConfirmablePasswordController;

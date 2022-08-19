@@ -32,11 +32,7 @@ if(!function_exists("authRoles")) {
     }
 }
 
-function user_total_count()
-{
-    return DB::table('users')->count();
-    //return 1;
-}
+
 
 
 if(!function_exists('user')) {
@@ -60,4 +56,15 @@ if(!function_exists('userRelation')) {
         }
         return $ids;
     }
+}
+
+
+/**
+ * dashboard용
+ * 회원 정보조회 함수들
+ */
+
+function jinyAuth_userTotalCount()
+{
+    return DB::table('users')->count();
 }

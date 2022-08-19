@@ -6,8 +6,10 @@ use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\Request;
 
-use Jiny\Table\Http\Controllers\BaseController;
-class Dashboard extends BaseController
+use Illuminate\Support\Facades\DB;
+
+use Jiny\Table\Http\Controllers\DashboardController;
+class Dashboard extends DashboardController
 {
     use \Jiny\Table\Http\Livewire\Permit;
     use \Jiny\Table\Http\Controllers\SetMenu;
@@ -17,30 +19,44 @@ class Dashboard extends BaseController
         parent::__construct();  // setting Rule 초기화
         $this->setVisit($this); // Livewire와 양방향 의존성 주입
 
-        $this->actions['view_main'] = "jinyauth::admin.dashboard";
+        $this->actions['view_main'] = "jinyauth::admin.dashboard.index";
 
         // 테마설정
-        setTheme("admin/sidebar");
+        //setTheme("admin/sidebar");
     }
 
     public function index(Request $request)
     {
-        // 사용자 인증정보 체크
+        // Request값 Action 병합
+        $this->checkRequestNesteds($request);
+        $this->checkRequestQuery($request);
+
+        // 메뉴 설정
         $user = Auth::user();
-        if ($user) {
-            // 메뉴 설정
-            $this->setUserMenu($user);
-        }
+        $this->setUserMenu($user);
 
         // 권한
         $this->permitCheck();
         if($this->permit['read']) {
             $view = $this->checkMainView();
+
+
+            // 오늘 가입회원
+            $newUser = DB::table('users')->where('created_at',">", date("Y-m-d 00:00:00"))->get();
+
+            $counts = DB::table('users')->select(DB::raw('count(id) as total_count, count(auth) as auth_count, count(sleeper) as sleeper_count'))->get();
+
             return view($view,[
                 'actions' => $this->actions,
-                'request' => $request
+                'request' => $request,
+
+                'newUser' => count($newUser),
+                "total_count" => $counts[0]->total_count,
+                "auth_count" => $counts[0]->auth_count,
+                "sleeper_count"=> $counts[0]->sleeper_count
             ]);
         }
+
 
         // 권한 접속 실패
         return view("jinytable::error.permit",[

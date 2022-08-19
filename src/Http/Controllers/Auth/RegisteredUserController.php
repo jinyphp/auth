@@ -1,5 +1,7 @@
 <?php
-
+/**
+ * 회원 로그인
+ */
 namespace Jiny\Auth\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
@@ -11,44 +13,120 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rules;
 
+use Illuminate\Support\Facades\View;
+use Illuminate\Support\Facades\DB;
+
 class RegisteredUserController extends Controller
 {
     /**
-     * Display the registration view.
-     *
-     * @return \Illuminate\View\View
+     * 회원 로그인 가입폼 출력
      */
     public function create()
     {
-        return view('theme.default.laravel.'.'auth.register');
+        $setting = config("jiny.auth.setting");
+        if(isset($setting['register']) && $setting['register']) {
+
+            // 회원 가입 동의서 체크
+            if(isset($setting['agreement']) && $setting['agreement']) {
+                if(session()->has('agree')) {
+
+                    $viewfile = $this->getRegisterView($setting);
+                    if (View::exists($viewfile)) {
+                        return view($viewfile);
+                    }
+
+                    return $viewfile." 가입폼 view를 찾을 수 없습니다.";
+
+                } else {
+                    return redirect('/register/agree');
+                }
+            }
+
+        }
+
+        return view("jinyauth::errors.message_alert",[
+            'message' => "회원가입 서비스가 비활성화 상태 입니다. 관리자에게 직접 회원 가입을 요청하세요."
+        ]);
+
     }
 
+
+    private function getRegisterView($setting)
+    {
+        if(isset($setting['view']) && isset($setting['view']['register'])) {
+            $viewfile = $setting['view']['register'];
+            if(!$viewfile) {
+                $viewfile = 'jinyauth::register'; // 기본값
+            }
+        } else {
+            $viewfile = 'jinyauth::register'; // 기본값
+        }
+
+        return $viewfile;
+    }
+
+
     /**
-     * Handle an incoming registration request.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\RedirectResponse
-     *
-     * @throws \Illuminate\Validation\ValidationException
+     * 가입절차 신쟁
      */
     public function store(Request $request)
     {
+        $setting = config("jiny.auth.setting");
+
+        // 유효성 검사
         $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'email', 'max:255', 'unique:users'],
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
         ]);
 
+        // 회원 등록
         $user = User::create([
             'name' => $request->name,
             'email' => $request->email,
             'password' => Hash::make($request->password),
         ]);
 
+
+        // 자동 인증설정 처리
+        $setting = config("jiny.auth.setting");
+        if($setting['auth']['enable'] && $setting['auth']['auto']) {
+            DB::table('users')->where('email', $request->email)->update([
+                'auth'=>1
+            ]);
+        }
+
         event(new Registered($user));
 
+        // 자동 로그인 처리
         Auth::login($user);
+        $user = Auth::user();
 
-        return redirect(RouteServiceProvider::HOME);
+
+        // 회원약관 동의이력 저장
+        if(session()->has('agree')) {
+            $agree = [];
+            $rows = session('agree');
+            //dd($rows);
+            foreach($rows as $item) {
+                $agree []= [
+                    'user_id'=>$user->id,
+                    'agree_id'=>$item,
+                    'agree' => 1,
+                    'created_at' => date("Y-m-d"),
+                    'updated_at' => date("Y-m-d")
+                ];
+            }
+
+            DB::table('user_agreement_logs')->insert($agree);
+            session()->forget('agree');
+        }
+
+        // 리다이렉션
+        $home = config('jiny.auth.urls.home');
+        if(!$home) {
+            $home = '/'; // 기본값
+        }
+        return redirect($home);
     }
 }

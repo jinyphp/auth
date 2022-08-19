@@ -20,7 +20,8 @@ class NewPasswordController extends Controller
      */
     public function create(Request $request)
     {
-        return view('theme.default.laravel.'.'auth.reset-password', ['request' => $request]);
+
+        return view('jinyauth::reset-password', ['request' => $request]);
     }
 
     /**

@@ -8,6 +8,7 @@ use App\Providers\RouteServiceProvider;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\View;
 
 class AuthenticatedSessionController extends Controller
 {
@@ -18,16 +19,34 @@ class AuthenticatedSessionController extends Controller
      */
     public function create()
     {
-        //dd( isAdmin() );
+        $setting = config("jiny.auth.setting");
+        if(isset($setting['login']) && $setting['login']) {
 
-        //환경설정에서 login 블레이드 파일 읽기
-        $viewfile = config('jiny.auth.views.login');
-        if(!$viewfile) {
-            $viewfile = 'jinyauth::login';
+            $viewfile = $this->getLoginView($setting);
+            if (View::exists($viewfile)) {
+                return view($viewfile);
+            }
         }
 
-        return view($viewfile);
+        return view("jinyauth::errors.message_alert",[
+            'message' => "회원 로그인 서비스가 비활성화 상태 입니다."
+        ]);
     }
+
+    private function getLoginView($setting)
+    {
+        if(isset($setting['view']) && isset($setting['view']['login'])) {
+            $viewfile = $setting['view']['login'];
+            if(!$viewfile) {
+                $viewfile = 'jinyauth::login'; // 기본값
+            }
+        } else {
+            $viewfile = 'jinyauth::login'; // 기본값
+        }
+
+        return $viewfile;
+    }
+
 
     /**
      * 로그인 처리 프로세스
@@ -37,35 +56,72 @@ class AuthenticatedSessionController extends Controller
      */
     public function store(LoginRequest $request)
     {
-        $request->authenticate();
-        $request->session()->regenerate();
+        $email = $request->email;
+        $user = DB::table('users')->where('email', $email)->first();
+        if($user) {
 
-        /*
-        // 사용자권한 redirect 페이지
-        $user = DB::table('users')->where('email', $request->email)->first();
-        $role_ids = DB::table('role_user')->where('user_id', $user->id)->orderBy('role_id',"asc")->get();
-        if($role_ids) {
-            $role = DB::table('roles')->where('id', $role_ids[0]->role_id)->first();
-            if($role->redirect) {
-                // 1.역할 dashboard로 이동
-                return redirect($role->redirect);
+            // 관리자 승인된 회원만 접속가능 체크
+            $setting = config("jiny.auth.setting");
+            if($setting['auth']['enable']) {
+                if(!$user->auth) {
+                    session()->flash('error', "미승인된 회원입니다. 관리자의 승인을 기다려 주세요.");
+                    return redirect()->back();
+                }
             }
+
+
+            // 회원 유효기간 만료 체크
+            if($user->expire && isExpireTime($user->expire)) {
+                session()->flash('error', "접속 유효기간(".$user->expire.") 이 초과되었습니다.");
+                return redirect()->back();
+            }
+
+            // 인증 세션 처리
+            $request->authenticate();
+            $request->session()->regenerate();
+
+
+            // log 기록을 DB에 삽입
+            //$user = Auth::user();
+            DB::table('user_logs')->insert([
+                'user_id' => $user->id,
+                'created_at' => date("Y-m-d H:i:s"),
+                'updated_at' => date("Y-m-d H:i:s")
+            ]);
+
+
+            // 리다이렉트 처리
+            //1. mypage 사용자 리다이렉트 우선적용
+            if($user->redirect) {
+                return redirect()->intended($user->redirect);
+            }
+
+            //2. role 리다이렉트 적용
+            $role_ids = DB::table('role_user')->where('user_id', $user->id)->orderBy('role_id',"asc")->get();
+            if(count($role_ids)>0 && $role_ids) {
+                $role = DB::table('roles')->where('id', $role_ids[0]->role_id)->first();
+                if($role && $role->redirect) {
+                    // 역할 dashboard로 이동
+                    return redirect($role->redirect);
+                }
+            }
+
+
+            //3. 설정값 적용
+            $setting = config("jiny.auth.setting");
+            if(isset($setting['dashboard'])) {
+                $homeUrl = $setting['dashboard'];
+                if(!$homeUrl) {
+                    $homeUrl = "/";
+                }
+            } else {
+                $homeUrl = "/";
+            }
+            return redirect()->intended($homeUrl);
+
         }
 
-        // 2.auth 설정 dashboard로 이동
-        $dashboard = config("jiny.auth.setting.dashboard");
-        if($dashboard) {
-            return redirect($dashboard);
-        }
-        */
-
-        // 3.라라벨 설정 경로로 이동
-        $homeUrl = config("jiny.auth.urls.home");
-        if(!$homeUrl) {
-            $homeUrl = "/";
-        }
-        return redirect()->intended($homeUrl);
-        //return redirect()->intended();
+        return redirect()->back();
     }
 
     /**
@@ -82,8 +138,14 @@ class AuthenticatedSessionController extends Controller
         $request->session()->invalidate();
         $request->session()->regenerateToken();
 
-        $logout = config("jiny.auth.urls.logout_back");
-        if(!$logout) {
+        //
+        $setting = config("jiny.auth.setting");
+        if(isset($setting['logout'])) {
+            $logout = $setting['logout'];
+            if(!$logout) {
+                $logout = "/";
+            }
+        } else {
             $logout = "/";
         }
         return redirect($logout);

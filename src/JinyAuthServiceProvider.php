@@ -28,6 +28,11 @@ class JinyAuthServiceProvider extends ServiceProvider
             __DIR__.'/../config/auth.php' => config_path('jiny/auth.php'),
         ]);
 
+        $this->publishes([
+            __DIR__.'/../resources/actions/' => resource_path('actions')
+        ], 'auth-actions');
+
+        // 커멘드 명령
         if ($this->app->runningInConsole()) {
             $this->commands([
                 \Jiny\Auth\Console\Commands\userCreate::class,
@@ -36,6 +41,7 @@ class JinyAuthServiceProvider extends ServiceProvider
             ]);
         }
 
+        // 미들웨어
         $router = $this->app->make(Router::class);
         $router->aliasMiddleware('admin', IsAdmin::class);
 

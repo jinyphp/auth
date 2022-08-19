@@ -1,9 +1,7 @@
 <x-theme theme="default.laravel">
     <x-theme-auth-card>
         <x-slot name="logo">
-            <a href="/">
-                <x-theme-application-logo class="w-20 h-20 text-gray-500 fill-current" />
-            </a>
+            로고
         </x-slot>
 
         <!-- Validation Errors -->

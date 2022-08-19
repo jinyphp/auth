@@ -12,7 +12,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Schema;
 
 use Jiny\Table\Http\Controllers\ResourceController;
-class ReservedController extends ResourceController
+class AdminUserBlacklistController extends ResourceController
 {
     //const MENU_PATH = "menus";
     public function __construct()
@@ -33,12 +33,13 @@ class ReservedController extends ResourceController
 
     }
 
+
     ## Hook
     ## 데이터를 검색하기 위한 조건등을 설정합니다. (dbFetch 전에 실행)
     public function hookIndexing($wire)
     {
         // 블랙리스트만 추출
-        $wire->database()->where('type',"reserved");
+        $wire->database()->where('type',"blacklist");
 
         // return
         // 반환값이 있으면, 종료됩니다.
@@ -46,10 +47,9 @@ class ReservedController extends ResourceController
 
     public function hookCreating($wire, $value)
     {
-        $wire->forms['type'] = "reserved";
+        $wire->forms['type'] = "blacklist";
 
     }
-
 
 
 }

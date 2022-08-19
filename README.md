@@ -1,6 +1,39 @@
 # jinyPHP Auth
 라라벨 기반의 인증을 확장한 모듈입니다. 기본 인증 뿐만 아니라, 회원을 관리할 수 있는 Admin 기능을 가지고 있습니다.
 
+## 설치
+
+
+
+## 설정
+환경설정을 패키지에서 복사하여 설치를 합니다. 다음과 같이 콘솔창에서 입력하세요.
+
+```
+php artisan vendor:publish --provider="Jiny\Auth\JinyAuthServiceProvider"
+```
+
+`/config/jiny/auth.php` 파일이 생성됩니다. 설정값에서 화면과 url등의 설정값을 정의합니다.
+
+```php
+<?php
+return [
+    'urls'=>[
+        'home' => "/", // 로그인호 홈으로 이동
+        'logout_back' => "/" // 로그아웃후 이동되는 경로
+    ],
+    'views'=>[
+        'login'=> "jinyauth::login",
+        'regist'=>"jinyauth::register"
+    ]
+];
+```
+
+### actions rules 배포
+
+```
+php artisan vendor:publish --tag=auth-actions --force
+```
+
 ## 커멘드
 artisan 명령을 이용하여 콘솔창에서도 회원을 등록, 관리자 기능을 활성화 시킬 수 있습니다.
 
@@ -27,3 +60,7 @@ composer require jiny/auth
 * Agree : /admin/auth/agree
 * teams : /admin/auth/teams
 * setting : /admin/auth/setting
+
+
+
+php artisan vendor:publish --tag=laravel-mail

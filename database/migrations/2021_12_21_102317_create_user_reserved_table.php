@@ -18,7 +18,7 @@ class CreateUserReservedTable extends Migration
             $table->timestamps();
 
             $table->string('enable')->default(1);
-
+            $table->string('type')->nullable();
             $table->string('email')->nullable();
             $table->string('name')->nullable();
             $table->string('white_ip')->nullable();
