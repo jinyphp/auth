@@ -85,6 +85,7 @@ class AuthenticatedSessionController extends Controller
             //$user = Auth::user();
             DB::table('user_logs')->insert([
                 'user_id' => $user->id,
+                'provider'=>"email",
                 'created_at' => date("Y-m-d H:i:s"),
                 'updated_at' => date("Y-m-d H:i:s")
             ]);

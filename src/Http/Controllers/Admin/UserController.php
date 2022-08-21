@@ -177,4 +177,22 @@ class UserController extends ResourceController
 
 
 
+    /**
+     *
+     */
+    public function show(Request $request, $id)
+    {
+        return "show";
+    }
+
+    public function edit(Request $request, $id)
+    {
+        //dd($this->actions);
+        return view('jinyauth::admin.users.edit',[
+            'actions'=>$this->actions
+        ]);
+    }
+
+
+
 }

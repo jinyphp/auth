@@ -13,13 +13,20 @@ return new class extends Migration
      */
     public function up()
     {
-        Schema::create('user_logs', function (Blueprint $table) {
+        Schema::create('user_oauth', function (Blueprint $table) {
             $table->id();
             $table->timestamps();
 
             $table->bigInteger('user_id')->unsigned();
+            $table->string('email')->nullable();
+
             $table->string('provider')->nullable();
-            $table->string('ref')->nullable();
+            $table->string('provider_id')->nullable();
+
+            $table->string('oauth_id')->nullable();
+            $table->string('avatar')->nullable();
+
+            $table->string('status')->nullable();
         });
     }
 
@@ -30,6 +37,6 @@ return new class extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('user_logs');
+        Schema::dropIfExists('user_oauth');
     }
 };

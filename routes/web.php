@@ -2,6 +2,24 @@
 use Illuminate\Support\Facades\Route;
 use Illuminate\Http\Request;
 
+
+/**
+ * 소셜 로그인
+ */
+// Route::get('/login/social',[\Jiny\Auth\Http\Controllers\SocialAuthController::class, 'index'])
+// ->name('social-auth')->middleware(['web']);
+
+Route::get('/login/{provider}',[\Jiny\Auth\Http\Controllers\SocialAuthController::class, 'index'])
+->name('social-auth')->middleware(['web']);
+
+Route::get('/login/{provider}/redirect',[\Jiny\Auth\Http\Controllers\Auth\OAuthController::class, 'redirect'])
+->name('oauth-redirect')->middleware(['web']);
+
+Route::get('/login/{provider}/callback', [\Jiny\Auth\Http\Controllers\Auth\OAuthController::class, 'callback'])
+->middleware(['web']);
+
+
+
 /**
  * 사용자 데쉬보드
  */

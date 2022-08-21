@@ -32,11 +32,16 @@ Route::middleware(['web','auth:sanctum', 'verified', 'admin'])
     ## 설정
     Route::resource('setting', \Jiny\Auth\Http\Controllers\Admin\SettingController::class);
     Route::resource('country', \Jiny\Auth\Http\Controllers\Admin\AdminUserCountryController::class);
+    Route::resource('social', \Jiny\Auth\Http\Controllers\Admin\SocialController::class);
 
     // 사이트 데쉬보드
     Route::get('/', [\Jiny\Auth\Http\Controllers\Admin\Dashboard::class, "index"]);
 
 
     Route::resource('teams',\Jiny\Auth\Http\Controllers\Admin\TeamController::class);
+
+    // 소셜로그인
+    Route::resource('oauth',\Jiny\Auth\Http\Controllers\Admin\AdminOAuthController::class);
+    Route::resource('provider',\Jiny\Auth\Http\Controllers\Admin\AdminOAuthProviderController::class);
 
 });

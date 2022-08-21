@@ -11,6 +11,10 @@ use Laravel\Fortify\Fortify;
 use Illuminate\Routing\Router;
 use Jiny\Auth\Http\Middleware\IsAdmin;
 
+use Jiny\Auth\Contracts\Factory;
+use Jiny\Auth\Http\Controllers\SocialiteManager;
+
+
 class JinyAuthServiceProvider extends ServiceProvider
 {
     private $package = "jinyauth";
@@ -52,6 +56,11 @@ class JinyAuthServiceProvider extends ServiceProvider
         /* 라이브와이어 컴포넌트 등록 */
         $this->app->afterResolving(BladeCompiler::class, function () {
 
+        });
+
+        // SocialiteManager 랩퍼
+        $this->app->singleton(Factory::class, function ($app) {
+            return new SocialiteManager($app);
         });
 
     }
