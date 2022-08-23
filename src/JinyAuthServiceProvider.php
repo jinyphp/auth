@@ -29,7 +29,7 @@ class JinyAuthServiceProvider extends ServiceProvider
 
         // 설정파일 복사
         $this->publishes([
-            __DIR__.'/../config/auth.php' => config_path('jiny/auth.php'),
+            __DIR__.'/../config/auth/setting.php' => config_path('jiny/auth/setting.php'),
         ]);
 
         $this->publishes([
