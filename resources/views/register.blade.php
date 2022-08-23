@@ -8,7 +8,8 @@
         <title>JinyERP</title>
 
         {{-- @vite('resources/css/app.css') --}}
-        <link rel="stylesheet" href="{{ asset('css/app.4387550e.css') }}">
+        {{-- <link rel="stylesheet" href="{{ asset('css/app.4387550e.css') }}"> --}}
+        <script src="https://cdn.tailwindcss.com"></script>
         @stack('css')
         @livewireStyles
     </head>
