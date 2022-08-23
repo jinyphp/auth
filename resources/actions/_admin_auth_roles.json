@@ -1,4 +1,6 @@
 {
-    "menu": "1:admin",
-    "updated_at": "2022-08-17 17:11:08"
+    "menu": "4:admin_auth",
+    "updated_at": "2022-08-19 17:19:30",
+    "title": "권환관리",
+    "subtitle": "다양한 회원 권한을 사전에 설정합니다."
 }

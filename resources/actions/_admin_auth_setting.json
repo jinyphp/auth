@@ -1,4 +1,6 @@
 {
-    "menu": "1:admin",
-    "updated_at": "2022-08-17 17:12:19"
+    "menu": "4:admin_auth",
+    "updated_at": "2022-08-19 17:18:35",
+    "title": "인증설정",
+    "subtitle": "회원가입에 필요한 인증 설정을 합니다."
 }

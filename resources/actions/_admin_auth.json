@@ -1,4 +1,6 @@
 {
-    "menu": "1:admin",
-    "updated_at": "2022-08-17 17:09:56"
+    "menu": "4:admin_auth",
+    "updated_at": "2022-08-19 17:19:52",
+    "title": "회원관리",
+    "subtitle": "회원의 등록상태를 한눈에 확인 할 수 있습니다."
 }

@@ -1,4 +1,6 @@
 {
-    "menu": "1:admin",
-    "updated_at": "2022-08-17 17:11:22"
+    "menu": "4:admin_auth",
+    "updated_at": "2022-08-19 17:19:08",
+    "title": "회원 가입 약관",
+    "subtitle": "회원가입시 필요한 약관을 관리합니다."
 }
