@@ -30,6 +30,8 @@ class UserController extends ResourceController
 
         $this->actions['view_list'] = "jinyauth::admin.users.list";
         $this->actions['view_form'] = "jinyauth::admin.users.form";
+
+        $this->actions['view_filter'] = "jinyauth::admin.users.filter";
     }
 
     public function index(Request $request)
