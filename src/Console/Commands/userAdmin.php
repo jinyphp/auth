@@ -45,12 +45,12 @@ class userAdmin extends Command
 
         $isAdmin = $this->option('enable') ? 1:0;
         if($this->option('disable')) {
-            $isAdmin = 0;
+            $this->disableAdmin($email);
+        } else {
+            $this->enableAdmin($email);
         }
 
-        DB::table('users')->where('email',$email)->update([
-            'isAdmin'=>$isAdmin
-        ]);
+
 
         if($isAdmin) {
             $this->info('Success : '. $email." is Admin user");
@@ -59,6 +59,22 @@ class userAdmin extends Command
         }
 
         return 0;
+    }
+
+    private function enableAdmin($email)
+    {
+        DB::table('users')->where('email',$email)->update([
+            'isAdmin'=>1,
+            'utype'=>"admin",
+            'auth'=>1
+        ]);
+    }
+
+    private function disableAdmin($email)
+    {
+        DB::table('users')->where('email',$email)->update([
+            'isAdmin'=>0
+        ]);
     }
 
 
