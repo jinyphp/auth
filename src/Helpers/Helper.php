@@ -25,6 +25,23 @@ function is_admin($email=null)
 }
 
 
+if(!function_exists("isSuper")) {
+    function isSuper()
+    {
+        if(Auth::user()->utype == "super") {
+            return true;
+        }
+        return false;
+    }
+}
+
+if(!function_exists("is_super")) {
+    function is_super()
+    {
+        return isSuper();
+    }
+}
+
 if(!function_exists("authRoles")) {
     function authRoles($id)
     {
