@@ -14,7 +14,7 @@ if(function_exists('admin_prefix')) {
 ## 인증 Admin
 Route::middleware(['web','auth:sanctum', 'verified', 'admin'])
 ->name('admin.auth')
-->prefix($prefix.'/auth')->group(function () {
+->prefix("jiny/".$prefix.'/auth')->group(function () {
 
     Route::resource('users',\Jiny\Auth\Http\Controllers\Admin\UserController::class);
     Route::resource('roles',\Jiny\Auth\Http\Controllers\Admin\RoleController::class);
