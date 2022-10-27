@@ -32,8 +32,7 @@ class Dashboard extends DashboardController
         $this->checkRequestQuery($request);
 
         // 메뉴 설정
-        $user = Auth::user();
-        $this->setUserMenu($user);
+        $this->menu_init();
 
         // 권한
         $this->permitCheck();
