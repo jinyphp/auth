@@ -65,10 +65,13 @@ class AuthenticatedSessionController extends Controller
     public function store(LoginRequest $request)
     {
         $email = $request->email;
+
+        // 데이터베이스 회원 조회
         $user = DB::table('users')->where('email', $email)->first();
         if($user) {
 
             // 관리자 승인된 회원만 접속가능 체크
+            /*
             $setting = config("jiny.auth.setting");
             if($setting['auth']['enable']) {
                 if(!$user->auth) {
@@ -76,13 +79,16 @@ class AuthenticatedSessionController extends Controller
                     return redirect()->back();
                 }
             }
+            */
 
 
             // 회원 유효기간 만료 체크
+            /*
             if($user->expire && isExpireTime($user->expire)) {
                 session()->flash('error', "접속 유효기간(".$user->expire.") 이 초과되었습니다.");
                 return redirect()->back();
             }
+            */
 
             // 인증 세션 처리
             $request->authenticate();
@@ -100,6 +106,10 @@ class AuthenticatedSessionController extends Controller
 
 
             // 리다이렉트 처리
+            //return redirect()->intended("/home");
+            return redirect("/home");
+
+            /*
             //1. mypage 사용자 리다이렉트 우선적용
             if($user->redirect) {
                 return redirect()->intended($user->redirect);
@@ -127,9 +137,11 @@ class AuthenticatedSessionController extends Controller
                 $homeUrl = "/";
             }
             return redirect()->intended($homeUrl);
+            */
 
         }
 
+        // 회원 조회를 하지 못한경우, 이전페이지 이동
         return redirect()->back();
     }
 
