@@ -23,6 +23,7 @@ class RegisteredUserController extends Controller
      */
     public function create()
     {
+        // 환경설정 체크
         $setting = config("jiny.auth.setting");
         if(isset($setting['register']) && $setting['register']) {
 
@@ -44,9 +45,15 @@ class RegisteredUserController extends Controller
 
         }
 
+        // 환경 설정 파일이 없는 경우
+        // 패키지내 register 리소스 출력
+        return view("jinyauth::register");
+
+        /*
         return view("jinyauth::errors.message_alert",[
             'message' => "회원가입 서비스가 비활성화 상태 입니다. 관리자에게 직접 회원 가입을 요청하세요."
         ]);
+        */
 
     }
 
@@ -87,7 +94,11 @@ class RegisteredUserController extends Controller
             'password' => Hash::make($request->password),
         ]);
 
+        // 자동 로그인 처리
+        Auth::login($user);
+        $user = Auth::user();
 
+        /*
         // 자동 인증설정 처리
         $setting = config("jiny.auth.setting");
         if($setting['auth']['enable'] && $setting['auth']['auto']) {
@@ -96,11 +107,10 @@ class RegisteredUserController extends Controller
             ]);
         }
 
+
         event(new Registered($user));
 
-        // 자동 로그인 처리
-        Auth::login($user);
-        $user = Auth::user();
+        
 
 
         // 회원약관 동의이력 저장
@@ -122,11 +132,27 @@ class RegisteredUserController extends Controller
             session()->forget('agree');
         }
 
-        // 리다이렉션
-        $home = config('jiny.auth.urls.home');
-        if(!$home) {
-            $home = '/'; // 기본값
+        // 화면 페이지
+        if($setting) {
+            // 리다이렉션
+            $home = config('jiny.auth.urls.home');
+            if(!$home) {
+                $home = '/'; // 기본값
+            }
+            return redirect($home);
         }
-        return redirect($home);
+
+        */
+
+        
+        return redirect("/register/success");
+    }
+
+    public function success()
+    {
+        $user = Auth::user();
+
+        // 성공 화면 페이지 출력
+        return view("jinyauth::register_success",['user'=>$user]);
     }
 }

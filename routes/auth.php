@@ -8,9 +8,11 @@ use Jiny\Auth\Http\Controllers\Auth\AuthenticatedSessionController;
 Route::get('/login', [AuthenticatedSessionController::class, 'create'])
     ->middleware(['web', 'guest'])
     ->name('login');
+
 // 로그인 절차진행
 Route::post('/login', [AuthenticatedSessionController::class, 'store'])
     ->middleware(['web', 'guest']);
+
 // 로그아웃
 Route::get('/logout', [AuthenticatedSessionController::class, 'destroy'])
     ->middleware(['web'])
@@ -28,7 +30,8 @@ Route::get('/register', [RegisteredUserController::class, 'create'])
     ->name('register');
 Route::post('/register', [RegisteredUserController::class, 'store'])
     ->middleware(['web', 'guest']);
-
+Route::get('/register/success', [RegisteredUserController::class, 'success'])
+    ->middleware(['web', 'guest']);
 
 
 // 비밀번호 찾기

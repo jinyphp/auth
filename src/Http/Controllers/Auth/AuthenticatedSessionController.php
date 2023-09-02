@@ -19,6 +19,7 @@ class AuthenticatedSessionController extends Controller
      */
     public function create()
     {
+        // 환경설정 체크
         $setting = config("jiny.auth.setting");
         if(isset($setting['login']) && $setting['login']) {
 
@@ -28,9 +29,16 @@ class AuthenticatedSessionController extends Controller
             }
         }
 
+        // 환경 설정 파일이 없는 경우
+        // 패키지내 login 리소스 출력
+        return view("jinyauth::login");
+
+
+        /*
         return view("jinyauth::errors.message_alert",[
             'message' => "회원 로그인 서비스가 비활성화 상태 입니다."
         ]);
+        */
     }
 
     private function getLoginView($setting)
