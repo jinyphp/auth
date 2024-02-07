@@ -9,7 +9,6 @@ use Livewire\Livewire;
 use Laravel\Fortify\Fortify;
 
 use Illuminate\Routing\Router;
-use Jiny\Auth\Http\Middleware\IsAdmin;
 
 use Jiny\Auth\Contracts\Factory;
 use Jiny\Auth\Http\Controllers\SocialiteManager;
@@ -47,7 +46,7 @@ class JinyAuthServiceProvider extends ServiceProvider
 
         // 미들웨어
         $router = $this->app->make(Router::class);
-        $router->aliasMiddleware('admin', IsAdmin::class);
+
 
     }
 
