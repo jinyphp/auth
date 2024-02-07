@@ -2,6 +2,16 @@
 use Illuminate\Support\Facades\Route;
 use Illuminate\Http\Request;
 
+/**
+ * 사용자 데쉬보드
+ */
+if(!function_exists('module_home')) {
+    Route::get('/home', function () {
+        return view("jinyauth::home");
+    })->middleware(['web', 'auth'])->name('home');
+}
+
+
 
 /**
  * 소셜 로그인

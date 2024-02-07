@@ -8,21 +8,21 @@ use App\Models\User;
 use Illuminate\Support\Facades\DB;
 
 
-class userAdmin extends Command
+class userSuper extends Command
 {
     /**
      * The name and signature of the console command.
      *
      * @var string
      */
-    protected $signature = 'user:admin {email} {--disable} {--enable}';
+    protected $signature = 'user:super {email} {--disable} {--enable}';
 
     /**
      * The console command description.
      *
      * @var string
      */
-    protected $description = 'change admin';
+    protected $description = 'change super admin';
 
     /**
      * Create a new command instance.
@@ -50,10 +50,8 @@ class userAdmin extends Command
             $this->enableAdmin($email);
         }
 
-
-
         if($isAdmin) {
-            $this->info('Success : '. $email." is Admin user");
+            $this->info('Success : '. $email." is super user");
         } else {
             $this->info('Success : '. $email." is normal user");
         }
@@ -65,7 +63,7 @@ class userAdmin extends Command
     {
         DB::table('users')->where('email',$email)->update([
             'isAdmin'=>1,
-            'utype'=>"admin",
+            'utype'=>"super",
             'auth'=>1
         ]);
     }
@@ -73,7 +71,9 @@ class userAdmin extends Command
     private function disableAdmin($email)
     {
         DB::table('users')->where('email',$email)->update([
-            'isAdmin'=>0
+            'isAdmin'=>0,
+            'utype'=>"user",
+            'auth'=>0
         ]);
     }
 

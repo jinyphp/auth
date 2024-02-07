@@ -26,4 +26,11 @@ class SocialController extends ConfigController
         // 테마설정
         setTheme("admin/sidebar");
     }
+
+    public function index(Request $request)
+    {
+        // 메뉴 설정
+        $this->menu_init();
+        return parent::index($request);
+    }
 }
