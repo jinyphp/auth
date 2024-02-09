@@ -5,7 +5,7 @@
             <!-- Overview -->
             <h2
                 class="sm:flex sm:justify-between sm:items-center text-xl font-bold py-2 border-b-2 border-gray-200 mb-4 lg:mb-8">
-                <span>Overview</span>
+                <span>{{$actions['title']}}</span>
                 <div class="mt-3 sm:mt-0 text-center sm:text-right sm:w-48">
                     <select
                         class="block border border-gray-200 rounded text-sm px-2 py-1 w-full focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50">
@@ -18,13 +18,7 @@
             </h2>
             <!-- END Overview -->
 
-            <!-- Module Title Bar -->
-            @if (function_exists('isModule'))
-                @if (isModule('Titlebar'))
-                    @livewire('TitleBar', ['actions' => $actions])
-                @endif
-            @endif
-            <!-- end -->
+
 
             <!-- Statistics -->
             <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 lg:gap-8">

@@ -20,6 +20,8 @@ class Dashboard extends DashboardController
 
         $this->actions['view_main'] = "jinyauth::admin.dashboard.index";
 
+        $this->actions['title'] = "회원";
+
     }
 
     public function index(Request $request)

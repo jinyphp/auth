@@ -35,6 +35,8 @@ class UserController extends ResourceController
 
         // 커스텀 레이아웃
         $this->actions['view_main'] = "jinyauth::tables.main";
+        $this->actions['view_main_layout'] = "jinyauth::tables.table";
+
     }
 
     public function index(Request $request)
