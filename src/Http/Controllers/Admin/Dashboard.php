@@ -1,5 +1,4 @@
 <?php
-
 namespace Jiny\Auth\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
@@ -21,8 +20,6 @@ class Dashboard extends DashboardController
 
         $this->actions['view_main'] = "jinyauth::admin.dashboard.index";
 
-        // 테마설정
-        //setTheme("admin/sidebar");
     }
 
     public function index(Request $request)
@@ -32,7 +29,7 @@ class Dashboard extends DashboardController
         $this->checkRequestQuery($request);
 
         // 메뉴 설정
-        $this->menu_init();
+        ##$this->menu_init();
 
         // 권한
         $this->permitCheck();

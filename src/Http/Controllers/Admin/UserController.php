@@ -32,6 +32,9 @@ class UserController extends ResourceController
         $this->actions['view_form'] = "jinyauth::admin.users.form";
 
         $this->actions['view_filter'] = "jinyauth::admin.users.filter";
+
+        // 커스텀 레이아웃
+        $this->actions['view_main'] = "jinyauth::tables.main";
     }
 
     public function index(Request $request)

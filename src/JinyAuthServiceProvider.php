@@ -39,9 +39,7 @@ class JinyAuthServiceProvider extends ServiceProvider
         if ($this->app->runningInConsole()) {
             $this->commands([
                 \Jiny\Auth\Console\Commands\userCreate::class,
-                \Jiny\Auth\Console\Commands\userPassword::class,
-                \Jiny\Auth\Console\Commands\userAdmin::class,
-                \Jiny\Auth\Console\Commands\userSuper::class
+                \Jiny\Auth\Console\Commands\userPassword::class
             ]);
         }
 
