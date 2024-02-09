@@ -5,7 +5,7 @@
     <div class="p-5 lg:p-6 grow w-full border-b border-gray-200">
 
         <div class="flex">
-            <div class="w-48 pr-5 ">
+            <div class="w-48 pr-5 border-r border-gray-200">
                 <div class="space-y-6">
                     <div class="space-y-1 md:space-y-0 md:flex md:items-center">
                         <label for="filter-country" class="font-medium md:w-1/3 flex-none md:mr-2">페이징</label>
