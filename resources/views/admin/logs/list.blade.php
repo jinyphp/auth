@@ -13,6 +13,8 @@
                 </th>
 
                 <th>사용자</th>
+                <th width='200'>사용자ID</th>
+                <th width='200'>접속방식</th>
                 <th width='200'>로그일자</th>
             </tr>
         </thead>
@@ -39,6 +41,8 @@
                     @endphp
                     {{ $title }}
                 </td>
+                <td width='200'>{{$item->user_id}}</td>
+                <td width='200'>{{$item->provider}}</td>
                 <td width='200'>{{$item->created_at}}</td>
             </tr>
             @endforeach

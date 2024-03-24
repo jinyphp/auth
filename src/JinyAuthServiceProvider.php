@@ -1,5 +1,4 @@
 <?php
-
 namespace Jiny\Auth;
 
 use Illuminate\Support\ServiceProvider;
@@ -53,6 +52,7 @@ class JinyAuthServiceProvider extends ServiceProvider
     {
         /* 라이브와이어 컴포넌트 등록 */
         $this->app->afterResolving(BladeCompiler::class, function () {
+            // Livewire Components
 
         });
 

@@ -69,3 +69,12 @@ composer require jiny/auth
 
 
 php artisan vendor:publish --tag=laravel-mail
+
+## 확장모듈 소개
+지니Auth를 기반으로 다양한 회원정보를 유지관리 할 수 있는 추가 모듈을 제공합니다.
+> 일부 모듈은 유료로 제공됩니다.
+
+* module-accounts
+회원의 상세(성-중간-이름) 이름정보를 관리하고, 아바타 이미지, 멀티 주소록, 멀티 연락처등 관리 가능합니다.
+
+

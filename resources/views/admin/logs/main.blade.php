@@ -11,12 +11,10 @@
 
 
         @if(function_exists("is_admin") && is_admin())
-            {{-- Admin Rule Setting --}}
-            @include('jinytable::setActionRule')
-
-            {{-- popup UI Design mode --}}
-            <!-- ui design form -->
-            @livewire('DesignForm')
+            {{-- SuperAdmin Actions Setting --}}
+            @if(Module::has('Actions'))
+                @livewire('setActionRule', ['actions'=>$actions])
+            @endif
         @endif
 
     </x-theme-layout>

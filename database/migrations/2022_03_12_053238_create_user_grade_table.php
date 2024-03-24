@@ -18,6 +18,7 @@ return new class extends Migration
 
             $table->string('enable')->default(1);
             $table->string('name');
+            $table->text('description')->nullable();
 
             $table->timestamps();
         });

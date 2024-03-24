@@ -1,21 +1,24 @@
-<x-tailwindcss>
+<x-admin-hyper>
+    <div class="container-xl mx-auto p-4">
+        <!-- For large screens, apply additional padding -->
+        <div class="p-lg-8">
+          <!-- Content goes here -->
+          <div class="my-4 my-lg-8">
 
-    <div class="container xl:max-w-7xl mx-auto p-4 lg:p-8">
-        <div class="space-y-4 lg:space-y-8">
             <!-- Overview -->
-            <h2
-                class="sm:flex sm:justify-between sm:items-center text-xl font-bold py-2 border-b-2 border-gray-200 mb-4 lg:mb-8">
-                <span>{{$actions['title']}}</span>
-                <div class="mt-3 sm:mt-0 text-center sm:text-right sm:w-48">
-                    <select
-                        class="block border border-gray-200 rounded text-sm px-2 py-1 w-full focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50">
+            <div class="row align-items-center justify-content-between border-bottom border-gray-200 mb-4 mb-lg-8">
+                <div class="col-sm">
+                    <h2 class="text-xl font-weight-bold py-2">{{$actions['title']}}</h2>
+                </div>
+                <div class="col-sm mt-3 mt-sm-0 text-center text-sm-right">
+                    <select class="form-select border border-gray-200 rounded-sm text-sm px-2 py-1 w-100 border-blue-500 focus-ring-blue-500 focus-ring-opacity-50">
                         <option>Today</option>
-                        <option selected="">This Week</option>
+                        <option selected>This Week</option>
                         <option>This Month</option>
                         <option>This Year</option>
                     </select>
                 </div>
-            </h2>
+            </div>
             <!-- END Overview -->
 
 
@@ -299,10 +302,14 @@
             </div>
             <!-- END Open Deals -->
         </div>
+        </div>
     </div>
 
 
-    {{-- Admin Rule Setting --}}
-    @include('jinytable::setActionRule')
 
-</x-tailwindcss>
+
+    {{-- SuperAdmin Actions Setting --}}
+    @if(Module::has('Actions'))
+        @livewire('setActionRule', ['actions'=>$actions])
+    @endif
+</x-admin-hyper>

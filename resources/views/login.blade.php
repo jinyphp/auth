@@ -92,7 +92,8 @@
 
                                     <div class="space-y-2 sm:flex sm:items-center sm:justify-between sm:space-x-2 sm:space-y-0 mt-4">
                                     <label class="flex items-center">
-                                        <input type="checkbox" id="remember_me" class="border border-gray-200 rounded h-4 w-4 text-indigo-500 focus:border-indigo-500 focus:ring focus:ring-indigo-500 focus:ring-opacity-50"
+                                        <input type="checkbox" id="remember_me"
+                                        class="border border-gray-200 rounded h-4 w-4 text-indigo-500 focus:border-indigo-500 focus:ring focus:ring-indigo-500 focus:ring-opacity-50"
                                         name="remember">
                                         <span class="ml-2">
                                             {{ __('Remember me') }}
@@ -153,7 +154,7 @@
                     <!-- Footer -->
                     <!--
                     <div class="text-sm text-gray-500 text-center mt-6">
-                        <a class="font-medium text-indigo-600 hover:text-indigo-400" 
+                        <a class="font-medium text-indigo-600 hover:text-indigo-400"
                             href="https://jinyerp.com" target="_blank">
                             JinyERP
                         </a>

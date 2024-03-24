@@ -5,7 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>JinyPHP</title>
 
-  @vite('resources/css/app.css')
+  {{-- @vite('resources/css/app.css') --}}
+
 </head>
 <body>
     <div class="relative sm:flex sm:justify-center sm:items-center min-h-screen bg-dots-darker bg-center bg-gray-100 dark:bg-dots-lighter dark:bg-gray-900 selection:bg-red-500 selection:text-white">
@@ -19,6 +20,24 @@
             </div>
         @endif
     </div>
+
+    <main>
+
+        <div class="container mt-4">
+            <div class="mb-4">
+                <h1 class="mb-0 h3">
+                    {{userName()}}님은 {{userType()}} 회원 입니다.
+                </h1>
+                <p class="mb-0 fs-6">최근 접속일은 {{userLastLog()}} 입니다.</p>
+            </div>
+        </div>
+
+    </main>
+
+    @foreach ($message as $item)
+    <p>{{$item}}</p>
+    @endforeach
+
 </body>
 </html>
 

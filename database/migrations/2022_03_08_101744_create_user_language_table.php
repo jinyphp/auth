@@ -13,7 +13,7 @@ return new class extends Migration
      */
     public function up()
     {
-        Schema::create('user_country', function (Blueprint $table) {
+        Schema::create('user_language', function (Blueprint $table) {
             $table->id();
             $table->timestamps();
 
@@ -35,6 +35,6 @@ return new class extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('user_country');
+        Schema::dropIfExists('user_language');
     }
 };

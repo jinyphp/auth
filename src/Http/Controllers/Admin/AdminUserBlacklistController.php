@@ -11,8 +11,8 @@ use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Schema;
 
-use Jiny\Table\Http\Controllers\ResourceController;
-class AdminUserBlacklistController extends ResourceController
+use Jiny\Auth\Http\Controllers\Admin\AdminAuthController;
+class AdminUserBlacklistController extends AdminAuthController
 {
     //const MENU_PATH = "menus";
     public function __construct()
@@ -24,12 +24,12 @@ class AdminUserBlacklistController extends ResourceController
         $this->actions['table'] = "user_reserved"; // 테이블 정보
         $this->actions['paging'] = 10; // 페이지 기본값
 
-        $this->actions['view_list'] = "jinyauth::admin.reserved.list";
-        $this->actions['view_form'] = "jinyauth::admin.reserved.form";
+        $this->actions['view']['list'] = "jinyauth::admin.reserved.list";
+        $this->actions['view']['form'] = "jinyauth::admin.reserved.form";
 
-        //$this->actions['view_main'] = "jinyauth::auth.reserved.main";
-        //$this->actions['view_title'] = "jinyauth::auth.reserved.title";
-        //$this->actions['view_filter'] = "jinyauth::auth.reserved.filter";
+        //$this->actions['view']['main'] = "jinyauth::auth.reserved.main";
+        //$this->actions['view']['title'] = "jinyauth::auth.reserved.title";
+        //$this->actions['view']['filter'] = "jinyauth::auth.reserved.filter";
 
     }
 

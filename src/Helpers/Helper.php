@@ -2,6 +2,27 @@
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
 
+function userName() {
+    return Auth::user()->name;
+}
+
+function userType() {
+    return Auth::user()->utype;
+}
+
+function userLastLog() {
+    $user = Auth::user();
+    $log = DB::table('user_logs')
+        ->where('user_id',$user->id)
+        ->orderBy('id',"desc")
+        ->first();
+    if($log) {
+        return $log->created_at;
+    }
+
+    return date("Y-m-d");
+}
+
 function is_admin($email=null)
 {
     // 지정한 이메일이 있는 경우

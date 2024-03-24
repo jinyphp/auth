@@ -63,6 +63,7 @@ class userAdmin extends Command
 
     private function enableAdmin($email)
     {
+        // 필드를 변경합니다.
         DB::table('users')->where('email',$email)->update([
             'isAdmin'=>1,
             'utype'=>"admin",

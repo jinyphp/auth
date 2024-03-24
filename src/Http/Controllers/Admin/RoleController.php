@@ -11,8 +11,8 @@ use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Schema;
 
-use Jiny\Table\Http\Controllers\ResourceController;
-class RoleController extends ResourceController
+use Jiny\Auth\Http\Controllers\Admin\AdminAuthController;
+class RoleController extends AdminAuthController
 {
     public function __construct()
     {
@@ -23,10 +23,12 @@ class RoleController extends ResourceController
         $this->actions['table'] = "roles";
         $this->actions['paging'] =  "10";
 
-        $this->actions['view_list'] = "jinyauth::admin.roles.list";
-        $this->actions['view_form'] = "jinyauth::admin.roles.form";
+        $this->actions['view']['list'] = "jinyauth::admin.roles.list";
+        $this->actions['view']['form'] = "jinyauth::admin.roles.form";
 
-        //$this->actions['role'] = true;
+        // 커스텀 레이아웃
+        $this->actions['title'] = "회원권환";
+
     }
 
     // role당 사용자 수 계산출력

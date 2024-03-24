@@ -15,8 +15,8 @@ use Illuminate\Support\Facades\Schema;
 use Jiny\Auth\Models\User;
 use Jiny\Auth\Models\Role;
 
-use Jiny\Table\Http\Controllers\ResourceController;
-class UserController extends ResourceController
+use Jiny\Auth\Http\Controllers\Admin\AdminAuthController;
+class UserController extends AdminAuthController
 {
     //const MENU_PATH = "menus";
     public function __construct()
@@ -28,14 +28,15 @@ class UserController extends ResourceController
         $this->actions['table'] = "users"; // 테이블 정보
         $this->actions['paging'] = 10; // 페이지 기본값
 
-        $this->actions['view_list'] = "jinyauth::admin.users.list";
-        $this->actions['view_form'] = "jinyauth::admin.users.form";
+        $this->actions['view']['list'] = "jinyauth::admin.users.list";
+        $this->actions['view']['form'] = "jinyauth::admin.users.form";
 
-        $this->actions['view_filter'] = "jinyauth::admin.users.filter";
+        $this->actions['view']['filter'] = "jinyauth::admin.users.filter";
+
 
         // 커스텀 레이아웃
-        $this->actions['view_main'] = "jinyauth::tables.main";
-        $this->actions['view_main_layout'] = "jinyauth::tables.table";
+        $this->actions['title'] = "전체회원";
+
 
     }
 

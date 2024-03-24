@@ -19,41 +19,29 @@ class AuthenticatedSessionController extends Controller
      */
     public function create()
     {
-        // 환경설정 체크
+        // 로그인화면 리소스
+        // 1.환경설정 체크
         $setting = config("jiny.auth.setting");
-        if(isset($setting['login']) && $setting['login']) {
-
-            $viewfile = $this->getLoginView($setting);
+        if(isset($setting['view']['login']) && $setting['view']['login']) {
+            $viewfile = $setting['view']['login'];
             if (View::exists($viewfile)) {
                 return view($viewfile);
             }
         }
 
-        // 환경 설정 파일이 없는 경우
-        // 패키지내 login 리소스 출력
-        return view("jinyauth::login");
-
-
-        /*
-        return view("jinyauth::errors.message_alert",[
-            'message' => "회원 로그인 서비스가 비활성화 상태 입니다."
-        ]);
-        */
-    }
-
-    private function getLoginView($setting)
-    {
-        if(isset($setting['view']) && isset($setting['view']['login'])) {
-            $viewfile = $setting['view']['login'];
-            if(!$viewfile) {
-                $viewfile = 'jinyauth::login'; // 기본값
-            }
-        } else {
-            $viewfile = 'jinyauth::login'; // 기본값
+        // 2. 사이트 리소스
+        // Site빌더가 설치되어 있고, 리소스가 존재하는 경우
+        if(View::exists("www::login")) {
+            return view("www::login");
         }
 
-        return $viewfile;
+        // 3. 기본화면이 없는 경우
+        // 패키지내에 있는 기본 로그인 화면으로 출력
+        return view("jinyauth::login");
+
     }
+
+
 
 
     /**
@@ -106,8 +94,18 @@ class AuthenticatedSessionController extends Controller
 
 
             // 리다이렉트 처리
-            //return redirect()->intended("/home");
+            //Admin 회원인경우, 관리자 페이지로 이동
+            if(function_exists('admin_prefix')) {
+                if($user->isAdmin == 1) {
+                    // admin_prefix 설정값으로 이동
+                    return redirect("/".admin_prefix());
+                }
+            }
+
+
             return redirect("/home");
+
+
 
             /*
             //1. mypage 사용자 리다이렉트 우선적용
@@ -155,19 +153,18 @@ class AuthenticatedSessionController extends Controller
     {
         Auth::guard('web')->logout();
 
-        // 세션처리
+        // 세션 삭제
         $request->session()->invalidate();
         $request->session()->regenerateToken();
 
+        // 로그아웃, 어디로 이동할까요?
         //
         $setting = config("jiny.auth.setting");
+        $logout = "/";
         if(isset($setting['logout'])) {
-            $logout = $setting['logout'];
-            if(!$logout) {
-                $logout = "/";
+            if($setting['logout']) {
+                $logout = $setting['logout'];
             }
-        } else {
-            $logout = "/";
         }
         return redirect($logout);
     }

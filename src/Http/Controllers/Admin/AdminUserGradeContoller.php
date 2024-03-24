@@ -11,8 +11,8 @@ use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Schema;
 
-use Jiny\Table\Http\Controllers\ResourceController;
-class AdminUserGradeContoller extends ResourceController
+use Jiny\Auth\Http\Controllers\Admin\AdminAuthController;
+class AdminUserGradeContoller extends AdminAuthController
 {
     public function __construct()
     {
@@ -23,8 +23,8 @@ class AdminUserGradeContoller extends ResourceController
         $this->actions['table'] = "user_grade";
         $this->actions['paging'] =  "10";
 
-        $this->actions['view_list'] = "jinyauth::admin.grade.list";
-        $this->actions['view_form'] = "jinyauth::admin.grade.form";
+        $this->actions['view']['list'] = "jinyauth::admin.grade.list";
+        $this->actions['view']['form'] = "jinyauth::admin.grade.form";
 
         //$this->actions['role'] = true;
     }

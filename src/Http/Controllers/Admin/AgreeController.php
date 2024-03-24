@@ -11,8 +11,8 @@ use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Schema;
 
-use Jiny\Table\Http\Controllers\ResourceController;
-class AgreeController extends ResourceController
+use Jiny\Auth\Http\Controllers\Admin\AdminAuthController;
+class AgreeController extends AdminAuthController
 {
     //const MENU_PATH = "menus";
     public function __construct()
@@ -24,8 +24,8 @@ class AgreeController extends ResourceController
         $this->actions['table'] = "user_agreement"; // 테이블 정보
         $this->actions['paging'] = 10; // 페이지 기본값
 
-        $this->actions['view_list'] = "jinyauth::admin.agreement.list";
-        $this->actions['view_form'] = "jinyauth::admin.agreement.form";
+        $this->actions['view']['list'] = "jinyauth::admin.agreement.list";
+        $this->actions['view']['form'] = "jinyauth::admin.agreement.form";
 
     }
 

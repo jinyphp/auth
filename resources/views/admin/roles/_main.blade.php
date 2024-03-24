@@ -1,8 +1,8 @@
 <x-theme theme="admin.sidebar3">
     <x-theme-layout>
         <!-- start page title -->
-        @if (isset($actions['view_title']))
-            @includeIf($actions['view_title'])
+        @if (isset($actions['view']['title']))
+            @includeIf($actions['view']['title'])
         @endif
         <!-- end page title -->
 
@@ -42,7 +42,7 @@
             <div class="col">
                 @livewire('WireTable', ['actions'=>$actions])
 
-                @livewire('Popup-LiveForm', ['actions'=>$actions])
+                @livewire('WirePopupForm', ['actions'=>$actions])
 
                 @livewire('Popup-LiveManual')
             </div>

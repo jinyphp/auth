@@ -39,10 +39,7 @@
                         </div>
                         <!-- END Header -->
 
-                        <!-- Session Status -->
-                        @if(Session::has('status'))
-                        <div class="mb-4 text-sm font-medium text-green-600">{{Session::get('status')}}</div>
-                        @endif
+
 
 
                     <!-- Validation Errors -->
@@ -70,6 +67,11 @@
                                 <div class="font-medium text-red-600">
                                     {{session('error')}}
                                 </div>
+                            @endif
+
+                            <!-- Session Status -->
+                            @if(Session::has('status'))
+                            <div class="mb-4 text-sm font-medium text-green-600">{{Session::get('status')}}</div>
                             @endif
 
                             <form method="POST" action="{{ route('agreement') }}" class="space-y-6">

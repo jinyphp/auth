@@ -25,7 +25,9 @@ Route::middleware(['web','auth:sanctum', 'verified', 'admin'])
     Route::resource('agree',\Jiny\Auth\Http\Controllers\Admin\AgreeController::class);
     Route::resource('agreement/log',\Jiny\Auth\Http\Controllers\Admin\AdminAgreeLogController::class);
 
-    Route::resource('logs',\Jiny\Auth\Http\Controllers\Admin\AdminUserLogController::class);
+    Route::get('logs/{id}',[
+        \Jiny\Auth\Http\Controllers\Admin\AdminUserLogController::class,
+        "index"])->where('id', '[0-9]+');
 
     Route::resource('grade',\Jiny\Auth\Http\Controllers\Admin\AdminUserGradeContoller::class);
 
@@ -38,7 +40,6 @@ Route::middleware(['web','auth:sanctum', 'verified', 'admin'])
     Route::get('/', [\Jiny\Auth\Http\Controllers\Admin\Dashboard::class, "index"]);
 
 
-    Route::resource('teams',\Jiny\Auth\Http\Controllers\Admin\TeamController::class);
 
     // 소셜로그인
     Route::resource('oauth',\Jiny\Auth\Http\Controllers\Admin\AdminOAuthController::class);

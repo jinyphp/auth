@@ -43,12 +43,12 @@ class userCreate extends Command
     {
         //$name = $this->argument('name') ?? Str::random(8);
         $name = $this->option('name') ?? Str::random(8);
-        $email = $this->option('email') ?? $name."@gmail.com";
+        $email = $this->option('email') ?? $name."@jinyphp.com";
         $password = $this->option('password') ?? Str::random(12);
 
         // 회원 중복 검사
         if($this->isUser($email)) {
-            $this->info('Fail : '. $name."@gmail.com is duplicated");
+            $this->info('Fail : '. $name." is duplicated");
             return 0;
         }
 
@@ -68,7 +68,7 @@ class userCreate extends Command
             ]);
         }
 
-        $this->info('Success : '. $name."@gmail.com password:".$password);
+        $this->info('Success : '. $name." password:".$password);
         return 0;
     }
 
@@ -83,12 +83,12 @@ class userCreate extends Command
         $password = Str::random(12);
         User::create([
             'name'=>$name,
-            'email'=> $name."@gmail.com",
+            'email'=> $name."@jinyphp.com",
             'password'=>bcrypt($password)
         ]);
 
         return [
-            'name'=>$name, 'email'=>$name."@gmail.com", 'password'=>$password
+            'name'=>$name, 'email'=>$name."@jinyphp.com", 'password'=>$password
         ];
     }
 }

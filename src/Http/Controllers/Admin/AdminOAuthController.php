@@ -11,8 +11,8 @@ use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Schema;
 
-use Jiny\Table\Http\Controllers\ResourceController;
-class AdminOAuthController extends ResourceController
+use Jiny\Auth\Http\Controllers\Admin\AdminAuthController;
+class AdminOAuthController extends AdminAuthController
 {
     //const MENU_PATH = "menus";
     public function __construct()
@@ -24,8 +24,8 @@ class AdminOAuthController extends ResourceController
         $this->actions['table'] = "user_oauth"; // 테이블 정보
         $this->actions['paging'] = 10; // 페이지 기본값
 
-        $this->actions['view_list'] = "jinyauth::admin.oauth.list";
-        $this->actions['view_form'] = "jinyauth::admin.oauth.form";
+        $this->actions['view']['list'] = "jinyauth::admin.oauth.list";
+        $this->actions['view']['form'] = "jinyauth::admin.oauth.form";
     }
 
 

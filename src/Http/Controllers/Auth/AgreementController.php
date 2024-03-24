@@ -1,7 +1,4 @@
 <?php
-/**
- * 회원 로그인
- */
 namespace Jiny\Auth\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
@@ -18,15 +15,23 @@ use Illuminate\Support\Facades\DB;
 
 class AgreementController extends Controller
 {
+    public $setting = [];
+
+    public function __construct()
+    {
+        $this->setting = config("jiny.auth.setting");
+    }
+
     /**
      * 회원 로그인 가입폼 출력
      */
     public function create()
     {
-        $setting = config("jiny.auth.setting");
-        $viewfile = $this->getAgreementView($setting);
+        $viewfile = "jinyauth::agreement"; // 기본값
+        $viewfile = $this->getAgreementView($this->setting);
 
         if (View::exists($viewfile)) {
+            // 약관 목록을 전달
             $agreement = DB::table('user_agreement')->where('enable',1)->get();
             return view($viewfile,['agreement'=>$agreement]);
         }

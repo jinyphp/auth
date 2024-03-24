@@ -11,8 +11,8 @@ use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Schema;
 
-use Jiny\Table\Http\Controllers\ResourceController;
-class AdminUserLogController extends ResourceController
+use Jiny\Auth\Http\Controllers\Admin\AdminAuthController;
+class AdminUserLogController extends AdminAuthController
 {
     //const MENU_PATH = "menus";
     public function __construct()
@@ -24,11 +24,23 @@ class AdminUserLogController extends ResourceController
         $this->actions['table'] = "user_logs"; // 테이블 정보
         $this->actions['paging'] = 10; // 페이지 기본값
 
-        $this->actions['view_list'] = "jinyauth::admin.logs.list";
-        $this->actions['view_form'] = "jinyauth::admin.logs.form";
+        $this->actions['view']['list'] = "jinyauth::admin.logs.list";
+        $this->actions['view']['form'] = "jinyauth::admin.logs.form";
 
-        $this->actions['view_main'] = "jinyauth::admin.logs.main";
+        $this->actions['view']['main'] = "jinyauth::admin.logs.main";
 
+    }
+
+
+    ## 목록 dbFetch 전에 실행됩니다.
+    public function hookIndexing($wire)
+    {
+        $logUserId = $wire->request('id');
+        if($logUserId) {
+            $wire->db()->where('user_id',$logUserId);
+        }
+
+        // 반환값이 있으면, 종료됩니다.
     }
 
     /**
@@ -37,6 +49,7 @@ class AdminUserLogController extends ResourceController
     ## 목록 데이터 fetch후 호출 됩니다.
     public function hookIndexed($wire, $rows)
     {
+
         $ids = [];
         foreach($rows as $item)
         {

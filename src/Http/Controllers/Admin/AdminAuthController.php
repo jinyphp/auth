@@ -11,22 +11,16 @@ use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Schema;
 
-use Jiny\Auth\Http\Controllers\Admin\AdminAuthController;
-class AdminTestController extends AdminAuthController
+use Jiny\WireTable\Http\Controllers\LiveController;
+class AdminAuthController extends LiveController
 {
     public function __construct()
     {
         parent::__construct();
-        $this->setVisit($this);
+
+        // 커스텀 레이아웃
+        //$this->actions['view']['main'] = "jinyauth::tables.main";
+        //$this->actions['view']['main_layout'] = "jinyauth::tables.view_layout";
     }
-
-    public function index(Request $request)
-    {
-
-
-        return "test";
-    }
-
-
 
 }
