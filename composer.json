@@ -1,0 +1,43 @@
+{
+    "name": "jiny/auth",
+    "description": "auth for JinyPHP",
+    "keywords": [
+        "Laravel", "jinyPHP", "framwork", "auth"
+    ],
+    "homepage": "http://www.jinyphp.com",
+    "type": "library",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "hojinlee",
+            "email": "infohojin@gmail.com",
+            "homepage": "http://www.jinyphp.com"
+        }
+    ],
+    "minimum-stability": "stable",
+    "require": {
+        "php": "^8.1",
+        "livewire/livewire": "^3.0",
+        "jiny/social": "^0.0.3"
+    },
+    "autoload": {
+        "psr-4": {
+            "Jiny\\Auth\\":"src/"
+        },
+        "files" : [
+            "src/Helpers/Helper.php"
+        ]
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Jiny\\Auth\\Tests\\": "tests/"
+        }
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "Jiny\\Auth\\JinyAuthServiceProvider"
+            ]
+        }
+    }
+}
