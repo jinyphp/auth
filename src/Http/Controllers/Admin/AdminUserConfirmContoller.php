@@ -27,6 +27,10 @@ class AdminUserConfirmContoller extends AdminController
         $this->actions['view']['form'] = "jinyauth::admin.auth.form";
 
         $this->actions['title'] = "미인증회원";
+        $this->actions['subtitle'] = "";
+
+        //dd($this->actions);
+
     }
 
 
@@ -36,7 +40,6 @@ class AdminUserConfirmContoller extends AdminController
     ## 목록 데이터 fetch후 호출 됩니다.
     public function hookIndexed($wire, $rows)
     {
-
         $ids = rowsId($rows,'user_id');
         $users = DB::table('users')->whereIn('id', $ids)->get();
         foreach($rows as &$row) {

@@ -11,8 +11,10 @@
         </div>
     </div>
     <div class="col-6">
-        <input type="text" wire:model="filter.starts_at"/>
-
+        <div class="mb-3">
+            <label for="simpleinput" class="form-label">가입일자</label>
+            <x-flatpickr-date wire:model="filter.starts_at"/>
+        </div>
     </div>
 </div>
 

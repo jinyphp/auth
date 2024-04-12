@@ -36,7 +36,7 @@ class AdminUserSleeperContoller extends AdminController
     ## 목록 데이터 fetch후 호출 됩니다.
     public function hookIndexed($wire, $rows)
     {
-
+        //dd($rows);
         $ids = rowsId($rows,'user_id');
         $users = DB::table('users')->whereIn('id', $ids)->get();
         foreach($rows as &$row) {

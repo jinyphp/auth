@@ -11,7 +11,9 @@
             <x-form-hor>
                 <x-form-label>사용자</x-form-label>
                 <x-form-item>
+                    @if(isset($temp['email']))
                     {{$temp['email']}}
+                    @endif
                 </x-form-item>
             </x-form-hor>
 
@@ -34,12 +36,6 @@
                     !!}
                 </x-form-item>
             </x-form-hor>
-
-
-
         </x-navtab-item>
-
-
-
     </x-navtab>
 </div>

@@ -18,7 +18,7 @@ if(function_exists("isAdminPackage")) {
     ->prefix($prefix.'/auth')->group(function () {
 
         Route::resource('users',\Jiny\Auth\Http\Controllers\Admin\UserController::class);
-        Route::resource('roles',\Jiny\Auth\Http\Controllers\Admin\RoleController::class);
+        //Route::resource('roles',\Jiny\Auth\Http\Controllers\Admin\RoleController::class);
 
         Route::resource('reserved',\Jiny\Auth\Http\Controllers\Admin\ReservedController::class);
         Route::resource('blacklist',\Jiny\Auth\Http\Controllers\Admin\AdminUserBlacklistController::class);

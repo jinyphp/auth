@@ -23,7 +23,12 @@
                             alt=""
                             class="avatar-sm"/>
                         <div>
-                            <div>{!! $popupEdit($item, $item->email) !!}</div>
+                            <div>
+                                {{-- {!! $popupEdit($item, $item->email) !!} --}}
+                                <x-link-void wire:click="edit({{$item->id}})">
+                                    {{$item->email}}
+                                </x-link-void>
+                            </div>
                             <div>{{$item->name}} </div>
                         </div>
                     </x-flex>

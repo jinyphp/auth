@@ -94,7 +94,7 @@
             로그인 설정
         </a>
         <a class="list-group-item list-group-item-action"
-            href="/admin/auth/setting/register">
+            href="/admin/auth/setting/regist">
             회원가입
         </a>
         <a class="list-group-item list-group-item-action"

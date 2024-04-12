@@ -35,7 +35,7 @@ class UserController extends AdminController
 
         // 커스텀 레이아웃
         $this->actions['title'] = "전체회원";
-
+        $this->actions['subtitle'] = "가입되어 있는 모든 회원을 검색합니다.";
 
     }
 
@@ -101,6 +101,8 @@ class UserController extends AdminController
     public function hookEdited($wire, $form)
     {
         // M:N Role 권환
+
+        /*
         $user = User::find($form['id']);
         $userRoles = $user->roles->pluck('id')->toArray();
 
@@ -116,6 +118,7 @@ class UserController extends AdminController
                 $this->wire->roles[$id]['checked'] = false;
             }
         }
+        */
 
 
         // 패스워드값 삭제

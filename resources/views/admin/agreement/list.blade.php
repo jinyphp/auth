@@ -16,7 +16,10 @@
                     {{ $item->required }}
                 </td>
                 <td>
-                    {!! $popupEdit($item, $item->title) !!}
+                    {{-- {!! $popupEdit($item, $item->title) !!} --}}
+                    <x-link-void wire:click="edit({{$item->id}})">
+                        {{$item->title}}
+                    </x-link-void>
                 </td>
                 <td width='100'>
                     {{ $item->pos }}
@@ -30,4 +33,3 @@
         @endif
     </tbody>
 </x-wire-table>
-iv>

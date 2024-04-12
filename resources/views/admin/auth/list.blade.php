@@ -1,40 +1,22 @@
-<div>
+<x-wire-table>
+    <x-wire-thead>
+        {{-- 테이블 제목 --}}
+        <th width='50'>Id</th>
+        <th >
+            휴면회원
+        </th>
+        <th >
+            설명
+        </th>
+        <th width='250'>승인상태</th>
 
-
-    <x-datatable>
-        <thead>
-            <tr>
-                <th width='20'>
-                    <input type='checkbox' class="form-check-input" wire:model="selectedall">
-                </th>
-                <th width='50'>Id</th>
-                <th >
-                    휴면회원
-                </th>
-                <th >
-                    설명
-                </th>
-                <th width='250'>승인상태</th>
-
-                <th width='200'>등록일자</th>
-            </tr>
-        </thead>
-        <tbody>
+        <th width='200'>등록일자</th>
+    </x-wire-thead>
+    <tbody>
         @if(!empty($rows))
             @foreach ($rows as $item)
-
-            {{-- row-selected --}}
-            @if(in_array($item->id, $selected))
-            <tr class="row-selected">
-            @else
-            <tr>
-            @endif
-
-                <td width='20'>
-                    <input type='checkbox' name='ids' value="{{$item->id}}"
-                    class="form-check-input"
-                    wire:model="selected">
-                </td>
+            <x-wire-tbody-item :selected="$selected" :item="$item">
+                {{-- 테이블 리스트 --}}
                 <td width='50'>{{$item->id}}</td>
                 <td>
 
@@ -43,7 +25,12 @@
                             alt=""
                             class="avatar-sm"/>
                         <div>
-                            <div>{!! $popupEdit($item, $item->email) !!}</div>
+                            <div>
+                                {{-- {!! $popupEdit($item, $item->email) !!} --}}
+                                <x-link-void wire:click="edit({{$item->id}})">
+                                    {{$item->email}}
+                                </x-link-void>
+                            </div>
                             <div>{{$item->name}} </div>
                         </div>
                     </x-flex>
@@ -63,12 +50,9 @@
                 </td>
 
                 <td width='200'>{{$item->created_at}}</td>
-            </tr>
-            @endforeach
-        @else
-            목록이 없습니다.
-        @endif
-        </tbody>
-    </x-datatable>
 
-</div>
+            </x-wire-tbody-item>
+            @endforeach
+        @endif
+    </tbody>
+</x-wire-table>
