@@ -41,26 +41,3 @@ Route::get('/account/password/expire', function(){
 ->middleware(['web', 'auth']);
 
 
-/**
- * User Avata image
- */
-//,'auth:sanctum'
-Route::middleware(['web']) // , 'verified'
-->prefix('account')->group(function() {
-    // 사용자 아이디를 아바타 이미지 출력
-    // 도메인/account/avata/{id?} 로 접속시 이미지 출력
-    Route::get('avatas/{id?}', [
-        \Jiny\Auth\Http\Controllers\Account\AccountAvataID::class,
-        'index'])->where('id', '[0-9]+');
-
-    // 파일명을 직접 지정하는 경우
-    Route::get('avatas/{filename}', [
-        \Jiny\Auth\Http\Controllers\Account\AccountAvataFile::class,
-        'avata']);
-
-    // 아바타 이미지 업로드
-    Route::post('avatas/upload', [
-        \Jiny\Auth\Http\Controllers\Account\AccountAvataUpload::class,
-        'upload']);
-});
-
