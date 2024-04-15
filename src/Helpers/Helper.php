@@ -54,6 +54,14 @@ if(!function_exists("userFindByEmail")) {
     }
 }
 
+function user($id=null) {
+    if($id) {
+        return userFindById($id);
+    }
+
+    return Auth::user();
+}
+
 function userFindById($id) {
     return DB::table('users')->where('id',$id)->first();
 }
