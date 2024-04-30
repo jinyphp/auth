@@ -23,7 +23,8 @@ if(function_exists("isAdminPackage")) {
 
 
          ## 설정
-         Route::get('settings', [\Jiny\Auth\Http\Controllers\Admin\SettingController::class,"index"]);
+         Route::get('settings', [
+            \Jiny\Auth\Http\Controllers\Admin\SettingController::class,"index"]);
          Route::get('setting/login', [
              \Jiny\Auth\Http\Controllers\Admin\SettingLoginController::class,
              "index"]);
