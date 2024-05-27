@@ -15,8 +15,6 @@ use Illuminate\Support\Facades\DB;
 
 class RegistVerifiedController extends Controller
 {
-
-
     public $setting=[];
 
     public function __construct()
@@ -29,8 +27,18 @@ class RegistVerifiedController extends Controller
      */
     public function index()
     {
-        $viewFile = "jinyauth::regist.verified";
+        $viewFile = $this->getViewFile();
         return view($viewFile);
+    }
+
+    // 환경설정의 view 확인
+    private function getViewFile()
+    {
+        if(isset($this->setting['verified']['view'])) {
+            return$this->setting['verified']['view'];
+        }
+
+        return "jinyauth::verified.verified";
     }
 
 

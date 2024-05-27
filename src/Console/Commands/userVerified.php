@@ -8,21 +8,21 @@ use App\Models\User;
 use Illuminate\Support\Facades\DB;
 
 
-class userAdmin extends Command
+class userVerified extends Command
 {
     /**
      * The name and signature of the console command.
      *
      * @var string
      */
-    protected $signature = 'user:admin {email} {--disable} {--enable}';
+    protected $signature = 'user:verified {email} {--disable} {--enable}';
 
     /**
      * The console command description.
      *
      * @var string
      */
-    protected $description = 'change admin';
+    protected $description = 'user verified';
 
     /**
      * Create a new command instance.
@@ -45,37 +45,36 @@ class userAdmin extends Command
 
         $isAdmin = $this->option('enable') ? 1:0;
         if($this->option('disable')) {
-            $this->disableAdmin($email);
+            $this->disableVerified($email);
         } else {
-            $this->enableAdmin($email);
+            $this->enableVerified($email);
         }
 
 
 
         if($isAdmin) {
-            $this->info('Success : '. $email." is Admin user");
+            $this->info('Success : '. $email." is Verified");
         } else {
-            $this->info('Success : '. $email." is normal user");
+            $this->info('Success : '. $email." is Unverified");
         }
 
         return 0;
     }
 
-    private function enableAdmin($email)
+    private function enableVerified($email)
     {
-        // 필드를 변경합니다.
-        DB::table('users')->where('email',$email)->update([
-            'isAdmin'=>1,
-            'utype'=>"admin",
-            'auth'=>1
+        DB::table('users')->where('email', $email)->update([
+            'email_verified_at' => date("Y-m-d H:i:s")
         ]);
     }
 
-    private function disableAdmin($email)
+    private function disableVerified($email)
     {
-        DB::table('users')->where('email',$email)->update([
-            'isAdmin'=>0
+        DB::table('users')->where('email', $email)->update([
+            'email_verified_at' => null
         ]);
+
+
     }
 
 

@@ -50,11 +50,7 @@ Route::get('/register/reject', [RegistRejectController::class, 'index'])
     ->middleware(['web', 'guest'])
     ->name('register.reject');
 
-// 회원 이메일 검증상태를 안내하는 화면
-use Jiny\Auth\Http\Controllers\RegistVerifiedController;
-Route::get('/register/verified', [RegistVerifiedController::class, 'index'])
-    ->middleware(['web', 'guest'])
-    ->name('register.verified');
+
 
 
 // 회원가입 절차
@@ -72,6 +68,19 @@ use Jiny\Auth\Http\Controllers\RegistAuthController;
 Route::get('/register/auth', [RegistAuthController::class, 'index'])
     ->middleware(['web', 'guest'])
     ->name('register.auth');
+
+
+/**
+ * 회원 이메일 검증
+ */
+// 회원 이메일 검증상태를 안내하는 화면
+use Jiny\Auth\Http\Controllers\RegistVerifiedController;
+Route::get('/register/verified', [
+    RegistVerifiedController::class,
+    'index'])
+    ->middleware(['web', 'guest'])
+    ->name('register.verified');
+
 
 
 
