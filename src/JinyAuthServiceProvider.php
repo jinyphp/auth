@@ -43,6 +43,8 @@ class JinyAuthServiceProvider extends ServiceProvider
         // 미들웨어
         $router = $this->app->make(Router::class);
 
+
+
         // 컴포넌트
         Blade::component($this->package.'::components.'.'login_remember', 'login-remember');
 
@@ -53,6 +55,12 @@ class JinyAuthServiceProvider extends ServiceProvider
 
         Blade::component($this->package.'::components.'.'update-infomation', 'profile-update-infomation');
         Blade::component($this->package.'::components.'.'update-password', 'profile-update-password');
+
+        // 로그인 버튼링크
+        Blade::component($this->package.'::components.'.'link_login', 'link-login');
+
+        // 회원가입 버튼링크
+        Blade::component($this->package.'::components.'.'link_regist', 'link-regist');
 
 
     }
