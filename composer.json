@@ -18,9 +18,9 @@
     "require": {
         "php": "^8.2",
         "jiny/fortify": "^0.0.2",
-        "jiny/profile": "^0.4.0",
-        "jiny/social": "^0.3.0",
-        "jiny/users": "^0.3.0"
+        "jiny/auth-profile": "^0.5",
+        "jiny/auth-social": "^0.4",
+        "jiny/auth-users": "^0.4"
 
     },
     "autoload": {
