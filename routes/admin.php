@@ -17,6 +17,9 @@ if(function_exists("isAdminPackage")) {
     ->name('admin.auth')
     ->prefix($prefix.'/auth')->group(function () {
 
+        Route::get('/', [
+            Jiny\Auth\Http\Controllers\Admin\AuthAdminDashboard::class,
+            'index']);
 
         Route::resource('agree',\Jiny\Auth\Http\Controllers\Admin\AgreeController::class);
         Route::resource('agreement/log',\Jiny\Auth\Http\Controllers\Admin\AdminAgreeLogController::class);
@@ -25,9 +28,11 @@ if(function_exists("isAdminPackage")) {
          ## 설정
          Route::get('settings', [
             \Jiny\Auth\Http\Controllers\Admin\SettingController::class,"index"]);
+
          Route::get('setting/login', [
              \Jiny\Auth\Http\Controllers\Admin\SettingLoginController::class,
              "index"]);
+
          Route::get('setting/regist', [
              \Jiny\Auth\Http\Controllers\Admin\SettingRegistController::class,
              "index"]);
