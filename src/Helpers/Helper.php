@@ -170,3 +170,11 @@ function jinyAuth_userTotalCount()
 {
     return DB::table('users')->count();
 }
+
+/**
+ * 회원 테이블의 수를 반환 합니다.
+ */
+function user_count()
+{
+    return DB::table('users')->count();
+}

@@ -58,8 +58,6 @@
     </div>
     <!-- end row -->
 
-
-
     @push('scripts')
         <script>
             document.querySelector("#btn-livepopup-create").addEventListener("click", function(e) {

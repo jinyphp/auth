@@ -122,13 +122,18 @@ Route::get('/register/email/verify/{id}/{hash}', [
  */
 // 비밀번호 찾기화면
 use Jiny\Auth\Http\Controllers\Auth\PasswordResetLinkController;
-Route::get('/login/password/forgot', [PasswordResetLinkController::class, 'create'])
+Route::get('/login/password/forgot', [
+        PasswordResetLinkController::class,
+        'create'])
     ->middleware(['web', 'guest'])
     ->name('password.request');
 // Post 절차
-Route::post('/login/forgot-password', [PasswordResetLinkController::class, 'store'])
+Route::post('/login/forgot-password', [
+        PasswordResetLinkController::class,
+        'store'])
     ->middleware('guest')
     ->name('password.email');
+
 
 // 페스워드 재설정 링크
 use Jiny\Auth\Http\Controllers\Auth\NewPasswordController;

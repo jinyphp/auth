@@ -1,7 +1,4 @@
 <?php
-/**
- * 비밀번호 찾기
- */
 namespace Jiny\Auth\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
@@ -9,6 +6,9 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Password;
 use Illuminate\Support\Facades\View;
 
+/**
+ * 비밀번호 찾기
+ */
 class PasswordResetLinkController extends Controller
 {
     public $setting;
@@ -18,14 +18,13 @@ class PasswordResetLinkController extends Controller
         $this->setting = config("jiny.auth.setting");
     }
 
-
     /**
      * 비밀번호 찾기
      */
     public function create()
     {
         $viewfile = $this->getForgetView();
-        //dd($viewfile);
+
         if (View::exists($viewfile)) {
             return view($viewfile);
         }
@@ -36,14 +35,23 @@ class PasswordResetLinkController extends Controller
 
     private function getForgetView()
     {
-        $viewfile = 'jinyauth::password.forget'; // 기본값
 
+        ## 우선순위1
         if(isset($this->setting['view']['forget'])){
             if($this->setting['view']['forget']) {
                 $viewfile = $this->setting['view']['forget'];
             }
         }
 
+        ## 우선순위2
+        ## actions 설정
+        if(isset($this->actions['view']['layout'])){
+            if($this->actions['view']['layout']) {
+                $viewfile = $this->actions['view']['layout'];
+            }
+        }
+
+        $viewfile = 'jinyauth::password.forget.layout'; // 기본값
         return $viewfile;
     }
 

@@ -1,5 +1,4 @@
 <?php
-
 namespace Jiny\Auth\Http\Controllers;
 
 use App\Http\Controllers\Controller;
@@ -50,9 +49,24 @@ class LoginViewController extends Controller
 
         // 2. 사이트 리소스
         // Site빌더가 설치되어 있고, 리소스가 존재하는 경우
-        if(View::exists("www::login")) {
-            return "www::login";
+        // if(View::exists("www::login")) {
+        //     return "www::login";
+        // }
+
+        ## 우선순위3
+        ## www의 슷롯 regist/index 화면
+        $prefix = "www";
+        if($slot = www_slot()) {
+            if(View::exists($prefix."::".$slot.".login.index")) {
+                return $prefix."::".$slot.".login.index";
+            }
+        } else {
+            // 슬롯이 지정되어 있지 않는 경우
+            if(View::exists($prefix."::login.index")) {
+                return $prefix."::login.index";
+            }
         }
+
 
         $viewFile = "jinyauth"."::login.index";
         return $viewFile;

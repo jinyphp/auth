@@ -9,13 +9,17 @@
             <div class="card">
                 <div class="card-body">
 
-                    @includeIf('jinyauth::regist.form',['setting'=>$setting])
+                    @includeIf('jinyauth::regist.form',[
+                        'setting'=>$setting
+                        ])
 
                     <div class="text-center">
                         <a href="/login">로그인</a>
                     </div>
 
-                    @includeIf('jinyauth::regist.social',['setting'=>$setting])
+                    @includeIf('jinyauth::regist.social',[
+                        'setting'=>$setting
+                        ])
 
                 </div>
             </div>

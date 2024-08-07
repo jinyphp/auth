@@ -26,7 +26,12 @@
         <div class="card">
             <div class="card-body">
 
-                <!-- Session Status -->
+
+
+                <form method="POST" action="{{ route('password.update') }}">
+                    @csrf
+
+                    <!-- Session Status -->
                 @if(Session::has('status'))
                 <div class="alert alert-warning alert-dismissible" role="alert">
                     <div class="alert-message">
@@ -34,9 +39,6 @@
                     </div>
                 </div>
                 @endif
-
-                <form method="POST" action="{{ route('password.update') }}">
-                    @csrf
 
                     <!-- Password Reset Token -->
                     <input type="hidden" name="token" value="{{ $request->route('token') }}">

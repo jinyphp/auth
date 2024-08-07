@@ -18,7 +18,8 @@ use Jiny\Auth\Notifications\VerifyEmail;
 
 use Jiny\Auth\Notifications\WelcomeEmailNotification;
 
-class RegistViewController extends Controller
+use Jiny\Site\Http\Controllers\SiteController;
+class RegistViewController extends SiteController
 {
     use Notifiable;
 
@@ -26,21 +27,27 @@ class RegistViewController extends Controller
 
     public function __construct()
     {
+        parent::__construct();
+        $this->setVisit($this);
+
+        // 환경 설정을 읽어옵니다.
         $this->setting = config("jiny.auth.setting");
     }
 
     /**
      * 가입폼 출력
      */
-    public function index()
+    public function index(Request $request)
     {
-        // 1.환경설정 체크
+        ## 1.환경설정 체크
+        ## 신규 회원가입을 허용할지 여부를 확인
         if(!$this->isAllowRegist()) {
             // 회원가입 중단 화면
             return redirect("/register/reject");
         }
 
-        // 2.회원 가입 동의서 체크
+        ## 2.회원 가입 동의서 체크
+        ## 가입전에 회원 동의가 먼저 필요한 경우 확인
         if($this->isSetAgreeEnable()) {
             // 회원가입전, 동의서 체크
             if(!$this->checkAgree()) {
@@ -48,26 +55,57 @@ class RegistViewController extends Controller
             }
         }
 
-        // 3.회원가입폼
+        ## 3.회원가입
+        ## 회원을 가입 처리 합니다.
         $viewfile = $this->viewRegist();
-        return view($viewfile,['setting'=>$this->setting]);
+        return view($viewfile,[
+            'setting'=>$this->setting
+        ]);
     }
 
     private function viewRegist()
     {
+
+        ## 우선순위 1
+        ## 환경설정에서 화면을 지정하는 경우
         if(isset($this->setting['regist']['view'])) {
             if($this->setting['regist']['view']) {
                 return $this->setting['regist']['view'];
             }
         }
 
+
+        ## 우선순위2
+        ## Actions 설정값
+        if(isset($this->actions['view']['layout'])) {
+            if($this->actions['view']['layout']) {
+                return $this->actions['view']['layout'];
+            }
+        }
+
+        /*
         if(is_module("Site")) {
-            $prefix = "www";
+
+        }
+        */
+
+        ## 우선순위3
+        ## www의 슷롯 regist/index 화면
+        $prefix = "www";
+        if($slot = www_slot()) {
+            if(View::exists($prefix."::".$slot.".regist.index")) {
+                return $prefix."::".$slot.".regist.index";
+            }
+        } else {
+            // 슬롯이 지정되어 있지 않는 경우
             if(View::exists($prefix."::regist.index")) {
                 return $prefix."::regist.index";
             }
         }
 
+
+        ## 우선순위4
+        ## 페키지 기본 화면
         $viewfile = 'jinyauth::regist.index'; // 기본값
         return $viewfile;
     }

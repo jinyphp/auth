@@ -62,6 +62,22 @@ class JinyAuthServiceProvider extends ServiceProvider
         // 회원가입 버튼링크
         Blade::component($this->package.'::components.'.'link_regist', 'link-regist');
 
+        // 회원가입 form 양식
+        Blade::component($this->package.'::components.'.'register.form', 'register-form');
+        Blade::component($this->package.'::components.'.'register.name', 'register-name');
+        Blade::component($this->package.'::components.'.'login.email', 'register-email');
+        Blade::component($this->package.'::components.'.'login.password', 'register-password');
+        Blade::component($this->package.'::components.'.'register.confirm', 'register-password-confirm');
+        Blade::component($this->package.'::components.'.'login.submit', 'register-submit');
+
+        // 로그인 form 양식
+        Blade::component($this->package.'::components.'.'login.form', 'login-form');
+        Blade::component($this->package.'::components.'.'login.email', 'login-email');
+        Blade::component($this->package.'::components.'.'login.password', 'login-password');
+        Blade::component($this->package.'::components.'.'login.forgot', 'login-forgot');
+        Blade::component($this->package.'::components.'.'login.remember', 'login-remember');
+        Blade::component($this->package.'::components.'.'login.submit', 'login-submit');
+
 
     }
 
@@ -69,6 +85,14 @@ class JinyAuthServiceProvider extends ServiceProvider
     {
         /* 라이브와이어 컴포넌트 등록 */
         $this->app->afterResolving(BladeCompiler::class, function () {
+            // 회원가입폼
+            Livewire::component('auth-regist-form',
+                \Jiny\Auth\Http\Livewire\AuthRegistForm::class);
+
+            // 로그인폼
+            Livewire::component('auth-login-form',
+                \Jiny\Auth\Http\Livewire\AuthLoginForm::class);
+
             Livewire::component('user-password',
                 \Jiny\Auth\Http\Livewire\UserPassword::class);
 

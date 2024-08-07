@@ -20,5 +20,7 @@
         <div class="font-sans antialiased text-gray-900">
             {{ $slot }}
         </div>
+
+        <x-set-actions></x-set-actions>
     </body>
 </html>
