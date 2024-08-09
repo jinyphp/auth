@@ -10,12 +10,16 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\View;
 use Carbon\Carbon;
 
-class LoginViewController extends Controller
+use Jiny\Site\Http\Controllers\SiteController;
+class LoginViewController extends SiteController
 {
     public $setting = [];
 
     public function __construct()
     {
+        parent::__construct();
+        $this->setVisit($this);
+
         $this->setting = config("jiny.auth.setting");
     }
 
@@ -25,19 +29,28 @@ class LoginViewController extends Controller
      */
     public function index(Request $request)
     {
+        // 로그인을 허용하는 경우
         if($this->isLoginEnable()) {
             $viewFile = $this->viewLogin();
-        } else {
-            $viewFile = $this->viewLoginDisable();
+
+            return view($viewFile,[
+                'setting'=>$this->setting
+            ]);
         }
 
-        return view($viewFile,[
-            'setting'=>$this->setting
-        ]);
+        // 라우트 이름으로 리다이렉트
+        return redirect()->route('login.disable');
     }
 
     public function viewLogin()
     {
+        // 기본값
+        $this->viewFileLayout = "jinyauth"."::login.index";
+
+        // View 우선순위 처리
+        return $this->getViewFileLayout();
+
+        /*
         if(isset($this->setting['view']['login'])) {
             if($this->setting['view']['login']) {
                 $viewfile = $this->setting['view']['login'];
@@ -70,6 +83,7 @@ class LoginViewController extends Controller
 
         $viewFile = "jinyauth"."::login.index";
         return $viewFile;
+        */
     }
 
     public function viewLoginDisable()
@@ -99,8 +113,5 @@ class LoginViewController extends Controller
 
         return false;
     }
-
-
-
 
 }

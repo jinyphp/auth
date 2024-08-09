@@ -76,6 +76,11 @@
                 </div>
             </div>
         </x-page-center>
+
+        {{-- 사이트 설정 --}}
+        <x-set-actions></x-set-actions>
+        <x-site-setting></x-site-setting>
+
     </x-bootstrap>
 </x-app>
 

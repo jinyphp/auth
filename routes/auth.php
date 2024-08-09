@@ -4,6 +4,7 @@ use Illuminate\Http\Request;
 //use Jiny\Fortify\Features;
 //use Jiny\Fortify\RoutePath;
 
+
 /**
  * 로그인 처리
  */
@@ -12,6 +13,12 @@ use Jiny\Auth\Http\Controllers\LoginViewController;
 Route::get('/login', [LoginViewController::class, 'index'])
     ->middleware(['web', 'guest'])
     ->name('login');
+
+// 로그인 잠시 중단 페이지
+use Jiny\Auth\Http\Controllers\LoginDisable;
+Route::get('/login/disable', [LoginDisable::class, 'index'])
+    ->middleware(['web', 'guest'])
+    ->name('login.disable');
 
 // 로그인 확인절차 진행
 use Jiny\Auth\Http\Controllers\AuthSessionController;
