@@ -10,10 +10,14 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\View;
 use Carbon\Carbon;
 
+/**
+ * 로그인 화면 처리 컨트롤러
+ */
 use Jiny\Site\Http\Controllers\SiteController;
 class LoginViewController extends SiteController
 {
     public $setting = [];
+    public $login = [];
 
     public function __construct()
     {
@@ -21,6 +25,7 @@ class LoginViewController extends SiteController
         $this->setVisit($this);
 
         $this->setting = config("jiny.auth.setting");
+        $this->login = config("jiny.auth.login");
     }
 
     /**
@@ -31,10 +36,12 @@ class LoginViewController extends SiteController
     {
         // 로그인을 허용하는 경우
         if($this->isLoginEnable()) {
+            //dd("enabled");
             $viewFile = $this->viewLogin();
 
             return view($viewFile,[
-                'setting'=>$this->setting
+                'setting' => $this->setting,
+                'login' => $this->login
             ]);
         }
 
@@ -42,50 +49,32 @@ class LoginViewController extends SiteController
         return redirect()->route('login.disable');
     }
 
+    ## 로그인 화면 viewFile
     public function viewLogin()
     {
         // 기본값
-        $this->viewFileLayout = "jinyauth"."::login.index";
+        $default = "jinyauth::login.index";
 
         // View 우선순위 처리
-        return $this->getViewFileLayout();
+        // 1. actions -> 절대경로 -> slot경로 -> www:: -> theme -> resources/views
+        // 2. viewFileLayout 프로퍼티 ->
+        // 3. default
+        if($viewFile = $this->getViewFileLayout()) {
+            return $viewFile;
+        }
 
-        /*
-        if(isset($this->setting['view']['login'])) {
-            if($this->setting['view']['login']) {
-                $viewfile = $this->setting['view']['login'];
-                if (View::exists($viewfile)) {
-                    return $viewfile;
-                }
+        // 3. 우선순위 추가
+        // auth layout 환경설정 파일 읽기
+        if($layout = config("jiny.auth.layout")) {
+            if(isset($layout['login']) && $layout['login']) {
+                return $layout['login'];
             }
         }
 
-        // 2. 사이트 리소스
-        // Site빌더가 설치되어 있고, 리소스가 존재하는 경우
-        // if(View::exists("www::login")) {
-        //     return "www::login";
-        // }
-
-        ## 우선순위3
-        ## www의 슷롯 regist/index 화면
-        $prefix = "www";
-        if($slot = www_slot()) {
-            if(View::exists($prefix."::".$slot.".login.index")) {
-                return $prefix."::".$slot.".login.index";
-            }
-        } else {
-            // 슬롯이 지정되어 있지 않는 경우
-            if(View::exists($prefix."::login.index")) {
-                return $prefix."::login.index";
-            }
-        }
-
-
-        $viewFile = "jinyauth"."::login.index";
-        return $viewFile;
-        */
+        return $default;
     }
 
+    /*
     public function viewLoginDisable()
     {
         if(isset($this->setting['login']['disable'])) {
@@ -102,16 +91,24 @@ class LoginViewController extends SiteController
         $view = "jinyauth::login.disable";
         return $view;
     }
+    */
 
     private function isLoginEnable()
     {
+        // 1차검사
+        if(isset($this->login['disable']) && $this->login['disable']) {
+            return false;
+        }
+
+        // 2차검사
         if(isset($this->setting['login']['enable'])) {
             if($this->setting['login']['enable']) {
                 return true;
             }
         }
 
-        return false;
+        // 로그인 접속을 허용합니다.
+        return true;
     }
 
 }
