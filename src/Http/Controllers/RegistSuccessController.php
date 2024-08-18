@@ -13,17 +13,22 @@ use Illuminate\Validation\Rules;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\Facades\DB;
 
-class RegistSuccessController extends Controller
+use Jiny\Site\Http\Controllers\SiteController;
+class RegistSuccessController extends SiteController
 {
-
     public $setting=[];
+    public $regist=[];
 
     public function __construct()
     {
+        parent::__construct();
+        $this->setVisit($this);
+
         $this->setting = config("jiny.auth.setting");
+        $this->regist = config("jiny.auth.regist");
     }
 
-    public function index()
+    public function index(Request $request)
     {
         $user = Auth::user();
         if($this->isRegistSuccess()) {
@@ -38,6 +43,7 @@ class RegistSuccessController extends Controller
         }
 
 
+        /*
         // 6.리다이렉트 처리
         $redirect_url = $this->isSetLoginHome();
 
@@ -52,6 +58,7 @@ class RegistSuccessController extends Controller
         }
 
         return redirect($redirect_url);
+        */
 
 
     }
@@ -80,13 +87,19 @@ class RegistSuccessController extends Controller
 
     private function viewSuccess()
     {
-        if(isset($this->setting['success']['view'])) {
-            if($this->setting['success']['view']) {
-                return $this->setting['success']['view'];
+        if(isset($this->regist['success']['view'])) {
+            if($this->regist['success']['view']) {
+                return $this->regist['success']['view'];
             }
         }
 
-        return "jinyauth::login.success";
+        // if(isset($this->setting['success']['view'])) {
+        //     if($this->setting['success']['view']) {
+        //         return $this->setting['success']['view'];
+        //     }
+        // }
+
+        return "jinyauth::regist.success";
     }
 
     private function isRegistSuccess()

@@ -1,5 +1,6 @@
 <x-app>
     <x-bootstrap>
+
         <div class="d-flex justify-content-center align-items-center flex-column"
             style="height: 100vh;">
 
@@ -45,6 +46,11 @@
             </div>
 
         </div>
+
+        {{-- 관리자 제어판 --}}
+        <x-set-actions></x-set-actions>
+        <x-site-setting></x-site-setting>
+
     </x-bootstrap>
 </x-app>
 

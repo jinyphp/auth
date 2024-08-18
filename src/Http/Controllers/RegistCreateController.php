@@ -23,10 +23,14 @@ class RegistCreateController extends Controller
     use Notifiable;
 
     public $setting=[];
+    public $regist=[];
+
+    public $messages = [];
 
     public function __construct()
     {
         $this->setting = config("jiny.auth.setting");
+        $this->regist = config("jiny.auth.regist");
     }
 
 
@@ -35,49 +39,72 @@ class RegistCreateController extends Controller
      */
     public function store(Request $request)
     {
-
         $pass = false;
 
         // 1.유효성 검사
+        /*
         $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'email', 'max:255', 'unique:users'],
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
         ]);
+        */
 
         // 증복된 회원인지 검사
         if($user = $this->isDatabaseUser($request->email)) {
 
             // 가입된 회원 이메일 주소 입니다.
+            $this->messages []= $request->email." 는 이미 가입된 회원 이메일 입니다.";
+            //session()->flash('errors', $this->messages);
+
+            // dd("이미 가입된 회원 이메일 입니다.");
+            //return redirect("/register");
+            return view("jinyauth::regist.error",[
+                'messages' => $this->messages
+            ]);
 
         } else {
             // 신규 유저 임시 DB등록
             $user = $this->createNewUser($request);
+            if($user) {
+                $this->messages []= "임시 회원을 등록하였습니다.";
+            }
+
 
             // 이메일 검증여부 확인처리
             if($this->isSetVerified()) {
+                $this->messages []= "이메일 검증이 필요합니다.";
+
                 // 회원 검증 이메일 발송
                 // 회원 검증을 하시길 바랍니다.
                 //$user_id = $user->id;
                 //User::find($user_id);
 
                 $this->sendEmailVerificationNotification($user);
+                $this->messages []= "검증 이메일을 발송합니다.";
 
                 // 이메일 검증 안내 화면으로 이동
                 return redirect("/register/verified");
+
             } else {
+
                 // 검증이 필요없는 경우, 바로 회원가입 처리
+                $pass = true;
+
+                // 회원 가입 축하 이메일 발송
                 if($this->isSetRegistMail()) {
-                    // 회원 가입 축하 이메일 발송
                     $user->notify(new WelcomeEmailNotification($user));
                 }
 
-                $pass = false;
+
             }
 
         }
 
+        ## 임시 가입처리가 완료된 경우
+        ## 실제 로그인 처리를 진행함
         if($pass) {
+
             // 3.회원인증
             // 자동 인증설정 처리
             if($this->isNeedAuth()) {
@@ -102,12 +129,15 @@ class RegistCreateController extends Controller
                 // 7.페이지 이동
                 // 성공페이지 설정시
                 if($this->isRegistSuccess()) {
-                    // 성공 화면 페이지 출력
-                    $viewFile = $this->viewSuccess();
+                    // 성공 화면 페이지로
+                    // return redirect("/register/success");
 
+
+                    $viewFile = $this->viewSuccess();
                     return view($viewFile,[
                         'user'=>$user
                     ]);
+
                 }
 
                 // 홈 설정시
@@ -305,7 +335,9 @@ class RegistCreateController extends Controller
     }
 
 
-
+    /**
+     * DB에 회원 이메일이 존재하는지 확인
+     */
     private function isDatabaseUser($email)
     {
         $user = DB::table('users')->where('email', $email)->first();

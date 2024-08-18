@@ -1,32 +1,18 @@
 <x-app>
     <x-bootstrap>
-        <x-page-center>
-            <div class="text-center mt-4">
-                <h1 class="h2">회원 가입신청</h1>
-                <p class="lead"></p>
-            </div>
 
-            <div class="card">
-                <div class="card-body">
+        <!-- 회원가입 -->
+        <div class="container">
 
-                    @includeIf('jinyauth::regist.form',[
-                        'setting'=>$setting
-                        ])
+            <x-page-center>
+                @includeIf('jinyauth::regist.main',['setting'=>$setting])
+            </x-page-center>
 
-                    <div class="text-center">
-                        <a href="/login">로그인</a>
-                    </div>
+        </div>
 
-                    @includeIf('jinyauth::regist.social',[
-                        'setting'=>$setting
-                        ])
+        {{-- 관리자 제어판 --}}
+        <x-set-actions></x-set-actions>
+        <x-site-setting></x-site-setting>
 
-                </div>
-            </div>
-            <div class="text-center mb-3">
-                Copyright all right reserved JinyPHP
-            </div>
-        </x-page-center>
     </x-bootstrap>
 </x-app>
-

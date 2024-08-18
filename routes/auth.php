@@ -25,13 +25,16 @@ use Jiny\Auth\Http\Controllers\AuthSessionController;
 Route::post('/login', [AuthSessionController::class, 'store'])
     ->middleware(['web', 'guest']);
 
-// 로그아웃
+/**
+ * 로그아웃
+ */
 use Jiny\Auth\Http\Controllers\LogoutSessionController;
 Route::get('/logout', [LogoutSessionController::class, 'destroy'])
     ->middleware(['web'])
     ->name('logout');
 Route::post('/logout', [LogoutSessionController::class, 'destroy'])
     ->middleware(['web']);
+
 
 /**
  * 회원가입
@@ -45,6 +48,7 @@ Route::get('/register/agree', [AgreeViewController::class, 'index'])
 use Jiny\Auth\Http\Controllers\AgreeStoreController;
 Route::post('/register/agree', [AgreeStoreController::class, 'store'])
     ->middleware(['web', 'guest']);
+
 
 // 회원가입 화면
 use Jiny\Auth\Http\Controllers\RegistViewController;
@@ -60,7 +64,7 @@ Route::get('/register/reject', [RegistRejectController::class, 'index'])
 
 
 
-// 회원가입 절차
+// 회원가입 절차를 진행합니다.
 use Jiny\Auth\Http\Controllers\RegistCreateController;
 Route::post('/register', [RegistCreateController::class, 'store'])
     ->middleware(['web', 'guest'])
