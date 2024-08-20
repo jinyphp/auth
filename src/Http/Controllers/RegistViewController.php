@@ -107,6 +107,7 @@ class RegistViewController extends SiteController
         ## 우선순위4
         ## 페키지 기본 화면
         $viewfile = 'jinyauth::regist.index'; // 기본값
+        $viewfile = 'jinyauth::regist.signup'; // 기본값
         return $viewfile;
     }
 
