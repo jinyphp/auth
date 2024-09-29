@@ -1,4 +1,31 @@
-<!-- Quick Links -->
+<div class="row">
+    <div class="col-xl-6 col-xxl-5 d-flex">
+        <div class="w-100">
+            <div class="row">
+                <div class="col-sm-6">
+                    @includeIf("jinyauth::admin.dashboard.user_count")
+                    @includeIf("jinyauth::admin.dashboard.country")
+                </div>
+                <div class="col-sm-6">
+                    @includeIf("jinyauth::admin.dashboard.teams")
+                    @includeIf("jinyauth::admin.dashboard.status")
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-6 col-xxl-7">
+        <div class="card" >
+            <div class="card-body">
+                {{-- @includeIf("jinyauth::admin.dashboard.chart") --}}
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<x-ui-divider>회원 설정</x-ui-divider>
+
 <div class="row">
     <div class="col-3">
         <div class="card">
@@ -6,35 +33,8 @@
                 <x-flex-between>
                     <div>
                         <h5 class="card-title">
-                            <a href="/admin/auth">
-                            가입/인증
-                            </a>
-                        </h5>
-                        <h6 class="card-subtitle text-muted">
-                            회원 인증을 처리합니다.
-                        </h6>
-                    </div>
-                    <div>
-                        @icon("info-circle.svg")
-                    </div>
-                </x-flex-between>
-            </div>
-            <div class="card-body">
-                <x-badge-secondary>동의서</x-badge-secondary>
-                <x-badge-secondary>동의서로그</x-badge-secondary>
-                <x-badge-info>설정</x-badge-info>
-            </div>
-        </div>
-    </div>
-
-    <div class="col-3">
-        <div class="card">
-            <div class="card-header">
-                <x-flex-between>
-                    <div>
-                        <h5 class="card-title">
-                            <a href="/admin/auth">
-                            회원관리
+                            <a href="/admin/auth/agree">
+                            동의서
                             </a>
                         </h5>
                         <h6 class="card-subtitle text-muted">
@@ -47,50 +47,27 @@
                 </x-flex-between>
             </div>
             <div class="card-body">
-                <x-badge-primary>회원목록</x-badge-primary>
-                <x-badge-primary>등급</x-badge-primary>
-                <x-badge-danger>예약어</x-badge-danger>
-                <x-badge-danger>블렉리스트</x-badge-danger>
 
-                <x-badge-info>국가</x-badge-info>
-
-                <x-badge-info>휴면회원</x-badge-info>
+                <x-badge-info>
+                    <a href="/admin/auth/agree/log">
+                    동의로그
+                    </a>
+                </x-badge-info>
             </div>
         </div>
     </div>
 
     <div class="col-3">
         <div class="card">
-            <div class="card-header border-bottom">
+            <div class="card-header">
                 <x-flex-between>
                     <div>
-                        <h5 class="card-title">프로필관리</h5>
-                        <h6 class="card-subtitle text-muted">
-                            회원 프로필을 관리합니다.
-                        </h6>
-                    </div>
-                    <div>
-                        @icon("info-circle.svg")
-                    </div>
-                </x-flex-between>
-            </div>
-            <div class="list-group list-group-flush" role="tablist">
-                <a class="list-group-item list-group-item-action"
-                    href="#">
-                    avata 이미지
-                </a>
-            </div>
-        </div>
-    </div>
+                        <h5 class="card-title">
+                            회원 유형
 
-    <div class="col-3">
-        <div class="card">
-            <div class="card-header border-bottom">
-                <x-flex-between>
-                    <div>
-                        <h5 class="card-title">권환관리</h5>
+                        </h5>
                         <h6 class="card-subtitle text-muted">
-                            회원별 권환을 부여할 수 있습니다.
+
                         </h6>
                     </div>
                     <div>
@@ -99,11 +76,99 @@
                 </x-flex-between>
             </div>
             <div class="card-body">
-                <x-badge-primary>권환등급</x-badge-primary>
+                <x-badge-info>
+                    <a href="/admin/auth/grade">
+                        등급
+                    </a>
+                </x-badge-info>
+
+                <x-badge-info>
+                    <a href="/admin/auth/roles">
+                        권환
+                    </a>
+                </x-badge-info>
+
+
+
+
             </div>
         </div>
     </div>
 
+
+    <div class="col-3">
+        <div class="card">
+            <div class="card-header">
+                <x-flex-between>
+                    <div>
+                        <h5 class="card-title">
+                            회원제한
+                        </h5>
+                        <h6 class="card-subtitle text-muted">
+                            회원의 가입을 제한합니다.
+                        </h6>
+                    </div>
+                    <div>
+                        @icon("info-circle.svg")
+                    </div>
+                </x-flex-between>
+            </div>
+            <div class="card-body">
+                <x-badge-danger>
+                    <a href="/admin/auth/reserved">
+                        예약어
+                    </a>
+                </x-badge-danger>
+                <x-badge-danger>
+                    <a href="/admin/auth/blacklist">
+                        블렉리스트
+                    </a>
+                </x-badge-danger>
+
+            </div>
+        </div>
+    </div>
+
+    <div class="col-3">
+        <div class="card">
+            <div class="card-header">
+                <x-flex-between>
+                    <div>
+                        <h5 class="card-title">
+                            회원지역
+                        </h5>
+                        <h6 class="card-subtitle text-muted">
+                            회원별 지역을 관리합니다.
+                        </h6>
+                    </div>
+                    <div>
+                        @icon("info-circle.svg")
+                    </div>
+                </x-flex-between>
+            </div>
+            <div class="card-body">
+                <x-badge-info>
+                    <a href="/admin/auth/locale">
+                        지역
+                    </a>
+                </x-badge-info>
+
+            </div>
+        </div>
+    </div>
+
+
+
+
+
+
+</div>
+
+@includeIf("jiny-profile::admin.dash")
+
+<x-ui-divider>소셜 로그인</x-ui-divider>
+
+<div class="row">
     <div class="col-3">
         <div class="card">
             <div class="card-header border-bottom">
@@ -121,34 +186,10 @@
             </div>
             <div class="list-group list-group-flush" role="tablist">
                 <a class="list-group-item list-group-item-action"
-                    href="#">
+                    href="/admin/auth/social">
                     연동목록
                 </a>
             </div>
         </div>
     </div>
-
-    <div class="col-3">
-        <div class="card">
-            <div class="card-header">
-                <x-flex-between>
-                    <div>
-                        <h5 class="card-title">
-                            <a href="/admin/module/teams">
-                                팀관리
-                            </a>
-                        </h5>
-                        <h6 class="card-subtitle text-muted">
-                            등록된 회원을 그룹화 하여 팀을 운영합니다.
-                        </h6>
-                    </div>
-                    <div>
-                        @icon("info-circle.svg")
-                    </div>
-                </x-flex-between>
-            </div>
-        </div>
-    </div>
-
 </div>
-

@@ -57,6 +57,7 @@ class JinyAuthServiceProvider extends ServiceProvider
         Blade::component($this->package.'::components.'.'update-password', 'profile-update-password');
 
         // 로그인 버튼링크
+        Blade::component($this->package.'::components.'.'login.link', 'login-link');
         Blade::component($this->package.'::components.'.'link_login', 'link-login');
 
         // 회원가입 버튼링크

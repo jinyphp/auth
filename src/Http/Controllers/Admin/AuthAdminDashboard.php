@@ -20,26 +20,11 @@ class AuthAdminDashboard extends WireDashController
 
         $this->actions['view']['main'] = "jinyauth::admin.dashboard.main";
 
-        $this->actions['title'] = "JinyPHP Auth";
-        $this->actions['subtitle'] = "회원 가입 및 인증을 관리합니다.";
+        $this->actions['title'] = "회원관리";
+        $this->actions['subtitle'] = "가입된 회원을 관리합니다.";
 
-        //setMenu('menus/site.json');
-        setTheme("admin/sidebar");
     }
 
-    /*
-    public function index(Request $request)
-    {
-        // 지니테마가 설치되어 있는지 확인
-        if(function_exists("getThemeName")) {
 
-            // 테마의 view를 출력
-            return view("jiny-admin::dashboard.theme");
-        }
-
-        $viewFile = "jiny-admin"."::dashboard.index";
-        return view($viewFile);
-    }
-        */
 
 }

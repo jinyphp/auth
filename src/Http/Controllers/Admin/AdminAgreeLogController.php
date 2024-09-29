@@ -11,8 +11,8 @@ use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Schema;
 
-use Jiny\Auth\Http\Controllers\AdminController;
-class AdminAgreeLogController extends AdminController
+use Jiny\WireTable\Http\Controllers\WireTablePopupForms;
+class AdminAgreeLogController extends WireTablePopupForms
 {
     public function __construct()
     {
@@ -26,6 +26,8 @@ class AdminAgreeLogController extends AdminController
         $this->actions['view']['list'] = "jinyauth::admin.agreement_log.list";
         $this->actions['view']['form'] = "jinyauth::admin.agreement_log.form";
 
+        $this->actions['title'] = "동의서 Log";
+        $this->actions['subtitle'] = "";
     }
 
 

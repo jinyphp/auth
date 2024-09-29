@@ -2,7 +2,12 @@
 라라벨 기반의 인증을 확장한 모듈입니다. 기본 인증 뿐만 아니라, 회원을 관리할 수 있는 Admin 기능을 가지고 있습니다.
 
 ## 설치
+기본 라라벨 회원 테이블을 확장하여 보다 향상된 회원인증을 처리할 수 있습니다.
 
+```bash
+composer require jiny/auth
+```
+> 의존성 : `jiny/auth-users`,`jiny/auth-profile`,`jiny/auth-social` 
 
 
 ## 설정

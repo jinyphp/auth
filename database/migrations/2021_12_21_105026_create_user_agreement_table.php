@@ -21,6 +21,9 @@ class CreateUserAgreementTable extends Migration
             $table->string('required')->default(1);
 
             $table->string('title');
+            $table->string('slug')->nullable();
+            $table->string('blade')->nullable();
+
             $table->text('content')->nullable();
             $table->integer('pos')->default(1);
 

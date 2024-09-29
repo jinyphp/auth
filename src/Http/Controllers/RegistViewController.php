@@ -58,6 +58,7 @@ class RegistViewController extends SiteController
         ## 3.회원가입
         ## 회원을 가입 처리 합니다.
         $viewfile = $this->viewRegist();
+        //dd($viewfile);
         return view($viewfile,[
             'setting'=>$this->setting
         ]);
@@ -68,20 +69,41 @@ class RegistViewController extends SiteController
 
         ## 우선순위 1
         ## 환경설정에서 화면을 지정하는 경우
-        if(isset($this->setting['regist']['view'])) {
-            if($this->setting['regist']['view']) {
-                return $this->setting['regist']['view'];
+        // if(isset($this->setting['regist']['view'])) {
+        //     if($this->setting['regist']['view']) {
+        //         return $this->setting['regist']['view'];
+        //     }
+        // }
+
+        // 기본값
+        $default = "jinyauth::regist.index";
+
+        // View 우선순위 처리
+        // 1. actions -> 절대경로 -> slot경로 -> www:: -> theme -> resources/views
+        // 2. viewFileLayout 프로퍼티 ->
+        // 3. default
+        if($viewFile = $this->getViewFileLayout()) {
+            return $viewFile;
+        }
+
+        // 3. 우선순위 추가
+        // auth layout 환경설정 파일 읽기
+        if($layout = config("jiny.auth.layout")) {
+            if(isset($layout['regist']) && $layout['regist']) {
+                return $layout['regist'];
             }
         }
+
+        return $default;
 
 
         ## 우선순위2
         ## Actions 설정값
-        if(isset($this->actions['view']['layout'])) {
-            if($this->actions['view']['layout']) {
-                return $this->actions['view']['layout'];
-            }
-        }
+        // if(isset($this->actions['view']['layout'])) {
+        //     if($this->actions['view']['layout']) {
+        //         return $this->actions['view']['layout'];
+        //     }
+        // }
 
         /*
         if(is_module("Site")) {
@@ -91,6 +113,7 @@ class RegistViewController extends SiteController
 
         ## 우선순위3
         ## www의 슷롯 regist/index 화면
+        /*
         $prefix = "www";
         if($slot = www_slot()) {
             if(View::exists($prefix."::".$slot.".regist.index")) {
@@ -102,13 +125,13 @@ class RegistViewController extends SiteController
                 return $prefix."::regist.index";
             }
         }
+        */
 
 
         ## 우선순위4
         ## 페키지 기본 화면
-        $viewfile = 'jinyauth::regist.index'; // 기본값
-        $viewfile = 'jinyauth::regist.signup'; // 기본값
-        return $viewfile;
+        // $viewfile = 'jinyauth::regist.index'; // 기본값
+        // return $viewfile;
     }
 
     // 회원가입전, 동의서 체크

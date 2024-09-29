@@ -17,12 +17,24 @@ if(function_exists("isAdminPackage")) {
     ->name('admin.auth')
     ->prefix($prefix.'/auth')->group(function () {
 
+        // 데시보드
         Route::get('/', [
             Jiny\Auth\Http\Controllers\Admin\AuthAdminDashboard::class,
             'index']);
 
-        Route::resource('agree',\Jiny\Auth\Http\Controllers\Admin\AgreeController::class);
-        Route::resource('agreement/log',\Jiny\Auth\Http\Controllers\Admin\AdminAgreeLogController::class);
+        // 사용자목록
+        Route::get('/users',[
+            \Jiny\Auth\Http\Controllers\Admin\UserController::class,
+            'index']);
+
+
+        // 동의서
+        Route::get('/agree',[
+            \Jiny\Auth\Http\Controllers\Admin\AgreeController::class,
+            'index']);
+        Route::get('/agree/log',[
+            \Jiny\Auth\Http\Controllers\Admin\AdminAgreeLogController::class,
+            'index']);
 
 
          ## 설정
