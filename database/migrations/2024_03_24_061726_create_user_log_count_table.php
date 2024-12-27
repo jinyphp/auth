@@ -21,6 +21,8 @@ class CreateUserLogCountTable extends Migration
 
             // 사용자 번호
             $table->unsignedBigInteger('user_id')->default(0);
+            $table->string('email')->nullable();
+            $table->string('name')->nullable();
 
             $table->string('year')->nullable();
             $table->string('month')->nullable();

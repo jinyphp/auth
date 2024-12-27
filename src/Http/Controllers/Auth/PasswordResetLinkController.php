@@ -51,7 +51,7 @@ class PasswordResetLinkController extends Controller
             }
         }
 
-        $viewfile = 'jinyauth::password.forget.layout'; // 기본값
+        $viewfile = 'jiny-auth::password.forget.layout'; // 기본값
         return $viewfile;
     }
 

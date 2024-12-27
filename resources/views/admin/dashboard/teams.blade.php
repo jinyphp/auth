@@ -3,7 +3,7 @@
         <x-flex-between>
             <div>
                 <h5 class="card-title">
-                    <a href="/admin/module/teams">
+                    <a href="#">
                         팀관리
                     </a>
                 </h5>

@@ -20,7 +20,7 @@ class SettingController extends ConfigController
 
         ##
         $this->actions['filename'] = "jiny/auth/setting"; // 설정파일명(경로)
-        $this->actions['view']['form'] = "jinyauth::admin.setting.form";
+        $this->actions['view']['form'] = "jiny-auth::admin.setting.form";
 
         $this->actions['title'] = "인증설정";
     }

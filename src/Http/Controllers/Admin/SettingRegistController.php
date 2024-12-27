@@ -19,7 +19,7 @@ class SettingRegistController extends ConfigController
         $this->setVisit($this);
 
         $this->actions['filename'] = "jiny/auth/setting"; // 설정파일명(경로)
-        $this->actions['view']['form'] = "jinyauth::admin.setting.regist";
+        $this->actions['view']['form'] = "jiny-auth::admin.setting.regist";
 
         $this->actions['title'] = "회원가입 설정";
         $this->actions['subtitle'] = "회원 가입을 위한 다양한 설정을 지정할 수 있습니다.";

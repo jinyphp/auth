@@ -28,8 +28,13 @@ class CreateUserAgreementTable extends Migration
             $table->integer('pos')->default(1);
 
             $table->text('description')->nullable();
+
             // 작업자ID
+            $table->string('manager')->nullable();
             $table->unsignedBigInteger('user_id')->default(0);
+
+            // 동의한 회원수
+            $table->integer('users')->default(0);
         });
     }
 

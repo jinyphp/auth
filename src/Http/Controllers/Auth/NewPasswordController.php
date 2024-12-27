@@ -20,7 +20,7 @@ class NewPasswordController extends Controller
      */
     public function create(Request $request)
     {
-        $viewFile = "jinyauth::password.reset";
+        $viewFile = "jiny-auth::password.reset";
         return view($viewFile, ['request' => $request]);
     }
 

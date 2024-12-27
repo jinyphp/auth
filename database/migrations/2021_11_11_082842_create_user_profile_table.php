@@ -13,19 +13,22 @@ class CreateUserProfileTable extends Migration
      */
     public function up()
     {
-        Schema::create('userProfile', function (Blueprint $table) {
+        Schema::create('user_profile', function (Blueprint $table) {
             $table->id();
             $table->timestamps();
 
             $table->unsignedBigInteger('user_id');
-            $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
+            $table->string('firstname')->nullable();
+            $table->string('lastname')->nullable();
+
+            $table->string('description')->nullable();
+
+            $table->string('skill')->nullable();
+
 
             $table->string('country')->nullable();
             $table->string('language')->nullable();
             $table->string('timezone')->nullable();
-
-            $table->string('firstname')->nullable();
-            $table->string('lastname')->nullable();
 
             $table->string('phone')->nullable();
             $table->string('mobile')->nullable();
@@ -34,6 +37,8 @@ class CreateUserProfileTable extends Migration
             $table->string('post')->nullable();
             $table->string('address1')->nullable();
             $table->string('address2')->nullable();
+
+
         });
     }
 
@@ -44,8 +49,6 @@ class CreateUserProfileTable extends Migration
      */
     public function down()
     {
-        Schema::table('userProfile', function (Blueprint $table) {
-            Schema::dropIfExists('userProfile');
-        });
+        Schema::dropIfExists('user_profile');
     }
 }

@@ -25,6 +25,8 @@ return new class extends Migration
 
             $table->text('description')->nullable();
 
+            $table->unsignedBigInteger('users')->default(0);
+
         });
     }
 

@@ -78,7 +78,7 @@ class DeleteUserForm extends Component
      */
     public function render()
     {
-        $viewFile = "jinyauth::profile.delete-user-form";
+        $viewFile = "jiny-auth::profile.delete-user-form";
         return view($viewFile);
     }
 }

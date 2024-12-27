@@ -16,11 +16,11 @@ class AuthRegistForm extends Component
     public function mount()
     {
         if(!$this->viewFile) {
-            $this->viewFile = "jinyauth::regist.form_layout";
+            $this->viewFile = "jiny-auth::regist.form_layout";
         }
 
         if(!$this->viewForm) {
-            $this->viewForm = "jinyauth::regist.form";
+            $this->viewForm = "jiny-auth::regist.form";
         }
     }
 

@@ -16,11 +16,11 @@ class AuthLoginForm extends Component
     public function mount()
     {
         if(!$this->viewFile) {
-            $this->viewFile = "jinyauth::login.form_layout";
+            $this->viewFile = "jiny-auth::login.form_layout";
         }
 
         if(!$this->viewForm) {
-            $this->viewForm = "jinyauth::login.form";
+            $this->viewForm = "jiny-auth::login.form";
         }
     }
 

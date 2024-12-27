@@ -9,26 +9,35 @@
             </x-navtab-link>
 
 
-
             <x-form-hor>
-                <x-form-label>User_id</x-form-label>
+                <x-form-label>동의서</x-form-label>
                 <x-form-item>
-                    {!! xInputText()
-                        ->setWire('model.defer',"forms.user_id")
+                    {{-- {!! xInputText()
+                        ->setWire('model.defer',"forms.agree_id")
                         ->setWidth("standard")
-                    !!}
+                    !!} --}}
+                    <select class="form-control" wire:model="forms.agree">
+                        <option value="">동의서 선택</option>
+                        @foreach (DB::table('user_agreement')->get() as $item)
+                            <option value="{{ $item->id }}:{{ $item->title }}">
+                                {{ $item->title }}
+                            </option>
+                        @endforeach
+                    </select>
                 </x-form-item>
             </x-form-hor>
 
 
-
             <x-form-hor>
-                <x-form-label>Agree_id</x-form-label>
+                <x-form-label>이메일</x-form-label>
                 <x-form-item>
-                    {!! xInputText()
-                        ->setWire('model.defer',"forms.agree_id")
+                    <input type="text" class="form-control"
+                        wire:model="forms.email">
+
+                    {{-- {!! xInputText()
+                        ->setWire('model.live',"forms.email")
                         ->setWidth("standard")
-                    !!}
+                    !!} --}}
                 </x-form-item>
             </x-form-hor>
 
@@ -36,7 +45,7 @@
                 <x-form-label>동의여부</x-form-label>
                 <x-form-item>
                     {!! xCheckbox()
-                        ->setWire('model.defer',"forms.agree")
+                        ->setWire('model.defer',"forms.checked")
                     !!}
                 </x-form-item>
             </x-form-hor>

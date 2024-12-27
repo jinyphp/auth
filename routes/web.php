@@ -4,13 +4,6 @@ use Illuminate\Http\Request;
 
 
 
-/**
- * 휴면 회원 표시
- */
-Route::get('/login/sleeper',[
-    \Jiny\Auth\Http\Controllers\Auth\UserSleeperController::class,
-    'index'])->middleware(['web'])->name('login.sleeper');
-
 
 
 /**
@@ -23,21 +16,27 @@ Route::get('/dashboard', function () {
 */
 
 // 인증처리
-include(__DIR__.DIRECTORY_SEPARATOR."auth.php");
+//include(__DIR__.DIRECTORY_SEPARATOR."auth.php");
 
 // 인증 관리자 페이지
-include(__DIR__.DIRECTORY_SEPARATOR."admin.php");
+//include(__DIR__.DIRECTORY_SEPARATOR."admin.php");
 
 //
 // Route::get('_admin/test', [\Jiny\Auth\Http\Controllers\Admin\AdminTestController::class, 'index'])
 // ->middleware(['web', 'auth','admin']);
 
-/**
- * 비밀번호 만료
- */
-Route::get('/account/password/expire', function(){
-    return view("www::password_expire");
-})
-->middleware(['web', 'auth']);
 
 
+Route::middleware(['web','auth'])
+->name('home')
+->prefix('home')->group(function () {
+    Route::get('/terms',[
+        \Jiny\Auth\Http\Controllers\Home\HomeUserTerms::class,
+        'index'
+    ]);
+
+    Route::get('/',[
+        \Jiny\Auth\Http\Controllers\Home\HomeController::class,
+        'index'
+    ]);
+});

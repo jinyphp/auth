@@ -5,7 +5,7 @@
         <div class="container">
 
             <x-page-center>
-                @includeIf('jinyauth::regist.main',[
+                @includeIf('jiny-auth::regist.main',[
                     'setting'=>$setting
                     ])
             </x-page-center>

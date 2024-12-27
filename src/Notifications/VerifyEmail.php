@@ -77,11 +77,19 @@ class VerifyEmail extends Notification
      */
     protected function buildMailMessage($url)
     {
+        // return (new MailMessage)
+        //     ->subject(Lang::get('이메일 확인요청'))
+        //     ->line(Lang::get('Please click the button below to verify your email address.'))
+        //     ->action(Lang::get('Verify Email Address'), $url)
+        //     ->line(Lang::get('If you did not create an account, no further action is required.'));
+
         return (new MailMessage)
             ->subject(Lang::get('이메일 확인요청'))
-            ->line(Lang::get('Please click the button below to verify your email address.'))
             ->action(Lang::get('Verify Email Address'), $url)
-            ->line(Lang::get('If you did not create an account, no further action is required.'));
+            ->view(
+                'jiny-auth::emails.verify', // 새로 생성한 Blade 뷰
+                ['url' => $url] // 전달할 데이터
+            );
     }
 
     /**

@@ -112,7 +112,7 @@ class UpdateProfileInformationForm extends Component
      */
     public function render()
     {
-        $viewFile = "jinyauth::profile.update-profile-information-form";
+        $viewFile = "jiny-auth::profile.update-profile-information-form";
         return view($viewFile);
     }
 }

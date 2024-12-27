@@ -26,14 +26,14 @@ blade 컴포넌트 코드를 통하여 간단하게 로그인 입력폼 양식�
 
 ```php
 <x-login-form>
-    @includeIf('jinyauth::login.form')
+    @includeIf('jiny-auth::login.form')
 </x-login-form>
 ```
 
 `<x-login-form>` 는 서버로 로그인을 요청하는 post form 양식을 포함하고 있습니다. 
 
 ### 로그인폼 양식
-> 로그인 폼의 입력 양식은 `jinyauth::login.form`을 참고하면 됩니다.
+> 로그인 폼의 입력 양식은 `jiny-auth::login.form`을 참고하면 됩니다.
 
 로그인 화면을 쉽게 구현할 수 있도록 각각의 입력폼은 컨포넌트로 간소화 되어 있습니다.
 

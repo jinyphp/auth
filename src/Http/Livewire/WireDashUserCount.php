@@ -46,7 +46,7 @@ class WireDashUserCount extends Component
         }
 
 
-        return view("jinyauth::livewire.dash_user_count",[
+        return view("jiny-auth::livewire.dash_user_count",[
             'result' => $result
         ]);
     }

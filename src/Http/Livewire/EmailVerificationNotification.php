@@ -27,7 +27,7 @@ class EmailVerificationNotification extends Component
 
     public function render()
     {
-        return view('jinyauth::livewire.email_verification_notification');
+        return view('jiny-auth::verified.email_verification');
     }
 
     public function resend()

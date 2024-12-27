@@ -4,31 +4,45 @@ use Illuminate\Http\Request;
 //use Jiny\Fortify\Features;
 //use Jiny\Fortify\RoutePath;
 
+/**
+ * 사용자 라우트
+ */
 
 /**
  * 로그인 처리
  */
 // 로그인 화면출력
-use Jiny\Auth\Http\Controllers\LoginViewController;
-Route::get('/login', [LoginViewController::class, 'index'])
+use Jiny\Auth\Http\Controllers\Auth\LoginViewController;
+Route::get('/login', [
+    LoginViewController::class,
+    'index'])
     ->middleware(['web', 'guest'])
     ->name('login');
 
 // 로그인 잠시 중단 페이지
-use Jiny\Auth\Http\Controllers\LoginDisable;
-Route::get('/login/disable', [LoginDisable::class, 'index'])
+use Jiny\Auth\Http\Controllers\Auth\LoginDisable;
+Route::get('/login/disable', [
+    LoginDisable::class,
+    'index'])
     ->middleware(['web', 'guest'])
     ->name('login.disable');
 
-// 로그인 확인절차 진행
-use Jiny\Auth\Http\Controllers\AuthSessionController;
-Route::post('/login', [AuthSessionController::class, 'store'])
-    ->middleware(['web', 'guest']);
+
+// 로그인 절차를 진행합니다.
+Route::post('/login', [
+    \Jiny\Auth\Http\Controllers\Auth\AuthLoginSession::class,
+    'store'])->middleware(['web', 'guest']);
+
+
+use Jiny\Auth\Http\Controllers\Auth\PasswordExpireController;
+Route::get('/login/expired', [PasswordExpireController::class, 'index'])
+    ->middleware(['web', 'guest'])
+    ->name('login.expired');
 
 /**
  * 로그아웃
  */
-use Jiny\Auth\Http\Controllers\LogoutSessionController;
+use Jiny\Auth\Http\Controllers\Auth\LogoutSessionController;
 Route::get('/logout', [LogoutSessionController::class, 'destroy'])
     ->middleware(['web'])
     ->name('logout');
@@ -39,58 +53,58 @@ Route::post('/logout', [LogoutSessionController::class, 'destroy'])
 /**
  * 회원가입
  */
+
+
 // 약관동의서 출력
-use Jiny\Auth\Http\Controllers\AgreeViewController;
-Route::get('/register/agree', [AgreeViewController::class, 'index'])
+use Jiny\Auth\Http\Controllers\Auth\AgreeViewController;
+Route::get('/regist/agree', [AgreeViewController::class, 'index'])
     ->middleware(['web', 'guest'])
     ->name('agreement');
 
-use Jiny\Auth\Http\Controllers\AgreeStoreController;
-Route::post('/register/agree', [AgreeStoreController::class, 'store'])
+use Jiny\Auth\Http\Controllers\Auth\AgreeStoreController;
+Route::post('/regist/agree', [AgreeStoreController::class, 'store'])
     ->middleware(['web', 'guest']);
 
 
 // 회원가입 화면
-use Jiny\Auth\Http\Controllers\RegistViewController;
-Route::get('/register', [RegistViewController::class, 'index'])
+use Jiny\Auth\Http\Controllers\Auth\RegistViewController;
+Route::get('/regist', [RegistViewController::class, 'index'])
     ->middleware(['web', 'guest'])
     ->name('register');
 
-use Jiny\Auth\Http\Controllers\RegistRejectController;
-Route::get('/register/reject', [RegistRejectController::class, 'index'])
+use Jiny\Auth\Http\Controllers\Auth\RegistRejectController;
+Route::get('/regist/reject', [RegistRejectController::class, 'index'])
     ->middleware(['web', 'guest'])
-    ->name('register.reject');
-
-
+    ->name('regist.reject');
 
 
 // 회원가입 절차를 진행합니다.
-use Jiny\Auth\Http\Controllers\RegistCreateController;
-Route::post('/register', [RegistCreateController::class, 'store'])
+use Jiny\Auth\Http\Controllers\Auth\RegistCreateController;
+Route::post('/regist', [RegistCreateController::class, 'store'])
     ->middleware(['web', 'guest'])
-    ->name('register.create');
+    ->name('regist.create');
 
 // 회원가입 성공
-use Jiny\Auth\Http\Controllers\RegistSuccessController;
+use Jiny\Auth\Http\Controllers\Auth\RegistSuccessController;
 Route::get('/register/success', [RegistSuccessController::class, 'index'])
     ->middleware(['web', 'auth']);
 
-use Jiny\Auth\Http\Controllers\RegistAuthController;
-Route::get('/register/auth', [RegistAuthController::class, 'index'])
+use Jiny\Auth\Http\Controllers\Auth\RegistAuthController;
+Route::get('/regist/auth', [RegistAuthController::class, 'index'])
     ->middleware(['web', 'guest'])
-    ->name('register.auth');
+    ->name('regist.auth');
 
 
 /**
  * 회원 이메일 검증
  */
 // 회원 이메일 검증상태를 안내하는 화면
-use Jiny\Auth\Http\Controllers\RegistVerifiedController;
-Route::get('/register/verified', [
+use Jiny\Auth\Http\Controllers\Auth\RegistVerifiedController;
+Route::get('/regist/verified', [
     RegistVerifiedController::class,
     'index'])
     ->middleware(['web', 'guest'])
-    ->name('register.verified');
+    ->name('regist.verified');
 
 
 
@@ -127,51 +141,9 @@ Route::get('/register/email/verify/{id}/{hash}', [
 
 
 
-
 /**
- * 비밀번호 설정
+ * 휴면 회원 표시
  */
-// 비밀번호 찾기화면
-use Jiny\Auth\Http\Controllers\Auth\PasswordResetLinkController;
-Route::get('/login/password/forgot', [
-        PasswordResetLinkController::class,
-        'create'])
-    ->middleware(['web', 'guest'])
-    ->name('password.request');
-// Post 절차
-Route::post('/login/forgot-password', [
-        PasswordResetLinkController::class,
-        'store'])
-    ->middleware('guest')
-    ->name('password.email');
-
-
-// 페스워드 재설정 링크
-use Jiny\Auth\Http\Controllers\Auth\NewPasswordController;
-Route::get('/login/reset-password/{token}', [NewPasswordController::class, 'create'])
-->middleware(['web', 'guest'])
-->name('password.reset');
-
-Route::post('/login/reset-password', [NewPasswordController::class, 'store'])
-    ->middleware(['web', 'guest'])
-    ->name('password.update');
-
-
-
-
-use Jiny\Auth\Http\Controllers\Auth\ConfirmablePasswordController;
-Route::get('/login/confirm-password', [ConfirmablePasswordController::class, 'show'])
-     ->middleware(['web', 'auth'])
-     ->name('password.confirm');
-
-Route::post('/login/confirm-password', [ConfirmablePasswordController::class, 'store'])
-     ->middleware(['web', 'auth']);
-
-
-
-
-
-
-
-
-
+Route::get('/login/sleeper',[
+    \Jiny\Auth\Http\Controllers\Auth\UserSleeperController::class,
+    'index'])->middleware(['web'])->name('login.sleeper');

@@ -1,9 +1,11 @@
 <?php
-
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Database\Migrations\Migration;
 
+/**
+ * 회원 관리가 가능한 국가 목록
+ */
 return new class extends Migration
 {
     /**
@@ -24,6 +26,8 @@ return new class extends Migration
             $table->string('name')->nullable();
 
             $table->text('description')->nullable();
+
+            $table->unsignedBigInteger('users')->default(0);
 
         });
     }

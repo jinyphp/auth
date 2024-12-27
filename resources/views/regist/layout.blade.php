@@ -12,7 +12,7 @@
       </a>
     </header>
 
-    @includeIf('jinyauth::regist.main',['setting'=>$setting])
+    @includeIf('jiny-auth::regist.main',['setting'=>$setting])
 
     <!-- Footer -->
     <footer class="mt-auto">

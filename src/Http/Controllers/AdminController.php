@@ -18,8 +18,8 @@ class AdminController extends LiveController
         parent::__construct();
 
         // 커스텀 레이아웃
-        //$this->actions['view']['main'] = "jinyauth::tables.main";
-        //$this->actions['view']['main_layout'] = "jinyauth::tables.view_layout";
+        //$this->actions['view']['main'] = "jiny-auth::tables.main";
+        //$this->actions['view']['main_layout'] = "jiny-auth::tables.view_layout";
 
         // 컨트롤러 테마 지정
         $this->setTheme("admin.sidebar");

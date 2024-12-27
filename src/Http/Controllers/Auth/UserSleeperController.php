@@ -34,7 +34,7 @@ class UserSleeperController extends Controller
             }
         }
 
-        return "jinyauth::login_sleeper";
+        return "jiny-auth::login.sleeper.layout";
     }
 
 }

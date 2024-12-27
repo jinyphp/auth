@@ -27,8 +27,8 @@ return [
         'logout_back' => "/" // 로그아웃후 이동되는 경로
     ],
     'views'=>[
-        'login'=> "jinyauth::login",
-        'regist'=>"jinyauth::register"
+        'login'=> "jiny-auth::login",
+        'regist'=>"jiny-auth::register"
     ]
 ];
 ```

@@ -14,73 +14,101 @@ class SleeperUnlockRequest extends Component
     public $message;
     public $errors;
 
+    public $setting = [];
+
     public function mount()
     {
         $this->message = null;
         $this->error_message = null;
+
+        $this->setting = config("jiny.auth.setting");
     }
 
     public function render()
     {
-        return view("jinyauth::livewire.sleeper_unlock_request");
+        return view("jiny-auth::login.sleeper.unlock");
     }
 
     public function submit()
     {
         if(isset($this->forms['email'])) {
-            $user = DB::table('users')->where('email',$this->forms['email'])->first();
+            $user = DB::table('users')
+                ->where('email',$this->forms['email'])
+                ->first();
 
-            // 패스워드 확인
-            if(isset($this->forms['password'])) {
-                $password = Hash::make($this->forms['password']);
-                if($user->password != $password) {
-                    $this->forms['password'] = null;
-                    $this->error_message = "비밀번호가 일치하지 않습니다.";
-                    return false;
-                }
-            } else {
+            if (!$user) {
+                $this->error_message = "해당 이메일로 등록된 사용자가 없습니다.";
+                return false;
+            }
+
+            // 비밀번호 확인
+            if (!isset($this->forms['password'])) {
                 $this->error_message = "비밀번호를 입력해 주세요.";
                 return false;
             }
 
+            if (!Hash::check($this->forms['password'], $user->password)) {
+                dump('비밀번호 불일치');
+                $this->error_message = "비밀번호가 일치하지 않습니다.";
+                $this->forms['password'] = null;
+                return false;
+            }
 
+            // dump('비밀번호 일치');
+
+            // // 패스워드 확인
+            // if(isset($this->forms['password'])) {
+            //     $password = Hash::make($this->forms['password']);
+            //     if($user->password != $password) {
+            //         //dump('비밀번호 불일치');
+            //         $this->forms['password'] = null;
+            //         $this->error_message = "비밀번호가 일치하지 않습니다.";
+            //         return false;
+            //     }
+            // } else {
+            //     $this->error_message = "비밀번호를 입력해 주세요.";
+            //     return false;
+            // }
+
+            // 휴면회원 해제
             if($user->sleeper) {
+                // dump('sleeper');
+                // dump($this->setting);
 
-                $sleeper = 0;
-
-                // user_sleeper 테이블 변경
-                $data = DB::table('user_sleeper')->where('user_id',$user->id)->first();
-                if($data) {
-                    DB::table('user_sleeper')->where('user_id',$user->id)->update([
-                        'unlock' => 1,
-                        'unlock_created_at' => date("Y-m-d H:i:s"),
-
-                        'sleeper' => $sleeper,
-                        'updated_at' => date("Y-m-d H:i:s"),
-                        'admin_id' => Auth::user()->id
-                    ]);
+                if($this->setting['sleeper']['auto']) {
+                    // 자동해제
+                    $this->unSleeper($user->email);
                 } else {
-                    DB::table('user_sleeper')->where('user_id',$user->id)->insert([
+                    // 휴면 해제 요청
+                    DB::table('user_sleeper')
+                        ->where('email',$user->email)
+                        ->update([
                         'unlock' => 1,
-                        'unlock_created_at' => date("Y-m-d H:i:s"),
-
-                        'user_id' => $user->id,
-                        'sleeper' => $sleeper,
-                        'created_at' => date("Y-m-d H:i:s"),
-                        'updated_at' => date("Y-m-d H:i:s"),
-
-                        'admin_id' => Auth::user()->id
+                        'unlock_created_at' => date("Y-m-d H:i:s")
                     ]);
+
                 }
-
-
             }
         }
 
+        // dd($this->forms);
+
         $this->forms = [];
         $this->message = "휴면 해제를 신청하였습니다.";
+    }
 
-        //dd($this->forms);
+    public function unSleeper($email)
+    {
+        DB::table('users')->where('email',$email)->update([
+            'sleeper' => 0
+        ]);
+
+        DB::table('user_sleeper')
+            ->where('email',$email)
+            ->update([
+                'sleeper' => 0
+            ]);
+
     }
 
 }

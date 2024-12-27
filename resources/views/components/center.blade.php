@@ -1,4 +1,4 @@
-@extends('jinyauth::layouts.bootstrap')
+@extends('jiny-auth::layouts.bootstrap')
 @section('content')
 
 <main class="d-flex w-100 h-100">

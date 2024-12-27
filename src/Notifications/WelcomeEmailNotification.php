@@ -25,7 +25,7 @@ class WelcomeEmailNotification extends Notification
     public function toMail($notifiable)
     {
         return (new MailMessage)->view(
-            'jinyauth::emails.welcome', // 새로 생성한 Blade 뷰
+            'jiny-auth::emails.welcome', // 새로 생성한 Blade 뷰
             ['user' => $this->user] // 전달할 데이터
         );
 

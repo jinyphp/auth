@@ -9,7 +9,7 @@
             <div class="card">
                 <div class="card-body">
 
-                    @includeIf('jinyauth::regist.form',[
+                    @includeIf('jiny-auth::regist.form',[
                         'setting'=>$setting
                         ])
 
@@ -17,7 +17,7 @@
                         <a href="/login">로그인</a>
                     </div>
 
-                    @includeIf('jinyauth::regist.social',[
+                    @includeIf('jiny-auth::regist.social',[
                         'setting'=>$setting
                         ])
 

@@ -17,7 +17,7 @@
     <x-card-body>
         <x-register-form>
 
-            @includeIf('jinyauth::regist.form', ['setting' => $setting])
+            @includeIf('jiny-auth::regist.form', ['setting' => $setting])
 
         </x-register-form>
     </x-card-body>
@@ -29,4 +29,4 @@
 </x-ui-divider>
 
 
-@includeIf('jinyauth::regist.seocial', ['setting' => $setting])
+@includeIf('jiny-auth::regist.seocial', ['setting' => $setting])

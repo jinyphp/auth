@@ -1,9 +1,9 @@
-@extends('jinyauth::layouts.app')
+@extends('jiny-auth::layouts.app')
 @section('content')
 <x-bootstrap>
 
-    {{-- @includeIf('jinyauth::home.header') --}}
-    {{-- @includeIf('jinyauth::home.navbar') --}}
+    {{-- @includeIf('jiny-auth::home.header') --}}
+    {{-- @includeIf('jiny-auth::home.navbar') --}}
 
 <main class="content">
     <div class="container p-0">
@@ -32,7 +32,7 @@
 
         <div class="row">
             <div class="col-md-4 col-xl-3">
-                @includeIf('jinyauth::home.sidemenu')
+                @includeIf('jiny-auth::home.sidemenu')
 
             </div>
 

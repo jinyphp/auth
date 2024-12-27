@@ -12,7 +12,7 @@
             {{__('걱정하지 마세요. 등록하신 이메일 주소로 비밀번호를 초기화 할 수 있는 링크를 보내드립니다.')}}
         </div>
 
-        @includeIf('jinyauth::password.forget.form')
+        @includeIf('jiny-auth::password.forget.form')
 
         <div class="mt-3">
             <div class="text-center">

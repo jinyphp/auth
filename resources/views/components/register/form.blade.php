@@ -1,4 +1,4 @@
-<form method="POST" action="{{ route('register.create') }}"
+<form method="POST" action="{{ route('regist.create') }}"
     class="needs-validation" novalidate>
     @csrf
 

@@ -19,10 +19,12 @@ class CreateUserSleeperTable extends Migration
             // 회원인증 요청일자 : created_at
             $table->timestamps();
 
+            $table->string('enable')->nullable();
+
             // 사용자 번호
+            $table->string('email')->nullable();
             $table->unsignedBigInteger('user_id')->default(0);
 
-            $table->string('enable')->nullable();
             $table->string('sleeper')->nullable(); // 휴면상태
             $table->text('description')->nullable();
 
@@ -37,6 +39,7 @@ class CreateUserSleeperTable extends Migration
 
             // 회원인증을 처리한 AdminId
             $table->unsignedBigInteger('admin_id')->default(0);
+            $table->unsignedBigInteger('manager_id')->default(0);
 
         });
     }

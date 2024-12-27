@@ -63,7 +63,7 @@ class UpdatePasswordForm extends Component
      */
     public function render()
     {
-        $viewFile = "jinyauth::profile.update-password-form";
+        $viewFile = "jiny-auth::profile.update-password-form";
         return view($viewFile);
     }
 }

@@ -1,5 +1,4 @@
 <?php
-
 namespace Jiny\Auth\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
