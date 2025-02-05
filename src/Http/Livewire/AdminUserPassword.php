@@ -8,6 +8,9 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Carbon\Carbon;
 
+/**
+ * 회원 정보에서 패스워드 변경
+ */
 class AdminUserPassword extends Component
 {
     public $setting;
@@ -40,6 +43,64 @@ class AdminUserPassword extends Component
     public function update()
     {
         if($this->password) {
+
+            if(isset($this->setting['password']['min'])) {
+
+                if($this->setting['password']['min']) {
+                    $password_min = $this->setting['password']['min'];
+                } else {
+                    $password_min = 8;
+                }
+
+                if(strlen($this->password) < $password_min) {
+                    $this->message = error_danger("비밀번호는 ".$password_min."자리 이상이어야 합니다.");
+                    return false;
+                }
+            }
+
+            if(isset($this->setting['password']['max'])) {
+
+                if($this->setting['password']['max']) {
+                    $password_max = $this->setting['password']['max'];
+                } else {
+                    $password_max = 20;
+                }
+
+                if(strlen($this->password) > $password_max) {
+                    $this->message = error_danger("비밀번호는 ".$password_max."자리 이하이어야 합니다.");
+                    return false;
+                }
+            }
+
+            // 특수문자 포함여부 체크
+            if(isset($this->setting['password']['special'])
+                && $this->setting['password']['special']) {
+
+                if (!preg_match('/[\'^£$%&*()}{@#~?><>,|=_+¬-]/', $this->password)) {
+                    $this->message = error_danger("비밀번호에는 특수문자가 포함되어야 합니다.");
+                    return false;
+                }
+            }
+
+            // 숫자 포함 체크
+            if(isset($this->setting['password']['number'])
+                && $this->setting['password']['number']) {
+                if (!preg_match('/[0-9]/', $this->password)) {
+                    $this->message = error_danger("비밀번호에는 숫자가 포함되어야 합니다.");
+                    return false;
+                }
+            }
+
+            // 영문자 포함 체크
+            if(isset($this->setting['password']['alpha'])
+                && $this->setting['password']['alpha']) {
+                if (!preg_match('/[a-zA-Z]/', $this->password)) {
+                    $this->message = error_danger("비밀번호에는 영문자가 포함되어야 합니다.");
+                    return false;
+                }
+            }
+
+            // DB 저장
             DB::table('users')
             ->where('id',$this->user_id)
             ->update([
@@ -47,95 +108,11 @@ class AdminUserPassword extends Component
                 'updated_at' => date("Y-m-d H:i:s")
             ]);
 
-            $this->message = [
-                'type' => 'success',
-                'message' => "비밀번호가 변경되었습니다."
-            ];
+            $this->message = error_success("비밀번호가 변경되었습니다.");
 
         } else {
-            $this->message = [
-                'type' => 'danger',
-                'message' => "비밀번호를 입력해 주세요."
-            ];
+            $this->message = error_danger("비밀번호를 입력해 주세요.");
         }
-
-
-        // $user = Auth::user();
-        // $row = DB::table('users')->where('id', $user->id)->first();
-
-        // if(isset($this->form['current'])) {
-        //     if (Hash::check($this->form['current'], $row->password))
-        //     {
-        //         //dd("일치");
-        //     } else {
-        //         //dd("불일치");
-        //         session()->flash('message',"현재 비밀번호가 일치하지 않습니다.");
-        //         return;
-        //     }
-        // } else {
-        //     session()->flash('message',"현재 비밀번호를 입력해 주세요.");
-        //     return;
-        // }
-
-        // if(isset($this->form['password'] )) {
-        //     $password = $this->form['password'] ;
-        // } else
-        // {
-        //     session()->flash('message',"비밀번호를 입력해 주세요.");
-        //     return;
-        // }
-
-        // if(isset($this->form['confirm'] )) {
-        //     $confirm = $this->form['confirm'] ;
-        // } else
-        // {
-        //     session()->flash('message',"확인 비밀번호를 입력해 주세요.");
-        //     return;
-        // }
-
-        // if($password == $confirm) {
-        //     DB::table('users')->where('id',$user->id)->update([
-        //         'password' => bcrypt($password),
-        //         'updated_at' => date("Y-m-d H:i:s")
-        //     ]);
-
-        //     // 사용자 페스워드 만료 기간 연장
-        //     $userPassword = DB::table('user_password')->where('user_id', $user->id)->first();
-
-        //     $renewalPriod = $this->setting['password_period'];
-        //     $renewalPriod = intval($renewalPriod);
-
-        //     // 현재 날짜 가져오기
-        //     $currentDate = Carbon::now();
-
-        //     // 3개월을 추가하여 새로운 날짜 계산
-        //     $newDate = $currentDate->addMonths($renewalPriod);
-
-        //     // 날짜를 원하는 형식으로 변환
-        //     $expire = $newDate->format('Y-m-d');
-
-        //     if($userPassword) {
-        //         DB::table('user_password')->where('user_id', $user->id)->update([
-        //             'expire' => $expire
-        //         ]);
-        //     } else {
-        //         DB::table('user_password')->insert([
-        //             'email' => $user->email,
-        //             'user_id' => $user->id,
-        //             'expire' => $expire,
-        //             'created_at' => date("Y-m-d H:i:s"),
-        //             'updated_at' => date("Y-m-d H:i:s")
-        //         ]);
-        //     }
-
-
-        //     $this->form = [];
-
-
-
-        // } else {
-        //     session()->flash('message',"확인 비밀번호가 일치하지 않습니다.");
-        // }
 
     }
 

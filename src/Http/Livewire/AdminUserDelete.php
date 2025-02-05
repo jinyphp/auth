@@ -4,10 +4,13 @@ namespace Jiny\Auth\Http\Livewire;
 use Livewire\Component;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
-
 use Illuminate\Support\Facades\Hash;
 use Carbon\Carbon;
 
+/**
+ * Admin Component
+ * 회원삭제
+ */
 class AdminUserDelete extends Component
 {
     public $setting;
@@ -38,6 +41,11 @@ class AdminUserDelete extends Component
     public function render()
     {
         return view($this->viewFile);
+    }
+
+    public function cancel()
+    {
+        $this->popupDelete = false;
     }
 
     public function delete()

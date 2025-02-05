@@ -35,21 +35,23 @@ class PasswordResetLinkController extends Controller
 
     private function getForgetView()
     {
-
         ## 우선순위1
-        if(isset($this->setting['view']['forget'])){
-            if($this->setting['view']['forget']) {
-                $viewfile = $this->setting['view']['forget'];
-            }
-        }
-
-        ## 우선순위2
         ## actions 설정
         if(isset($this->actions['view']['layout'])){
             if($this->actions['view']['layout']) {
                 $viewfile = $this->actions['view']['layout'];
+                return $viewfile;
             }
         }
+
+        ## 우선순위2
+        if(isset($this->setting['password']['forget'])){
+            if($this->setting['password']['forget']) {
+                $viewfile = $this->setting['password']['forget'];
+                return $viewfile;
+            }
+        }
+
 
         $viewfile = 'jiny-auth::password.forget.layout'; // 기본값
         return $viewfile;

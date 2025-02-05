@@ -54,9 +54,9 @@
             <x-form-hor>
                 <x-form-label>동의여부</x-form-label>
                 <x-form-item>
-                    {!! xCheckbox()
-                        ->setWire('model.defer',"forms.required")
-                    !!}
+                    <input type="checkbox" class="form-check-input"
+                        wire:model="forms.required"
+                        {{ isset($forms['required']) && $forms['required'] ? 'checked' : '' }}>
                 </x-form-item>
             </x-form-hor>
 

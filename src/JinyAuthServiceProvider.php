@@ -78,6 +78,7 @@ class JinyAuthServiceProvider extends ServiceProvider
 
         // 회원가입 form 양식
         Blade::component($this->package.'::components.'.'register.form', 'register-form');
+
         Blade::component($this->package.'::components.'.'register.name', 'register-name');
         Blade::component($this->package.'::components.'.'login.email', 'register-email');
         Blade::component($this->package.'::components.'.'login.password', 'register-password');
@@ -137,6 +138,19 @@ class JinyAuthServiceProvider extends ServiceProvider
 
         });
 
+
+        // 회원 인증관련 컴포넌트
+        $this->app->afterResolving(BladeCompiler::class, function () {
+            // 휴면회원 해제 신청
+            Livewire::component('auth-sleeper-unlock',
+                \Jiny\Auth\Http\Livewire\AuthSleeperUnlockRequest::class);
+
+            // 회원가입폼
+            Livewire::component('auth-regist-form',
+                \Jiny\Auth\Http\Livewire\AuthRegistForm::class);
+        });
+
+
         /* 라이브와이어 컴포넌트 등록 */
         $this->app->afterResolving(BladeCompiler::class, function () {
             // 아바타의 이미지를 변경합니다.
@@ -146,9 +160,7 @@ class JinyAuthServiceProvider extends ServiceProvider
                 \Jiny\Auth\Http\Livewire\AvataUpdate::class);
 
 
-            // 회원가입폼
-            Livewire::component('auth-regist-form',
-                \Jiny\Auth\Http\Livewire\AuthRegistForm::class);
+
 
             // 로그인폼
             Livewire::component('auth-login-form',
@@ -161,9 +173,7 @@ class JinyAuthServiceProvider extends ServiceProvider
             Livewire::component('admin-user-password',
                 \Jiny\Auth\Http\Livewire\AdminUserPassword::class);
 
-            // 휴면회원 해제 신청
-            Livewire::component('auth-sleeper-unlock',
-                \Jiny\Auth\Http\Livewire\SleeperUnlockRequest::class);
+
 
             Livewire::component('auth-password-expire',
                 \Jiny\Auth\Http\Livewire\AuthPasswordExpire::class);
@@ -171,7 +181,8 @@ class JinyAuthServiceProvider extends ServiceProvider
             Livewire::component('WireDash-UserCount',
                 \Jiny\Auth\Http\Livewire\WireDashUserCount::class);
 
-            Livewire::component('EmailVerificationNotification',
+            // 이메일 검증 알림
+            Livewire::component('auth-email-verification_notification',
                 \Jiny\Auth\Http\Livewire\EmailVerificationNotification::class);
 
 

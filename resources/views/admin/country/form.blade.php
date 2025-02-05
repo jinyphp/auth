@@ -20,12 +20,13 @@
 
 
             <x-form-hor>
-                <x-form-label>국가명</x-form-label>
+                <x-form-label>
+                    <a href="/admin/locale/country">
+                        국가명
+                    </a>
+                </x-form-label>
                 <x-form-item>
-                    {{-- {!! xInputText()
-                        ->setWire('model.defer',"forms.name")
-                        ->setWidth("standard")
-                    !!} --}}
+
                     <select class="form-select" wire:model="forms.name">
                         <option value="">선택</option>
                         @foreach(DB::table('country')->get() as $country)
@@ -47,6 +48,16 @@
                 </x-form-item>
             </x-form-hor>
 
+
+
+        </x-navtab-item>
+
+        <!-- formTab -->
+        <x-navtab-item class="">
+            <x-navtab-link class="rounded-0">
+                <span class="d-none d-md-block">사용자</span>
+            </x-navtab-link>
+
             <x-form-hor>
                 <x-form-label>사용자수</x-form-label>
                 <x-form-item>
@@ -59,7 +70,8 @@
 
         </x-navtab-item>
 
-
-
     </x-navtab>
+
+
+
 </div>

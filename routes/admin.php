@@ -6,7 +6,7 @@ use Illuminate\Http\Request;
  * 관리자 프로필 라우트
  */
 if(function_exists('Prefix')) {
-    $prefix = Prefix("admin");
+    $prefix = prefix("admin");
 } else {
     $prefix = "admin";
 }
@@ -20,7 +20,7 @@ Route::middleware(['web','auth:sanctum', 'verified', 'admin'])
 
     // 데시보드
     Route::get('/', [
-        Jiny\Auth\Http\Controllers\Admin\AuthAdminDashboard::class,
+        Jiny\Auth\Http\Controllers\Admin\AdminAuthDashboard::class,
         'index']);
 
     // 지역
@@ -30,7 +30,7 @@ Route::middleware(['web','auth:sanctum', 'verified', 'admin'])
 
     // 회원 국가
     Route::get('/country',[
-        \Jiny\Auth\Http\Controllers\Admin\AdminUserCountryController::class,
+        \Jiny\Auth\Http\Controllers\Admin\AdminUserCountry::class,
         'index']);
 
     Route::get('/language',[
@@ -42,25 +42,62 @@ Route::middleware(['web','auth:sanctum', 'verified', 'admin'])
         \Jiny\Auth\Http\Controllers\Admin\AdminUser::class,
         'index']);
 
+
+
+    // 사용자목록: 미성년자 보호자
+    Route::get('/users/minor/{id}',[
+        \Jiny\Auth\Http\Controllers\Admin\AdminUserMinorParent::class,
+        'index'])->where('id','[0-9]+');
+
+    // 사용자목록: 미성년자
+    Route::get('/users/minor',[
+        \Jiny\Auth\Http\Controllers\Admin\AdminUserMinor::class,
+        'index']);
+
+
+    // 사용자목록: 직원
+    Route::get('/users/{type?}',[
+        \Jiny\Auth\Http\Controllers\Admin\AdminUserHr::class,
+        'index'])->where('type', '[a-zA-Z]+');
+
+
+
+
     // 사용자 상세
     Route::get('/user/{id}',[
         \Jiny\Auth\Http\Controllers\Admin\AdminUserDetail::class,
         'index'])->where('id','[0-9]+');
-    Route::get('/user/password/detail/{id}',[
-        \Jiny\Auth\Http\Controllers\Admin\AdminUserPassword::class,
+
+    Route::get('/profile/{id?}',[
+        \Jiny\Auth\Http\Controllers\Admin\AdminUserProfile::class,
         'index'])->where('id','[0-9]+');
 
-    Route::get('/user/address/detail/{id}',[
+    Route::get('/user/{id}/profile',[
+            \Jiny\Auth\Http\Controllers\Admin\AdminUserProfileDetail::class,
+            'index'])->where('id','[0-9]+');
+
+    Route::get('/user/{id}/emoney',[
+        \Jiny\Auth\Http\Controllers\Admin\AdminUserEmoney::class,
+        'index'])->where('id','[0-9]+');
+
+
+    Route::get('/address/{id?}',[
+        \Jiny\Auth\Http\Controllers\Admin\AdminUserAddress::class,
+        'index'])->where('id','[0-9]+');
+
+    Route::get('/user/{id}/address',[
             \Jiny\Auth\Http\Controllers\Admin\AdminUserAddress::class,
             'index'])->where('id','[0-9]+');
-    Route::get('/user/phone/detail/{id}',[
+
+    Route::get('/phone/{id?}',[
+        \Jiny\Auth\Http\Controllers\Admin\AdminUserPhone::class,
+        'index'])->where('id','[0-9]+');
+
+    Route::get('/user/{id}/phone',[
             \Jiny\Auth\Http\Controllers\Admin\AdminUserPhone::class,
             'index'])->where('id','[0-9]+');
 
-    // 사용자 권한
-    Route::get('/user/role/{id}',[
-        \Jiny\Auth\Http\Controllers\Admin\AdminUserRole::class,
-        'index'])->where('id','[0-9]+');
+
 
 
     Route::get('/agree',[ // 동의서
@@ -75,9 +112,15 @@ Route::middleware(['web','auth:sanctum', 'verified', 'admin'])
 
 
     // 패스워드 유효기간 연장
-    Route::get('password',[
+    Route::get('password/{id?}',[
         \Jiny\Auth\Http\Controllers\Admin\AdminUserPasswordExpire::class,
-        'index']);
+        'index'])->where('id','[0-9]+');
+
+    Route::get('/user/password/{id}',[
+        \Jiny\Auth\Http\Controllers\Admin\AdminUserPassword::class,
+        'index'])->where('id','[0-9]+');
+
+
 
     // 회원 가입 승인
     Route::get('auth',[
@@ -109,17 +152,14 @@ Route::middleware(['web','auth:sanctum', 'verified', 'admin'])
         \Jiny\Auth\Http\Controllers\Admin\AdminUserGrade::class,
         "index"]);
 
-     ## 설정
-     Route::get('settings', [
-        \Jiny\Auth\Http\Controllers\Admin\SettingController::class,"index"]);
+    // 회원등급
+    Route::get('type',[
+        \Jiny\Auth\Http\Controllers\Admin\AdminUserType::class,
+        "index"]);
 
-     Route::get('setting/login', [
-         \Jiny\Auth\Http\Controllers\Admin\SettingLoginController::class,
-         "index"]);
 
-     Route::get('setting/regist', [
-         \Jiny\Auth\Http\Controllers\Admin\SettingRegistController::class,
-         "index"]);
+
+
 
     Route::get('mail', [
         \Jiny\Auth\Http\Controllers\Admin\AdminUserMail::class,
@@ -128,6 +168,22 @@ Route::middleware(['web','auth:sanctum', 'verified', 'admin'])
     Route::get('mail/label', [
         \Jiny\Auth\Http\Controllers\Admin\AdminUserMailLabel::class,
         "index"]);
+
+    ## 설정
+    Route::get('setting', [
+        \Jiny\Auth\Http\Controllers\Admin\AdminSetting::class,"index"]);
+
+    Route::get('setting/password', [
+        \Jiny\Auth\Http\Controllers\Admin\AdminSetting::class,
+        "password"]);
+
+    Route::get('setting/login', [
+        \Jiny\Auth\Http\Controllers\Admin\AdminSetting::class,
+        "login"]);
+
+    Route::get('setting/regist', [
+        \Jiny\Auth\Http\Controllers\Admin\AdminSetting::class,
+        "regist"]);
 
 });
 

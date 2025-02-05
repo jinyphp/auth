@@ -22,6 +22,7 @@ class AdminUserSleeper extends AdminController
 
         $this->actions['view']['layout'] = "jiny-auth::admin.sleeper.layout";
         $this->actions['view']['table'] = "jiny-auth::admin.sleeper.table";
+        $this->actions['view']['filter'] = "jiny-auth::admin.sleeper.filter";
 
         $this->actions['view']['list'] = "jiny-auth::admin.sleeper.list";
         $this->actions['view']['form'] = "jiny-auth::admin.sleeper.form";

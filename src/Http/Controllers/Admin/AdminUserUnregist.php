@@ -35,7 +35,7 @@ class AdminUserUnregist extends AdminController
         $this->actions['view']['list'] = "jiny-auth::admin.unregist.list";
         $this->actions['view']['form'] = "jiny-auth::admin.unregist.form";
 
-        $this->actions['title'] = "틸원탈퇴 관리";
+        $this->actions['title'] = "회원탈퇴 관리";
         $this->actions['subtitle'] = "회원탈퇴 신청 관리합니다. 탈퇴 신청 승인, 취소 등의 작업을 수행할 수 있습니다.";
     }
 

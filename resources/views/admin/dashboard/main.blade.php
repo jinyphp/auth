@@ -1,30 +1,31 @@
 <div class="row">
     <div class="col-xl-3 col-lg-4">
+        <!-- card -->
         <div class="card tilebox-one">
             <div class="card-body">
-                <a href="/admin/auth/users" class="text-decoration-none">
+                <a href="/{{$prefix}}/auth/users" class="text-decoration-none">
                     <h6 class="text-uppercase mt-0">활성 사용자</h6>
                     <h2 class="my-2" id="active-users-count">{{ user_count() }} 명</h2>
                 </a>
 
                 <div>
-                    <a href="/admin/auth/unregist" class="badge bg-danger">
+                    <a href="/{{$prefix}}/auth/unregist" class="badge bg-danger">
                         탈퇴회원
                     </a>
 
-                    <a href="/admin/auth/auth" class="badge bg-secondary">
+                    <a href="/{{$prefix}}/auth/auth" class="badge bg-secondary">
                         승인대기
                     </a>
 
-                    <a href="/admin/auth/grade" class="badge bg-secondary">
+                    <a href="/{{$prefix}}/auth/grade" class="badge bg-secondary">
                         등급
                     </a>
 
-                    <a href="/admin/auth/roles" class="badge bg-secondary">
+                    <a href="/{{$prefix}}/auth/roles" class="badge bg-secondary">
                         역할
                     </a>
 
-                    <a href="/admin/auth/country" class="badge bg-secondary">
+                    <a href="/{{$prefix}}/auth/country" class="badge bg-secondary">
                         국가
                     </a>
 
@@ -36,7 +37,7 @@
 
         <div class="card tilebox-one">
             <div class="card-body">
-                <a href="/admin/auth/log/count" class="text-decoration-none">
+                <a href="/{{$prefix}}/auth/log/daily" class="text-decoration-none">
                     <h6 class="text-uppercase mt-0">
                         방문자
                     </h6>
@@ -44,7 +45,7 @@
 
                 <h2 class="my-2" id="active-views-count">
 
-                    <a href="/admin/auth/log/daily" class="text-decoration-none">
+                    <a href="/{{$prefix}}/auth/log/count" class="text-decoration-none">
                         {{ $logTotal = Jiny\Auth\User::getLogTotal() }} 명
                     </a>
 
@@ -66,17 +67,17 @@
 
         <div class="card tilebox-one">
             <div class="card-body">
-                <a href="/admin/auth/oauth" class="text-decoration-none">
+                <a href="/{{$prefix}}/auth/oauth" class="text-decoration-none">
                     <h6 class="text-uppercase mt-0">소셜연동</h6>
                 </a>
                 <h2 class="my-2" id="active-views-count">
-                    <a href="/admin/auth/oauth/users" class="text-decoration-none">
+                    <a href="/{{$prefix}}/auth/oauth/users" class="text-decoration-none">
                         {{ DB::table('user_oauth')->count() }} 명
                     </a>
                 </h2>
                 <div class="mb-0 d-flex flex-wrap gap-2">
                     @foreach (DB::table('user_oauth_providers')->get() as $item)
-                        <a href="/admin/auth/oauth/users/{{ $item->provider }}" class="text-decoration-none">
+                        <a href="/{{$prefix}}/auth/oauth/users/{{ $item->provider }}" class="text-decoration-none">
                             <span class="badge bg-secondary">{{ $item->provider }}</span>
                         </a>
                     @endforeach
@@ -84,7 +85,6 @@
             </div> <!-- end card-body-->
         </div>
         <!--end card-->
-
 
     </div> <!-- end col -->
 
@@ -183,7 +183,7 @@
     <div class="col-xl-6 col-xxl-4">
         <div class="card flex-fill w-100">
             <div class="card-header">
-                <a href="/admin/auth/country" class="text-decoration-none">
+                <a href="/{{$prefix}}/auth/country" class="text-decoration-none">
                     <h5 class="card-title mb-0">회원별 지역국가</h5>
                 </a>
             </div>
@@ -202,7 +202,7 @@
                     @foreach (DB::table('user_country')->limit(5)->get() as $item)
                         <tr>
                             <td>
-                                <a href="/admin/auth/locale" class="text-decoration-none">
+                                <a href="/{{$prefix}}/auth/locale" class="text-decoration-none">
                                     {{ $item->name }}
                                 </a>
                             </td>
@@ -242,7 +242,7 @@
     <div class="col-xl-6 col-xxl-4">
         <div class="card flex-fill w-100">
             <div class="card-header">
-                <a href="/admin/auth/grade" class="text-decoration-none">
+                <a href="/{{$prefix}}/auth/grade" class="text-decoration-none">
                     <h5 class="card-title mb-0">등급</h5>
                 </a>
             </div>
@@ -276,7 +276,7 @@
     <div class="col-xl-6 col-xxl-4">
         <div class="card flex-fill w-100">
             <div class="card-header">
-                <a href="/admin/permit/roles" class="text-decoration-none">
+                <a href="/{{$prefix}}/permit/roles" class="text-decoration-none">
                     <h5 class="card-title mb-0">역할</h5>
                 </a>
             </div>
@@ -318,7 +318,7 @@
         <div class="card flex-fill">
             <div class="card-header">
                 <div class="card-actions float-end">
-                    <a href="/admin/auth/password">
+                    <a href="/{{$prefix}}/auth/password">
                         <button class="btn btn-sm btn-light">View all</button>
                     </a>
                 </div>
@@ -349,7 +349,7 @@
         <div class="card flex-fill">
             <div class="card-header">
                 <div class="card-actions float-end">
-                    <a href="/admin/auth/sleeper">
+                    <a href="/{{$prefix}}/auth/sleeper">
                         <button class="btn btn-sm btn-light">View all</button>
                     </a>
                 </div>
@@ -381,7 +381,7 @@
         <div class="card flex-fill">
             <div class="card-header">
                 <div class="card-actions float-end">
-                    <a href="/admin/auth/auth">
+                    <a href="/{{$prefix}}/auth/auth">
                         <button class="btn btn-sm btn-light">View all</button>
                     </a>
                 </div>
@@ -419,7 +419,7 @@
         <div class="card flex-fill">
             <div class="card-header">
                 <div class="card-actions float-end">
-                    <a href="/admin/auth/agree">
+                    <a href="/{{$prefix}}/auth/agree">
                         <button class="btn btn-sm btn-light">View all</button>
                     </a>
                 </div>
@@ -452,7 +452,7 @@
         <div class="card flex-fill">
             <div class="card-header">
                 <div class="card-actions float-end">
-                    <a href="/admin/auth/reserved">
+                    <a href="/{{$prefix}}/auth/reserved">
                         <button class="btn btn-sm btn-light">View all</button>
                     </a>
                 </div>
@@ -482,7 +482,7 @@
         <div class="card flex-fill">
             <div class="card-header">
                 <div class="card-actions float-end">
-                    <a href="/admin/auth/blacklist">
+                    <a href="/{{$prefix}}/auth/blacklist">
                         <button class="btn btn-sm btn-light">View all</button>
                     </a>
                 </div>

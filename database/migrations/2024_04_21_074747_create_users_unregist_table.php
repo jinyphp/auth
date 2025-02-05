@@ -19,7 +19,7 @@ return new class extends Migration
             $table->id();
             $table->timestamps();
 
-            $table->bigInteger('user_id')->unsigned();
+            $table->bigInteger('user_id')->nullable();
             $table->string('email')->nullable();
             $table->string('name')->nullable();
 
@@ -27,7 +27,7 @@ return new class extends Migration
             $table->text('description')->nullable();
 
             $table->string('confirm')->nullable();
-            $table->bigInteger('manager_id')->unsigned();
+            $table->bigInteger('manager_id')->nullable();
         });
     }
 

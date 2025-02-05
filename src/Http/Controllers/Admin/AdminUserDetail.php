@@ -28,16 +28,8 @@ class AdminUserDetail extends WireTablePopupForms
         $this->actions['paging'] = 10; // 페이지 기본값
 
         $this->actions['view']['layout'] = "jiny-auth::admin.user_detail.layout";
-        // $this->actions['view']['table'] = "jiny-auth::admin.users.table";
-        // $this->actions['view']['list'] = "jiny-auth::admin.users.list";
-        // $this->actions['view']['form'] = "jiny-auth::admin.users.form";
 
-        // $this->actions['view']['filter'] = "jiny-auth::admin.users.filter";
-
-
-        // 커스텀 레이아웃
-        // $this->actions['title'] = "전체회원";
-        // $this->actions['subtitle'] = "가입되어 있는 모든 회원을 검색합니다.";
+        $this->actions['subtitle'] = "회원 정보를 수정합니다.";
 
     }
 

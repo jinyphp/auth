@@ -11,6 +11,7 @@ use Carbon\Carbon;
 
 use Illuminate\Notifications\Notifiable;
 use Jiny\Auth\Notifications\VerifyEmail;
+use Illuminate\Support\Facades\Mail;
 
 class EmailVerificationNotification extends Component
 {
@@ -20,20 +21,26 @@ class EmailVerificationNotification extends Component
     public $email;
     public $message;
 
+    public $viewFile;
+
     public function mount()
     {
         $this->setting = config('jiny.auth.setting');
+
+        if(!$this->viewFile) {
+            $this->viewFile = "jiny-auth::auth.verify.verification";
+        }
     }
 
     public function render()
     {
-        return view('jiny-auth::verified.email_verification');
+        return view($this->viewFile);
     }
 
     public function resend()
     {
         if($this->email) {
-            $this->sendEmailVerificationNotification($this->email);
+            $this->sendEmail($this->email);
 
             $this->email = "";
             $this->message = "메일을 발송하였습니다.";
@@ -47,14 +54,24 @@ class EmailVerificationNotification extends Component
      *
      * @return void
      */
-    public function sendEmailVerificationNotification($email)
+    public function sendEmail($email)
     {
-        // $user = DB::table('users')->where('email', $this->email)->first();
         // notify 메소드를 호출하기 위해서는 모델이 필요
         $user = User::where('email', $email)->first(); //
 
         $verificationToken = "";
         $user->notify(new VerifyEmail($verificationToken));
+
+
+        // $message = new \Jiny\Auth\Mail\UserMail();
+        // $message->from('jiny@jiny.dev', 'Jiny');
+        // $message->subject("확인요청");
+        // $message->content = "";
+
+        // // 즉시발송
+        // $result = Mail::to($user->email)
+        // ->locale('ko')
+        // ->send($message);
     }
 
 

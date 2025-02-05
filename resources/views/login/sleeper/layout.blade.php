@@ -22,9 +22,9 @@
                                 </div>
                             </header>
 
+
                             {{-- 휴면회원 해제 신청 --}}
                             @livewire('auth-sleeper-unlock')
-
 
 
                             <!-- Footer -->
@@ -49,7 +49,4 @@
             </div>
         </div>
     </main>
-
-
-
 </x-www-app>

@@ -8,10 +8,13 @@ use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Schema;
 
-use Jiny\Auth\Http\Controllers\AdminController;
+/**
+ * 회원 접속 로그를 조회합니다.
+ */
+use Jiny\Admin\Http\Controllers\AdminController;
 class AdminUserLogCount extends AdminController
 {
-    //const MENU_PATH = "menus";
+
     public function __construct()
     {
         parent::__construct();
@@ -24,61 +27,28 @@ class AdminUserLogCount extends AdminController
         $this->actions['view']['layout'] = "jiny-auth::admin.log_count.layout";
         $this->actions['view']['table'] = "jiny-auth::admin.log_count.table";
 
+        
+
         $this->actions['view']['list'] = "jiny-auth::admin.log_count.list";
         $this->actions['view']['form'] = "jiny-auth::admin.log_count.form";
 
         $this->actions['title'] = "로그인 접속 횟수";
-        $this->actions['subtitle'] = "사용자 접속 횟수 기록";
+        $this->actions['subtitle'] = "사용자별 접속 횟수 기록";
 
     }
 
 
-    ## 목록 dbFetch 전에 실행됩니다.
-    public function hookIndexing($wire)
+    public function index(Request $request)
     {
-        $logUserId = $wire->request('id');
-        if($logUserId) {
-            $wire->db()->where('user_id',$logUserId);
+        $user_id = $request->id;
+        if($user_id) {
+            $this->params['user_id'] = $user_id;
+            $this->actions['table']['where'] = [
+                "user_id" => $user_id
+            ];
         }
 
-        // 반환값이 있으면, 종료됩니다.
-    }
-
-    /**
-     * Livewire 동작후 실행되는 메서드ed
-     */
-    ## 목록 데이터 fetch후 호출 됩니다.
-    public function hookIndexed($wire, $rows)
-    {
-
-        $ids = [];
-        foreach($rows as $item)
-        {
-            $key = $item->user_id;
-            $ids[$key] = $item->user_id;
-        }
-
-        //dd($ids);
-        //$ids = [1,7];
-        $temp = DB::table('users')->whereIn('id',$ids)->get();
-        //dd($temp);
-        $users = [];
-        foreach($temp as $item)
-        {
-            $id = $item->id;
-            $users[$id] = $item;
-        }
-
-        //dd($users);
-
-        foreach($rows as $i => $row)
-        {
-            $id = $row->user_id;
-            $rows[$i]->user = $users[$id];
-        }
-
-
-        return $rows;
+        return parent::index($request);
     }
 
 

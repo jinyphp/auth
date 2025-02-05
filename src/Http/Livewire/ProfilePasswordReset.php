@@ -25,7 +25,7 @@ class ProfilePasswordReset extends Component
         }
 
         if(!$this->viewFile) {
-            $this->viewFile = 'jiny-profile::home.user.password.reset';
+            $this->viewFile = 'jiny-auth::admin.password.reset';
         }
 
         $this->status = false;

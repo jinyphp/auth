@@ -23,6 +23,10 @@
                 메일
             </a>
 
+            <a href="/admin/auth/message" class="btn btn-secondary">
+                메시지
+            </a>
+
             <a href="/admin/auth/avata" class="btn btn-secondary">
                 아바타
             </a>

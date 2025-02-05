@@ -20,6 +20,10 @@
         </div>
 
         <div class="d-flex justify-content-end gap-2">
+            <a href="/admin/auth/setting/password" class="btn btn-secondary">
+                설정
+            </a>
+
             <button class="btn btn-primary" wire:click="create">
                 추가
             </button>

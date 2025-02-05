@@ -23,6 +23,7 @@ class CreateUserSleeperTable extends Migration
 
             // 사용자 번호
             $table->string('email')->nullable();
+            $table->string('name')->nullable();
             $table->unsignedBigInteger('user_id')->default(0);
 
             $table->string('sleeper')->nullable(); // 휴면상태

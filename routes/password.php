@@ -14,10 +14,16 @@ Route::get('/account/password/expire', function(){
 /**
  * 비밀번호 설정
  */
+Route::middleware(['web','guest'])
+->name('login')
+->prefix('/login')->group(function () {
+
+});
+
 // 비밀번호 찾기화면
 use Jiny\Auth\Http\Controllers\Auth\PasswordResetLinkController;
 Route::get('/login/password/forgot', [
-        PasswordResetLinkController::class,
+    \Jiny\Auth\Http\Controllers\Auth\PasswordResetLinkController::class,
         'create'])
     ->middleware(['web', 'guest'])
     ->name('password.request');

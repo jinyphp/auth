@@ -21,10 +21,16 @@ class AdminUserLogController extends AdminController
         $this->actions['table']['name'] = "user_logs"; // 테이블 정보
         $this->actions['paging'] = 10; // 페이지 기본값
 
+        $this->actions['view']['layout'] = "jiny-auth::admin.logs.layout";
+        $this->actions['view']['table'] = "jiny-auth::admin.logs.table";
+
         $this->actions['view']['list'] = "jiny-auth::admin.logs.list";
         $this->actions['view']['form'] = "jiny-auth::admin.logs.form";
 
         $this->actions['view']['main'] = "jiny-auth::admin.logs.main";
+
+        $this->actions['title'] = "상세 로그";
+        $this->actions['subtitle'] = "사용자별 로그 기록";
 
     }
 

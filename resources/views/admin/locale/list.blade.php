@@ -5,9 +5,7 @@
         <th>
             회원
         </th>
-        <th>
-            설명
-        </th>
+
         <th width='200'>country/ip</th>
         <th width='200'>언어</th>
         <th width='200'>등록일자</th>
@@ -17,7 +15,9 @@
             @foreach ($rows as $item)
             <x-wire-tbody-item :selected="$selected" :item="$item">
                 {{-- 테이블 리스트 --}}
-                <td width='50'>{{$item->id}}</td>
+                <td width='50'>
+                    {{$item->id}}
+                </td>
                 <td>
                     <x-flex class="gap-2">
                         <x-avata src="/home/user/avatar/{{$item->user_id}}"
@@ -33,10 +33,6 @@
 
                         </div>
                     </x-flex>
-                </td>
-
-                <td>
-                    {{$item->description}}
                 </td>
                 <td width='200'>
                     <div>{{$item->country}}</div>

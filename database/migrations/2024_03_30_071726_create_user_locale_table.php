@@ -22,6 +22,8 @@ class CreateUserLocaleTable extends Migration
             // 회원id
             $table->unsignedBigInteger('user_id')->default(0);
             $table->string('email')->nullable();
+            $table->string('name')->nullable();
+
 
             $table->string('enable')->nullable();
             $table->string('ip')->nullable(); //

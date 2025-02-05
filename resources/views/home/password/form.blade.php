@@ -8,12 +8,12 @@
             wire:model.defer="form.old">
 
         @if(isset($message['old']))
-        <div id="passwordHelpBlock" class="form-text text-danger">
+        <div class="form-text text-danger">
             {{$message['old']}}
         </div>
         @else
             @if(!isset($form['old']))
-        <div id="passwordHelpBlock" class="form-text">
+        <div class="form-text">
             패스워드는 최소 8~20자 이내 이어야 합니다. 또한, @,#,! 특수기회와 대소문자가 같이 있어야 합니다.
         </div>
             @endif

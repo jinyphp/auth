@@ -9,7 +9,8 @@ use Illuminate\Support\Facades\Hash;
 /**
  * 사용자의 페스워드를 변경합니다.
  */
-class HomeProfilePassword extends Component
+use Jiny\Table\Http\Livewire\JinyComponent;
+class HomeProfilePassword extends JinyComponent
 {
     public $user_id;
 
@@ -26,7 +27,7 @@ class HomeProfilePassword extends Component
 
     public $status = false;
 
-
+    public $setting;
     public function mount()
     {
         if(!$this->user_id) {
@@ -43,6 +44,10 @@ class HomeProfilePassword extends Component
         if(!$this->viewSuccess) {
             $this->viewSuccess = 'jiny-auth::home.password.success';
         }
+
+        // 환경설정 읽어오기
+        $this->setting = config('jiny.auth.setting');
+        //dd($this->setting);
     }
 
     public function render()
@@ -63,11 +68,13 @@ class HomeProfilePassword extends Component
         $this->message = [];
 
         $form = $this->form;
+        // 검사1. 기존 비밀번호 입력 여부
         if(!isset($form['old']) || !$form['old']) {
             $this->message['old'] = "기존 비밀번호를 입력해 주세요.";
             return false;
         }
 
+        // 검사2. 기존 비밀번호 형식 검사
         $type = $this->checkTypePassword($form['old']);
         if(!is_bool($type) || !$type) {
             $this->message['old'] = $type;
@@ -121,29 +128,53 @@ class HomeProfilePassword extends Component
 
     private function checkTypePassword($password)
     {
-        if(strlen($password) < 8) {
-            return "패스워드 최소 8자 이상 되어야 합니다.";
+        if(isset($this->setting['password']['min'])) {
+
+            if($this->setting['password']['min']) {
+                $password_len = $this->setting['password']['min'];
+            } else {
+                $password_len = 8;
+            }
+
+            if(strlen($password) < $password_len) {
+                return "패스워드 최소 ".$password_len."자 이상 되어야 합니다.";
+            }
         }
 
-        if(strlen($password) >= 20) {
-            return "패스워드 최대 20자 입니다.";
+        if(isset($this->setting['password']['max'])) {
+            if($this->setting['password']['max']) {
+                $password_len = $this->setting['password']['max'];
+            } else {
+                $password_len = 20;
+            }
+
+            if(strlen($password) >= $password_len) {
+                return "패스워드 최대 ".$password_len."자 입니다.";
+            }
         }
 
-
-        // 문자열에서 #, @, ! 중 하나라도 포함되어 있는지 확인
-        if (strpos($password, '#') !== false
-            || strpos($password, '@') !== false
-            || strpos($password, '!') !== false) {
-            //echo "문자열에 #, @, ! 중 하나 이상이 포함되어 있습니다.";
-        } else {
-            return "문자열에 #, @, ! 중 하나도 포함되어 있어야 합니다.";
+        // 특수문자 포함여부 체크
+        if(isset($this->setting['password']['special'])
+            && $this->setting['password']['special']) {
+            if (!preg_match('/[\'^£$%&*()}{@#~?><>,|=_+¬-]/', $password)) {
+                return "비밀번호에는 특수문자가 포함되어야 합니다.";
+            }
         }
 
-        // 대문자 알파벳 중 하나라도 포함되어 있는지 확인
-        if (preg_match('/[A-Z]/', $password)) {
-            //echo "문자열에 대문자 알파벳이 포함되어 있습니다.";
-        } else {
-            return "패스워드에 대문자 알파벳이 포함되어 있지 않습니다.";
+        // 숫자 포함 체크
+        if(isset($this->setting['password']['number'])
+            && $this->setting['password']['number']) {
+            if (!preg_match('/[0-9]/', $password)) {
+                return "비밀번호에는 숫자가 포함되어야 합니다.";
+            }
+        }
+
+        // 영문자 포함 체크
+        if(isset($this->setting['password']['alpha'])
+            && $this->setting['password']['alpha']) {
+            if (!preg_match('/[a-zA-Z]/', $password)) {
+                return "비밀번호에는 영문자가 포함되어야 합니다.";
+            }
         }
 
         return true;

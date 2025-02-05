@@ -37,16 +37,7 @@
                 <span class="d-none d-md-block">비밀번호</span>
             </x-navtab-link>
 
-            <x-form-hor>
-                <x-form-label>최소 글자수</x-form-label>
-                <x-form-item>
-                    {!! xInputText()
-                        ->setWire('model.defer',"forms.password.min")
-                        ->setWidth("standard")
-                    !!}
-                    <p>패스워드 입력 최소 글자수 지정</p>
-                </x-form-item>
-            </x-form-hor>
+            
 
             <hr>
 

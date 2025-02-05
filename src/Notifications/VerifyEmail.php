@@ -10,7 +10,8 @@ use Illuminate\Support\Facades\URL;
 
 class VerifyEmail extends Notification
 {
-    // $this->user를 사용하지 않고도 Notification 클래스나 VerifyEmail 클래스에 직접 값을 전달합니다.
+    // $this->user를 사용하지 않고도 Notification 클래스나
+    // VerifyEmail 클래스에 직접 값을 전달합니다.
     // Notification 클래스의 생성자를 통해 값을 전달하고,
     // 해당 값을 이용하여 이메일을 구성할 수 있습니다.
     protected $verificationToken;
@@ -83,11 +84,12 @@ class VerifyEmail extends Notification
         //     ->action(Lang::get('Verify Email Address'), $url)
         //     ->line(Lang::get('If you did not create an account, no further action is required.'));
 
+        $viewMail = "jiny-auth::auth.verify.mail";
         return (new MailMessage)
             ->subject(Lang::get('이메일 확인요청'))
             ->action(Lang::get('Verify Email Address'), $url)
             ->view(
-                'jiny-auth::emails.verify', // 새로 생성한 Blade 뷰
+                $viewMail, // 새로 생성한 Blade 뷰
                 ['url' => $url] // 전달할 데이터
             );
     }

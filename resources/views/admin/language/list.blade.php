@@ -5,7 +5,7 @@
 <x-wire-table>
     <x-wire-thead>
         {{-- 테이블 제목 --}}
-
+        <th width='100' class="text-center">Id</th>
         <th>언어명</th>
         <th width='100' class="text-center">사용자수</th>
         <th width='100' class="text-center">% Percent</th>
@@ -17,6 +17,9 @@
             @foreach ($rows as $item)
             <x-wire-tbody-item :selected="$selected" :item="$item">
                 {{-- 테이블 리스트 --}}
+                <td width='100' class="text-center">
+                    {{$item->id}}
+                </td>
                 <td class="d-flex align-items-center gap-2">
 
                     <x-link-void wire:click="edit({{$item->id}})">

@@ -17,50 +17,25 @@ use Jiny\Site\Http\Controllers\SiteController;
 class LoginDisable extends SiteController
 {
     public $setting = [];
-    public $login = [];
 
     public function __construct()
     {
         parent::__construct();
         $this->setVisit($this);
 
-        $setting = config("jiny.auth.setting");
-        $this->login = config("jiny.auth.login");
-
-        $this->actions['setting'] = $setting; // 환경 설정값을 actions 으로 공유
-
+        $this->setting = config("jiny.auth.setting");
     }
 
-    /*
-    public function index(Request $request)
-    {
-        // 기본 View
-        $this->viewFileLayout = "jiny-auth::login.disable";
-
-        return parent::index($request);
-    }
-    */
 
     public function index(Request $request)
     {
-        // 로그인을 제한하는 경우
-        if($this->isLoginDisable()) {
-            $viewFile = $this->viewDisable();
-
-            return view($viewFile,[
-                'setting'=>$this->setting
-            ]);
-        }
-
-        // 라우트 이름으로 리다이렉트
-        return redirect()->route('login');
+        $viewFile = $this->viewDisable();
+        return view($viewFile,);
     }
+
 
     public function viewDisable()
     {
-        // 기본값
-        $default = "jiny-auth::login.disable";
-
         // View 우선순위 처리
         // 1. actions -> 절대경로 -> slot경로 -> www:: -> theme -> resources/views
         // 2. viewFileLayout 프로퍼티 ->
@@ -77,18 +52,9 @@ class LoginDisable extends SiteController
             }
         }
 
+        // 기본값
+        $default = "jiny-auth::login.disable.layout";
         return $default;
-    }
-
-
-    private function isLoginDisable()
-    {
-        // 1차검사
-        if(isset($this->login['disable']) && $this->login['disable']) {
-            return true;
-        }
-
-        return false;
     }
 
 

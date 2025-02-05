@@ -11,6 +11,13 @@
         </th>
         <th width='100'>user</th>
         <th width='100' class="text-center">% Percent</th>
+        <th width='100'>가입 포인트</th>
+        <th width='100'>추천 포인트</th>
+        <th width='100'>가입비용</th>
+        <th width='100'>월 유지비용</th>
+        <th width='100'>최대 사용자 수</th>
+
+
         <th width='200'>등록일자</th>
 
     </x-wire-thead>
@@ -54,9 +61,12 @@
                             aria-valuemax="100">{{ $percent }}%</div>
                     </div>
                 </td>
-
+                <td width='100'>{{$item->welcome_point}}</td>
+                <td width='100'>{{$item->recommend_point}}</td>
+                <td width='100'>{{$item->register_fee}}</td>
+                <td width='100'>{{$item->monthly_fee}}</td>
+                <td width='100'>{{$item->max_users}}</td>
                 <td width='200'>{{$item->created_at}}</td>
-
             </x-wire-tbody-item>
             @endforeach
         @endif

@@ -1,4 +1,6 @@
 <div>
+
+
     {{$message}}
 
     @if(!$message)

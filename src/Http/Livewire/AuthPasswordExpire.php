@@ -53,7 +53,7 @@ class AuthPasswordExpire extends Component
             }
 
             if (!Hash::check($this->forms['password'], $user->password)) {
-                dump('비밀번호 불일치');
+                //dump('비밀번호 불일치');
                 $this->error_message = "비밀번호가 일치하지 않습니다.";
                 $this->forms['password'] = null;
                 return false;

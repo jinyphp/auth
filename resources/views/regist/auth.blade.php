@@ -7,6 +7,7 @@
                 <div class="col-sm-10 col-md-5 mx-auto d-table h-100">
                     <div class="d-table-cell align-middle">
 
+
                         <section>
                             <header>
                                 <div class="d-flex justify-content-between align-items-end mb-3">
@@ -22,9 +23,6 @@
 
                                 </div>
                             </header>
-
-
-
 
 
                             <!-- Footer -->
@@ -43,11 +41,10 @@
                             </footer>
                         </section>
 
-                        <!-- -->
+
                     </div>
                 </div>
             </div>
         </div>
     </main>
-
 </x-www-app>

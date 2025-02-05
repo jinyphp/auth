@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 
 class EmailVerificationPromptController extends Controller
 {
+
     /**
      * Display the email verification prompt.
      *
