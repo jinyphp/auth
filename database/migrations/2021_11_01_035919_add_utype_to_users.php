@@ -14,10 +14,14 @@ class AddUtypeToUsers extends Migration
     public function up()
     {
         Schema::table('users', function (Blueprint $table) {
-            $table->string('isAdmin')->default('0');
-            $table->string('utype')
-                ->default('USR')
-                ->comment('ADM for admin and USR for Normal');
+            if (!Schema::hasColumn('users', 'isAdmin')) {
+                $table->string('isAdmin')->default('0');
+            }
+            if (!Schema::hasColumn('users', 'utype')) {
+                $table->string('utype')
+                    ->default('USR')
+                    ->comment('ADM for admin and USR for Normal');
+            }
         });
     }
 

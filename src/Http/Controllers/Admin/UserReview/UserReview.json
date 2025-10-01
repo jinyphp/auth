@@ -1,0 +1,86 @@
+{
+    "table": {
+        "name": "user_reviews",
+        "sort": {
+            "column": "created_at",
+            "order": "desc"
+        }
+    },
+    "storage": {},
+    "index": {
+        "title": "사용자 리뷰 관리",
+        "subtitle": "사용자 리뷰 목록",
+        "view": "jiny-auth::admin.user-review.index",
+        "route": "admin.auth.user.reviews.index",
+        "filter": {
+            "search": true,
+            "rating": true
+        },
+        "pagination": {
+            "per_page": 20
+        }
+    },
+    "show": {
+        "title": "리뷰 상세",
+        "subtitle": "리뷰 정보",
+        "view": "jiny-auth::admin.user-review.show",
+        "route": "admin.auth.user.reviews.show"
+    },
+    "create": {
+        "title": "리뷰 생성",
+        "subtitle": "새로운 리뷰 추가",
+        "view": "jiny-auth::admin.user-review.create",
+        "route": "admin.auth.user.reviews.create"
+    },
+    "edit": {
+        "title": "리뷰 수정",
+        "subtitle": "리뷰 정보 수정",
+        "view": "jiny-auth::admin.user-review.edit",
+        "route": "admin.auth.user.reviews.edit"
+    },
+    "store": {
+        "route": "admin.auth.user.reviews.store",
+        "redirect": {
+            "success": "admin.auth.user.reviews.index",
+            "error": "admin.auth.user.reviews.create"
+        },
+        "validation": {
+            "user_id": "required|exists:users,id",
+            "reviewable_type": "required|string|max:255",
+            "reviewable_id": "required|integer",
+            "rating": "required|integer|min:1|max:5",
+            "comment": "nullable|string"
+        },
+        "messages": {
+            "success": "리뷰가 성공적으로 생성되었습니다.",
+            "error": "리뷰 생성에 실패했습니다."
+        }
+    },
+    "update": {
+        "route": "admin.auth.user.reviews.update",
+        "redirect": {
+            "success": "admin.auth.user.reviews.show",
+            "error": "admin.auth.user.reviews.edit"
+        },
+        "validation": {
+            "rating": "required|integer|min:1|max:5",
+            "comment": "nullable|string"
+        },
+        "messages": {
+            "success": "리뷰 정보가 성공적으로 업데이트되었습니다.",
+            "error": "리뷰 정보 업데이트에 실패했습니다."
+        }
+    },
+    "delete": {
+        "title": "리뷰 삭제",
+        "subtitle": "리뷰 삭제 확인",
+        "route": "admin.auth.user.reviews.destroy",
+        "redirect": {
+            "success": "admin.auth.user.reviews.index"
+        },
+        "messages": {
+            "success": "리뷰가 성공적으로 삭제되었습니다.",
+            "error": "리뷰 삭제에 실패했습니다."
+        }
+    }
+}

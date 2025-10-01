@@ -1,0 +1,89 @@
+{
+    "table": {
+        "name": "user_messages",
+        "sort": {
+            "column": "created_at",
+            "order": "desc"
+        }
+    },
+    "storage": {},
+    "index": {
+        "title": "사용자 메시지 관리",
+        "subtitle": "사용자 메시지 목록",
+        "view": "jiny-auth::admin.user-message.index",
+        "route": "admin.user-messages.index",
+        "filter": {
+            "search": true,
+            "status": true,
+            "notice": true
+        },
+        "pagination": {
+            "per_page": 20
+        }
+    },
+    "show": {
+        "title": "메시지 상세",
+        "subtitle": "메시지 정보 조회",
+        "view": "jiny-auth::admin.user-message.show",
+        "route": "admin.auth.user.messages.show"
+    },
+    "create": {
+        "title": "메시지 생성",
+        "subtitle": "새로운 메시지 추가",
+        "view": "jiny-auth::admin.user-message.create",
+        "route": "admin.auth.user.messages.create"
+    },
+    "edit": {
+        "title": "메시지 수정",
+        "subtitle": "메시지 정보 수정",
+        "view": "jiny-auth::admin.user-message.edit",
+        "route": "admin.auth.user.messages.edit"
+    },
+    "store": {
+        "route": "admin.auth.user.messages.store",
+        "redirect": {
+            "success": "admin.auth.user.messages.index",
+            "error": "admin.auth.user.messages.create"
+        },
+        "validation": {
+            "user_id": "required|exists:users,id",
+            "from_user_id": "nullable|exists:users,id",
+            "subject": "required|string|max:255",
+            "message": "required|string",
+            "notice": "nullable|in:0,1"
+        },
+        "messages": {
+            "success": "메시지가 성공적으로 생성되었습니다.",
+            "error": "메시지 생성에 실패했습니다."
+        }
+    },
+    "update": {
+        "route": "admin.auth.user.messages.update",
+        "redirect": {
+            "success": "admin.auth.user.messages.show",
+            "error": "admin.auth.user.messages.edit"
+        },
+        "validation": {
+            "subject": "required|string|max:255",
+            "message": "required|string",
+            "status": "nullable|string|max:50",
+            "notice": "nullable|in:0,1"
+        },
+        "messages": {
+            "success": "메시지가 성공적으로 업데이트되었습니다.",
+            "error": "메시지 업데이트에 실패했습니다."
+        }
+    },
+    "delete": {
+        "title": "메시지 삭제",
+        "subtitle": "메시지 삭제 확인",
+        "route": "admin.auth.user.messages.destroy",
+        "redirect": {
+            "success": "admin.auth.user.messages.index"
+        },
+        "messages": {
+            "success": "메시지가 성공적으로 삭제되었습니다.",
+            "error": "메시지 삭제에 실패했습니다."
+        }
+    }
+}

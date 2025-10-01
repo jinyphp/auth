@@ -1,0 +1,88 @@
+{
+    "table": {
+        "name": "user_grade",
+        "model": "Jiny\\Auth\\Models\\UserGrade",
+        "where": {},
+        "sort": {
+            "column": "created_at",
+            "order": "desc"
+        }
+    },
+    "index": {
+        "title": "사용자 등급 관리",
+        "subtitle": "시스템 사용자 등급 목록",
+        "view": "jiny-auth::admin.user-grades.index",
+        "route": "admin.auth.user.grades.index",
+        "filter": {
+            "search": true,
+            "status": true
+        },
+        "pagination": {
+            "per_page": 10
+        }
+    },
+    "show": {
+        "title": "사용자 등급 상세",
+        "subtitle": "사용자 등급 정보 조회",
+        "view": "jiny-auth::admin.user-grades.show",
+        "route": "admin.auth.user.grades.show"
+    },
+    "create": {
+        "title": "사용자 등급 생성",
+        "subtitle": "새로운 사용자 등급 추가",
+        "view": "jiny-auth::admin.user-grades.create",
+        "route": "admin.auth.user.grades.create"
+    },
+    "edit": {
+        "title": "사용자 등급 수정",
+        "subtitle": "사용자 등급 정보 수정",
+        "view": "jiny-auth::admin.user-grades.edit",
+        "route": "admin.auth.user.grades.edit"
+    },
+    "store": {
+        "route": "admin.auth.user.grades.store",
+        "redirect": {
+            "success": "admin.auth.user.grades.index",
+            "error": "admin.auth.user.grades.create"
+        },
+        "validation": {
+            "name": "required|string|max:255|unique:user_grade",
+            "description": "nullable|string",
+            "level": "nullable|integer",
+            "enable": "required|boolean"
+        },
+        "messages": {
+            "success": "사용자 등급이 성공적으로 생성되었습니다.",
+            "error": "사용자 등급 생성에 실패했습니다."
+        }
+    },
+    "update": {
+        "route": "admin.auth.user.grades.update",
+        "redirect": {
+            "success": "admin.auth.user.grades.show",
+            "error": "admin.auth.user.grades.edit"
+        },
+        "validation": {
+            "name": "required|string|max:255",
+            "description": "nullable|string",
+            "level": "nullable|integer",
+            "enable": "required|boolean"
+        },
+        "messages": {
+            "success": "사용자 등급이 성공적으로 업데이트되었습니다.",
+            "error": "사용자 등급 업데이트에 실패했습니다."
+        }
+    },
+    "delete": {
+        "title": "사용자 등급 삭제",
+        "subtitle": "사용자 등급 삭제 확인",
+        "route": "admin.auth.user.grades.destroy",
+        "redirect": {
+            "success": "admin.auth.user.grades.index"
+        },
+        "messages": {
+            "success": "사용자 등급이 성공적으로 삭제되었습니다.",
+            "error": "사용자 등급 삭제에 실패했습니다."
+        }
+    }
+}

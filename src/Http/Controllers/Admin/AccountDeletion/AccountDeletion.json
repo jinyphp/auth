@@ -1,0 +1,66 @@
+{
+    "table": {
+        "name": "account_deletions",
+        "sort": {
+            "column": "requested_at",
+            "order": "desc"
+        }
+    },
+    "storage": {
+    },
+    "index": {
+        "title": "계정 탈퇴 관리",
+        "subtitle": "탈퇴 신청 목록",
+        "view": "jiny-auth::admin.deletion.index",
+        "route": "admin.deletions.index",
+        "filter": {
+            "search": true,
+            "status": true
+        },
+        "pagination": {
+            "per_page": 20
+        }
+    },
+    "show": {
+        "title": "탈퇴 신청 상세",
+        "subtitle": "탈퇴 신청 정보 조회",
+        "view": "jiny-auth::account.deletion.pending",
+        "route": "admin.deletions.show",
+        "detail_view": "jiny-auth::account.deletion.pending"
+    },
+    "approve": {
+        "title": "탈퇴 승인",
+        "subtitle": "탈퇴 신청 승인 처리",
+        "route": "admin.deletions.approve",
+        "redirect": {
+            "success": "admin.deletions.index",
+            "error": "back"
+        },
+        "validation": {
+            "note": "nullable|string|max:500"
+        },
+        "messages": {
+            "success": "탈퇴가 승인되고 처리되었습니다.",
+            "error": "탈퇴 승인 처리에 실패했습니다."
+        }
+    },
+    "reject": {
+        "title": "탈퇴 거부",
+        "subtitle": "탈퇴 신청 거부 처리",
+        "route": "admin.deletions.reject",
+        "redirect": {
+            "success": "admin.deletions.index",
+            "error": "back"
+        },
+        "validation": {
+            "note": "required|string|max:500"
+        },
+        "messages": {
+            "success": "탈퇴 신청이 거부되었습니다.",
+            "error": "탈퇴 거부 처리에 실패했습니다.",
+            "validation": {
+                "note.required": "거부 사유를 입력해주세요."
+            }
+        }
+    }
+}

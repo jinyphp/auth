@@ -1,4 +1,0 @@
-<div>
-    {{$forms['email']}}
-
-</div>

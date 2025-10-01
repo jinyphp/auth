@@ -1,0 +1,85 @@
+{
+    "table": {
+        "name": "user_reserved",
+        "sort": {
+            "column": "created_at",
+            "order": "desc"
+        }
+    },
+    "storage": {},
+    "index": {
+        "title": "예약 키워드 관리",
+        "subtitle": "예약된 키워드 목록",
+        "view": "jiny-auth::admin.user-reserved.index",
+        "route": "admin.auth.user.reserved.index",
+        "filter": {
+            "search": true,
+            "type": true
+        },
+        "pagination": {
+            "per_page": 20
+        }
+    },
+    "show": {
+        "title": "예약 키워드 상세",
+        "subtitle": "예약 키워드 정보",
+        "view": "jiny-auth::admin.user-reserved.show",
+        "route": "admin.auth.user.reserved.show"
+    },
+    "create": {
+        "title": "예약 키워드 생성",
+        "subtitle": "새로운 예약 키워드 추가",
+        "view": "jiny-auth::admin.user-reserved.create",
+        "route": "admin.auth.user.reserved.create"
+    },
+    "edit": {
+        "title": "예약 키워드 수정",
+        "subtitle": "예약 키워드 정보 수정",
+        "view": "jiny-auth::admin.user-reserved.edit",
+        "route": "admin.auth.user.reserved.edit"
+    },
+    "store": {
+        "route": "admin.auth.user.reserved.store",
+        "redirect": {
+            "success": "admin.auth.user.reserved.index",
+            "error": "admin.auth.user.reserved.create"
+        },
+        "validation": {
+            "keyword": "required|string|max:255|unique:user_reserved,keyword",
+            "type": "required|string|max:50",
+            "description": "nullable|string"
+        },
+        "messages": {
+            "success": "예약 키워드가 성공적으로 생성되었습니다.",
+            "error": "예약 키워드 생성에 실패했습니다."
+        }
+    },
+    "update": {
+        "route": "admin.auth.user.reserved.update",
+        "redirect": {
+            "success": "admin.auth.user.reserved.show",
+            "error": "admin.auth.user.reserved.edit"
+        },
+        "validation": {
+            "keyword": "required|string|max:255",
+            "type": "required|string|max:50",
+            "description": "nullable|string"
+        },
+        "messages": {
+            "success": "예약 키워드 정보가 성공적으로 업데이트되었습니다.",
+            "error": "예약 키워드 정보 업데이트에 실패했습니다."
+        }
+    },
+    "delete": {
+        "title": "예약 키워드 삭제",
+        "subtitle": "예약 키워드 삭제 확인",
+        "route": "admin.auth.user.reserved.destroy",
+        "redirect": {
+            "success": "admin.auth.user.reserved.index"
+        },
+        "messages": {
+            "success": "예약 키워드가 성공적으로 삭제되었습니다.",
+            "error": "예약 키워드 삭제에 실패했습니다."
+        }
+    }
+}

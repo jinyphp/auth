@@ -1,0 +1,93 @@
+{
+    "table": {
+        "name": "user_type",
+        "model": "Jiny\\Auth\\Models\\UserType",
+        "where": {},
+        "sort": {
+            "column": "created_at",
+            "order": "desc"
+        }
+    },
+    "index": {
+        "title": "사용자 유형 관리",
+        "subtitle": "시스템 사용자 유형 목록",
+        "view": "jiny-auth::admin.user-types.index",
+        "route": "admin.auth.user.types.index",
+        "filter": {
+            "search": true,
+            "status": true
+        },
+        "pagination": {
+            "per_page": 10
+        }
+    },
+    "show": {
+        "title": "사용자 유형 상세",
+        "subtitle": "사용자 유형 정보 조회",
+        "view": "jiny-auth::admin.user-types.show",
+        "route": "admin.auth.user.types.show"
+    },
+    "create": {
+        "title": "사용자 유형 생성",
+        "subtitle": "새로운 사용자 유형 추가",
+        "view": "jiny-auth::admin.user-types.create",
+        "route": "admin.auth.user.types.create"
+    },
+    "edit": {
+        "title": "사용자 유형 수정",
+        "subtitle": "사용자 유형 정보 수정",
+        "view": "jiny-auth::admin.user-types.edit",
+        "route": "admin.auth.user.types.edit"
+    },
+    "store": {
+        "route": "admin.auth.user.types.store",
+        "redirect": {
+            "success": "admin.auth.user.types.index",
+            "error": "admin.auth.user.types.create"
+        },
+        "validation": {
+            "type": "required|string|max:255|unique:user_type",
+            "description": "nullable|string",
+            "enable": "required|boolean"
+        },
+        "defaults": {
+            "users": 0
+        },
+        "messages": {
+            "success": "사용자 유형이 성공적으로 생성되었습니다.",
+            "error": "사용자 유형 생성에 실패했습니다."
+        }
+    },
+    "update": {
+        "route": "admin.auth.user.types.update",
+        "redirect": {
+            "success": "admin.auth.user.types.show",
+            "error": "admin.auth.user.types.edit"
+        },
+        "validation": {
+            "type": "required|string|max:255",
+            "description": "nullable|string",
+            "enable": "required|boolean"
+        },
+        "messages": {
+            "success": "사용자 유형이 성공적으로 업데이트되었습니다.",
+            "error": "사용자 유형 업데이트에 실패했습니다."
+        }
+    },
+    "delete": {
+        "title": "사용자 유형 삭제",
+        "subtitle": "사용자 유형 삭제 확인",
+        "route": "admin.auth.user.types.destroy",
+        "redirect": {
+            "success": "admin.auth.user.types.index"
+        },
+        "validation": {
+            "check_users": true
+        },
+        "messages": {
+            "success": "사용자 유형이 성공적으로 삭제되었습니다.",
+            "error": "사용자 유형 삭제에 실패했습니다.",
+            "has_users": "이 유형을 사용하는 사용자가 있어 삭제할 수 없습니다."
+        }
+    }
+}

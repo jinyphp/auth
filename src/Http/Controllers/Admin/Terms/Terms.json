@@ -1,0 +1,96 @@
+{
+    "table": {
+        "name": "user_terms",
+        "model": "Jiny\\Auth\\Models\\UserTerms",
+        "where": {},
+        "sort": {
+            "column": "pos",
+            "order": "asc",
+            "secondary": {
+                "column": "created_at",
+                "order": "desc"
+            }
+        }
+    },
+    "index": {
+        "title": "이용약관 관리",
+        "subtitle": "시스템 이용약관 목록",
+        "view": "jiny-auth::admin.terms.index",
+        "route": "admin.auth.terms.index",
+        "filter": {
+            "search": true,
+            "status": true
+        },
+        "pagination": {
+            "per_page": 10
+        }
+    },
+    "show": {
+        "title": "이용약관 상세",
+        "subtitle": "이용약관 정보 조회",
+        "view": "jiny-auth::admin.terms.show",
+        "route": "admin.auth.terms.show"
+    },
+    "create": {
+        "title": "이용약관 생성",
+        "subtitle": "새로운 이용약관 추가",
+        "view": "jiny-auth::admin.terms.create",
+        "route": "admin.auth.terms.create"
+    },
+    "edit": {
+        "title": "이용약관 수정",
+        "subtitle": "이용약관 정보 수정",
+        "view": "jiny-auth::admin.terms.edit",
+        "route": "admin.auth.terms.edit"
+    },
+    "store": {
+        "route": "admin.auth.terms.store",
+        "redirect": {
+            "success": "admin.auth.terms.index",
+            "error": "admin.auth.terms.create"
+        },
+        "validation": {
+            "title": "required|string|max:255",
+            "description": "nullable|string",
+            "content": "required|string",
+            "version": "nullable|string|max:50",
+            "pos": "nullable|integer",
+            "enable": "required|boolean"
+        },
+        "messages": {
+            "success": "이용약관이 성공적으로 생성되었습니다.",
+            "error": "이용약관 생성에 실패했습니다."
+        }
+    },
+    "update": {
+        "route": "admin.auth.terms.update",
+        "redirect": {
+            "success": "admin.auth.terms.show",
+            "error": "admin.auth.terms.edit"
+        },
+        "validation": {
+            "title": "required|string|max:255",
+            "description": "nullable|string",
+            "content": "required|string",
+            "version": "nullable|string|max:50",
+            "pos": "nullable|integer",
+            "enable": "required|boolean"
+        },
+        "messages": {
+            "success": "이용약관이 성공적으로 업데이트되었습니다.",
+            "error": "이용약관 업데이트에 실패했습니다."
+        }
+    },
+    "delete": {
+        "title": "이용약관 삭제",
+        "subtitle": "이용약관 삭제 확인",
+        "route": "admin.auth.terms.destroy",
+        "redirect": {
+            "success": "admin.auth.terms.index"
+        },
+        "messages": {
+            "success": "이용약관이 성공적으로 삭제되었습니다.",
+            "error": "이용약관 삭제에 실패했습니다."
+        }
+    }
+}

@@ -1,0 +1,88 @@
+{
+    "table": {
+        "name": "user_phones",
+        "sort": {
+            "column": "created_at",
+            "order": "desc"
+        }
+    },
+    "storage": {},
+    "index": {
+        "title": "사용자 전화번호 관리",
+        "subtitle": "사용자 전화번호 목록",
+        "view": "jiny-auth::admin.user-phone.index",
+        "route": "admin.auth.user.phones.index",
+        "filter": {
+            "search": true,
+            "verified": true
+        },
+        "pagination": {
+            "per_page": 20
+        }
+    },
+    "show": {
+        "title": "전화번호 상세",
+        "subtitle": "전화번호 정보",
+        "view": "jiny-auth::admin.user-phone.show",
+        "route": "admin.auth.user.phones.show"
+    },
+    "create": {
+        "title": "전화번호 생성",
+        "subtitle": "새로운 전화번호 추가",
+        "view": "jiny-auth::admin.user-phone.create",
+        "route": "admin.auth.user.phones.create"
+    },
+    "edit": {
+        "title": "전화번호 수정",
+        "subtitle": "전화번호 정보 수정",
+        "view": "jiny-auth::admin.user-phone.edit",
+        "route": "admin.auth.user.phones.edit"
+    },
+    "store": {
+        "route": "admin.auth.user.phones.store",
+        "redirect": {
+            "success": "admin.auth.user.phones.index",
+            "error": "admin.auth.user.phones.create"
+        },
+        "validation": {
+            "user_id": "required|exists:users,id",
+            "phone": "required|string|max:20",
+            "country_code": "required|string|max:5",
+            "verified": "boolean",
+            "primary": "boolean"
+        },
+        "messages": {
+            "success": "전화번호가 성공적으로 생성되었습니다.",
+            "error": "전화번호 생성에 실패했습니다."
+        }
+    },
+    "update": {
+        "route": "admin.auth.user.phones.update",
+        "redirect": {
+            "success": "admin.auth.user.phones.show",
+            "error": "admin.auth.user.phones.edit"
+        },
+        "validation": {
+            "phone": "required|string|max:20",
+            "country_code": "required|string|max:5",
+            "verified": "boolean",
+            "primary": "boolean"
+        },
+        "messages": {
+            "success": "전화번호 정보가 성공적으로 업데이트되었습니다.",
+            "error": "전화번호 정보 업데이트에 실패했습니다."
+        }
+    },
+    "delete": {
+        "title": "전화번호 삭제",
+        "subtitle": "전화번호 삭제 확인",
+        "route": "admin.auth.user.phones.destroy",
+        "redirect": {
+            "success": "admin.auth.user.phones.index"
+        },
+        "messages": {
+            "success": "전화번호가 성공적으로 삭제되었습니다.",
+            "error": "전화번호 삭제에 실패했습니다."
+        }
+    }
+}

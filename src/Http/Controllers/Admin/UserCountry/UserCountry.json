@@ -1,0 +1,87 @@
+{
+    "table": {
+        "name": "user_country",
+        "sort": {
+            "column": "name",
+            "order": "asc"
+        }
+    },
+    "storage": {},
+    "index": {
+        "title": "국가 관리",
+        "subtitle": "국가 목록",
+        "view": "jiny-auth::admin.user-country.index",
+        "route": "admin.auth.user.countries.index",
+        "filter": {
+            "search": true,
+            "enable": true
+        },
+        "pagination": {
+            "per_page": 20
+        }
+    },
+    "show": {
+        "title": "국가 상세",
+        "subtitle": "국가 정보 조회",
+        "view": "jiny-auth::admin.user-country.show",
+        "route": "admin.auth.user.countries.show"
+    },
+    "create": {
+        "title": "국가 생성",
+        "subtitle": "새로운 국가 추가",
+        "view": "jiny-auth::admin.user-country.create",
+        "route": "admin.auth.user.countries.create"
+    },
+    "edit": {
+        "title": "국가 수정",
+        "subtitle": "국가 정보 수정",
+        "view": "jiny-auth::admin.user-country.edit",
+        "route": "admin.auth.user.countries.edit"
+    },
+    "store": {
+        "route": "admin.auth.user.countries.store",
+        "redirect": {
+            "success": "admin.auth.user.countries.index",
+            "error": "admin.auth.user.countries.create"
+        },
+        "validation": {
+            "code": "required|string|max:10|unique:user_country,code",
+            "name": "required|string|max:255",
+            "flag": "nullable|string|max:255",
+            "enable": "nullable|in:0,1"
+        },
+        "messages": {
+            "success": "국가가 성공적으로 생성되었습니다.",
+            "error": "국가 생성에 실패했습니다."
+        }
+    },
+    "update": {
+        "route": "admin.auth.user.countries.update",
+        "redirect": {
+            "success": "admin.auth.user.countries.show",
+            "error": "admin.auth.user.countries.edit"
+        },
+        "validation": {
+            "code": "required|string|max:10",
+            "name": "required|string|max:255",
+            "flag": "nullable|string|max:255",
+            "enable": "nullable|in:0,1"
+        },
+        "messages": {
+            "success": "국가가 성공적으로 업데이트되었습니다.",
+            "error": "국가 업데이트에 실패했습니다."
+        }
+    },
+    "delete": {
+        "title": "국가 삭제",
+        "subtitle": "국가 삭제 확인",
+        "route": "admin.auth.user.countries.destroy",
+        "redirect": {
+            "success": "admin.auth.user.countries.index"
+        },
+        "messages": {
+            "success": "국가가 성공적으로 삭제되었습니다.",
+            "error": "국가 삭제에 실패했습니다."
+        }
+    }
+}

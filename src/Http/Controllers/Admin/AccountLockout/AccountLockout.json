@@ -1,0 +1,57 @@
+{
+    "table": {
+        "name": "account_lockouts",
+        "sort": {
+            "column": "created_at",
+            "order": "desc"
+        }
+    },
+    "storage": {
+    },
+    "index": {
+        "title": "계정 잠금 관리",
+        "subtitle": "잠긴 계정 목록",
+        "view": "jiny-auth::admin.lockout.index",
+        "route": "admin.lockouts.index",
+        "filter": {
+            "search": true,
+            "status": true,
+            "requires_admin": true,
+            "level": true
+        },
+        "pagination": {
+            "per_page": 20
+        }
+    },
+    "show": {
+        "title": "계정 잠금 상세",
+        "subtitle": "잠금 정보 조회",
+        "view": "jiny-auth::admin.lockout.show",
+        "route": "admin.lockouts.show"
+    },
+    "unlock": {
+        "title": "계정 잠금 해제",
+        "subtitle": "계정 잠금 해제",
+        "route": "admin.lockouts.unlock",
+        "redirect": {
+            "success": "admin.lockouts.index",
+            "error": "back"
+        },
+        "validation": {
+            "reason": "required|string|max:500"
+        },
+        "messages": {
+            "success": "계정 잠금이 해제되었습니다.",
+            "error": "잠금 해제에 실패했습니다.",
+            "validation": {
+                "reason.required": "해제 사유를 입력해주세요."
+            }
+        }
+    },
+    "unlock_form": {
+        "title": "계정 잠금 해제",
+        "subtitle": "잠금 해제 폼",
+        "view": "jiny-auth::admin.lockout.unlock",
+        "route": "admin.lockouts.unlock.form"
+    }
+}

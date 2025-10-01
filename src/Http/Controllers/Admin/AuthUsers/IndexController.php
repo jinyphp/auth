@@ -1,0 +1,85 @@
+<?php
+
+namespace Jiny\Auth\Http\Controllers\Admin\AuthUsers;
+
+use App\Http\Controllers\Controller;
+use Illuminate\Http\Request;
+use Jiny\Auth\Models\AuthUser;
+
+/**
+ * 관리자 - 사용자 목록 컨트롤러
+ *
+ * 진입 경로:
+ * Route::get('/admin/auth-users') → IndexController::__invoke()
+ */
+class IndexController extends Controller
+{
+    protected $config;
+
+    public function __construct()
+    {
+        $this->middleware(['auth', 'admin']);
+        $this->loadConfig();
+    }
+
+    /**
+     * JSON 설정 파일 로드
+     */
+    protected function loadConfig()
+    {
+        $configPath = __DIR__ . '/AuthUser.json';
+        $jsonConfig = json_decode(file_get_contents($configPath), true);
+
+        $indexConfig = $jsonConfig['index'] ?? [];
+
+        $this->config = [
+            'view' => $indexConfig['view'] ?? 'jiny-auth::admin.auth-users.index',
+            'title' => $indexConfig['title'] ?? '사용자 관리',
+            'subtitle' => $indexConfig['subtitle'] ?? '시스템 사용자 목록',
+            'per_page' => $indexConfig['pagination']['per_page'] ?? 10,
+            'sort_column' => $jsonConfig['table']['sort']['column'] ?? 'created_at',
+            'sort_order' => $jsonConfig['table']['sort']['order'] ?? 'desc',
+            'filter_search' => $indexConfig['filter']['search'] ?? true,
+            'filter_role' => $indexConfig['filter']['role'] ?? true,
+            'filter_status' => $indexConfig['filter']['status'] ?? true,
+        ];
+    }
+
+    /**
+     * 사용자 목록 표시
+     */
+    public function __invoke(Request $request)
+    {
+        $query = AuthUser::query();
+
+        // 검색 필터
+        if ($this->config['filter_search'] && $request->filled('search')) {
+            $search = $request->get('search');
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                  ->orWhere('email', 'like', "%{$search}%")
+                  ->orWhere('username', 'like', "%{$search}%");
+            });
+        }
+
+        // 역할 필터
+        if ($this->config['filter_role'] && $request->filled('role') && $request->get('role') !== 'all') {
+            $query->where('role', $request->get('role'));
+        }
+
+        // 상태 필터
+        if ($this->config['filter_status'] && $request->filled('status') && $request->get('status') !== 'all') {
+            $query->where('status', $request->get('status'));
+        }
+
+        // 정렬
+        $sortBy = $request->get('sort_by', $this->config['sort_column']);
+        $sortOrder = $request->get('sort_order', $this->config['sort_order']);
+        $query->orderBy($sortBy, $sortOrder);
+
+        // 페이지네이션
+        $users = $query->paginate($this->config['per_page'])->withQueryString();
+
+        return view($this->config['view'], compact('users'));
+    }
+}

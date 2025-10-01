@@ -1,0 +1,87 @@
+{
+    "table": {
+        "name": "user_language",
+        "sort": {
+            "column": "name",
+            "order": "asc"
+        }
+    },
+    "storage": {},
+    "index": {
+        "title": "언어 관리",
+        "subtitle": "언어 목록",
+        "view": "jiny-auth::admin.user-language.index",
+        "route": "admin.auth.user.languages.index",
+        "filter": {
+            "search": true,
+            "enable": true
+        },
+        "pagination": {
+            "per_page": 20
+        }
+    },
+    "show": {
+        "title": "언어 상세",
+        "subtitle": "언어 정보 조회",
+        "view": "jiny-auth::admin.user-language.show",
+        "route": "admin.auth.user.languages.show"
+    },
+    "create": {
+        "title": "언어 생성",
+        "subtitle": "새로운 언어 추가",
+        "view": "jiny-auth::admin.user-language.create",
+        "route": "admin.auth.user.languages.create"
+    },
+    "edit": {
+        "title": "언어 수정",
+        "subtitle": "언어 정보 수정",
+        "view": "jiny-auth::admin.user-language.edit",
+        "route": "admin.auth.user.languages.edit"
+    },
+    "store": {
+        "route": "admin.auth.user.languages.store",
+        "redirect": {
+            "success": "admin.auth.user.languages.index",
+            "error": "admin.auth.user.languages.create"
+        },
+        "validation": {
+            "code": "required|string|max:10|unique:user_language,code",
+            "name": "required|string|max:255",
+            "flag": "nullable|string|max:255",
+            "enable": "nullable|in:0,1"
+        },
+        "messages": {
+            "success": "언어가 성공적으로 생성되었습니다.",
+            "error": "언어 생성에 실패했습니다."
+        }
+    },
+    "update": {
+        "route": "admin.auth.user.languages.update",
+        "redirect": {
+            "success": "admin.auth.user.languages.show",
+            "error": "admin.auth.user.languages.edit"
+        },
+        "validation": {
+            "code": "required|string|max:10",
+            "name": "required|string|max:255",
+            "flag": "nullable|string|max:255",
+            "enable": "nullable|in:0,1"
+        },
+        "messages": {
+            "success": "언어가 성공적으로 업데이트되었습니다.",
+            "error": "언어 업데이트에 실패했습니다."
+        }
+    },
+    "delete": {
+        "title": "언어 삭제",
+        "subtitle": "언어 삭제 확인",
+        "route": "admin.auth.user.languages.destroy",
+        "redirect": {
+            "success": "admin.auth.user.languages.index"
+        },
+        "messages": {
+            "success": "언어가 성공적으로 삭제되었습니다.",
+            "error": "언어 삭제에 실패했습니다."
+        }
+    }
+}

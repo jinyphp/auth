@@ -1,0 +1,85 @@
+{
+    "table": {
+        "name": "user_blacklist",
+        "model": "Jiny\\Auth\\Models\\UserBlacklist",
+        "where": {},
+        "sort": {
+            "column": "created_at",
+            "order": "desc"
+        }
+    },
+    "index": {
+        "title": "사용자 블랙리스트 관리",
+        "subtitle": "차단된 사용자 키워드 목록",
+        "view": "jiny-auth::admin.user-blacklist.index",
+        "route": "admin.auth.user.blacklist.index",
+        "filter": {
+            "search": true
+        },
+        "pagination": {
+            "per_page": 20
+        }
+    },
+    "show": {
+        "title": "블랙리스트 상세",
+        "subtitle": "블랙리스트 정보 조회",
+        "view": "jiny-auth::admin.user-blacklist.show",
+        "route": "admin.auth.user.blacklist.show"
+    },
+    "create": {
+        "title": "블랙리스트 추가",
+        "subtitle": "새로운 블랙리스트 키워드 추가",
+        "view": "jiny-auth::admin.user-blacklist.create",
+        "route": "admin.auth.user.blacklist.create"
+    },
+    "edit": {
+        "title": "블랙리스트 수정",
+        "subtitle": "블랙리스트 정보 수정",
+        "view": "jiny-auth::admin.user-blacklist.edit",
+        "route": "admin.auth.user.blacklist.edit"
+    },
+    "store": {
+        "route": "admin.auth.user.blacklist.store",
+        "redirect": {
+            "success": "admin.auth.user.blacklist.index",
+            "error": "admin.auth.user.blacklist.create"
+        },
+        "validation": {
+            "keyword": "required|string|max:255|unique:user_blacklist",
+            "description": "nullable|string",
+            "type": "nullable|string|in:username,email,domain,ip"
+        },
+        "messages": {
+            "success": "블랙리스트가 성공적으로 추가되었습니다.",
+            "error": "블랙리스트 추가에 실패했습니다."
+        }
+    },
+    "update": {
+        "route": "admin.auth.user.blacklist.update",
+        "redirect": {
+            "success": "admin.auth.user.blacklist.show",
+            "error": "admin.auth.user.blacklist.edit"
+        },
+        "validation": {
+            "keyword": "required|string|max:255",
+            "description": "nullable|string",
+            "type": "nullable|string|in:username,email,domain,ip"
+        },
+        "messages": {
+            "success": "블랙리스트가 성공적으로 업데이트되었습니다.",
+            "error": "블랙리스트 업데이트에 실패했습니다."
+        }
+    },
+    "delete": {
+        "title": "블랙리스트 삭제",
+        "subtitle": "블랙리스트 삭제 확인",
+        "route": "admin.auth.user.blacklist.destroy",
+        "redirect": {
+            "success": "admin.auth.user.blacklist.index"
+        },
+        "messages": {
+            "success": "블랙리스트가 성공적으로 삭제되었습니다.",
+            "error": "블랙리스트 삭제에 실패했습니다."
+        }
+    }
+}
