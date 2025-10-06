@@ -1,4 +1,4 @@
-@extends('layouts.instructor')
+@extends('jiny-auth::layouts.home')
 
 @section('title', '내 메시지')
 

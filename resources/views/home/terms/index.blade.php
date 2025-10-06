@@ -1,4 +1,4 @@
-@extends('_layouts.home')
+@extends('jiny-auth::layouts.home')
 
 @section('title', '약관 동의 관리')
 

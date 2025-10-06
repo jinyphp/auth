@@ -43,7 +43,6 @@
     <script src="{{ asset('assets/libs/simplebar/dist/simplebar.min.js') }}"></script>
 
     <!-- Theme JS -->
-    <script src="{{ asset('assets/js/theme.min.js') }}"></script>
 
     @stack('scripts')
 </body>

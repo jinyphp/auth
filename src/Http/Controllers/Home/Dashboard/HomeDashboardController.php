@@ -13,8 +13,6 @@ class HomeDashboardController extends Controller
 {
     public function __invoke(Request $request)
     {
-
-
         $user = auth()->user() ?? $request->auth_user;
 
         if (!$user) {
@@ -34,9 +32,20 @@ class HomeDashboardController extends Controller
             // 테이블이 없으면 무시
         }
 
+        // 접속 정보 수집
+        $connectionInfo = [
+            'ip' => $request->ip(),
+            'user_agent' => $request->userAgent(),
+            'last_login_at' => $user->last_login_at,
+            'last_activity_at' => $user->last_activity_at,
+            'login_count' => $user->login_count ?? 0,
+            'created_at' => $user->created_at,
+        ];
+
         return view('jiny-auth::home.dashboard', [
             'user' => $user,
             'recentLogins' => $recentLogins,
+            'connectionInfo' => $connectionInfo,
         ]);
     }
 }

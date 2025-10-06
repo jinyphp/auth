@@ -47,15 +47,70 @@ Route::middleware(['web', 'jwt.auth'])->group(function () {
 
     /*
     |--------------------------------------------------------------------------
-    | Terms (약관 동의 관리)
+    | Terms (약관 동의 관리) - 앱 레벨에서 오버라이드됨
     |--------------------------------------------------------------------------
     */
+    // Route::prefix('home/account/terms')->name('account.terms.')->group(function () {
+    //     Route::get('/', \Jiny\Auth\Http\Controllers\Home\Terms\IndexController::class)
+    //         ->name('index');
+    //     Route::post('/agree', \Jiny\Auth\Http\Controllers\Home\Terms\AgreeController::class)
+    //         ->name('agree');
+    // });
+
+
+
+
+    // 약관 동의 관리 (로그인 사용자)
     Route::prefix('home/account/terms')->name('account.terms.')->group(function () {
-        Route::get('/', \Jiny\Auth\Http\Controllers\Home\Terms\IndexController::class)
+        Route::get('/', \App\Http\Controllers\Home\Terms\IndexController::class)
             ->name('index');
         Route::post('/agree', \Jiny\Auth\Http\Controllers\Home\Terms\AgreeController::class)
             ->name('agree');
     });
+
+    // 계정 관리
+    Route::prefix('home/account')->name('home.account.')->group(function () {
+        // 프로필 수정
+        Route::get('/edit', \Jiny\Auth\Http\Controllers\Home\Account\Edit\EditController::class)
+            ->name('edit');
+        Route::put('/update', \Jiny\Auth\Http\Controllers\Home\Account\Edit\UpdateController::class)
+            ->name('update');
+
+        // 아바타 관리
+        Route::get('/avatar', \Jiny\Auth\Http\Controllers\Home\Account\Avatar\IndexController::class)
+            ->name('avatar');
+        Route::post('/avatar', \Jiny\Auth\Http\Controllers\Home\Account\Avatar\StoreController::class)
+            ->name('avatar.store');
+        Route::post('/avatar/{avatarId}/set-default', \Jiny\Auth\Http\Controllers\Home\Account\Avatar\SetDefaultController::class)
+            ->name('avatar.set-default');
+        Route::delete('/avatar/{avatarId}', \Jiny\Auth\Http\Controllers\Home\Account\Avatar\DeleteController::class)
+            ->name('avatar.delete');
+
+        // 전화번호 관리
+        Route::get('/phones', \Jiny\Auth\Http\Controllers\Home\Account\Phones\IndexController::class)
+            ->name('phones');
+        Route::post('/phones', \Jiny\Auth\Http\Controllers\Home\Account\Phones\StoreController::class)
+            ->name('phones.store');
+        Route::post('/phones/{phoneId}/set-primary', \Jiny\Auth\Http\Controllers\Home\Account\Phones\SetPrimaryController::class)
+            ->name('phones.set-primary');
+        Route::delete('/phones/{phoneId}', \Jiny\Auth\Http\Controllers\Home\Account\Phones\DeleteController::class)
+            ->name('phones.delete');
+
+        // 주소 관리
+        Route::get('/address', \Jiny\Auth\Http\Controllers\Home\Account\Address\IndexController::class)
+            ->name('address');
+        Route::post('/address', \Jiny\Auth\Http\Controllers\Home\Account\Address\StoreController::class)
+            ->name('address.store');
+        Route::post('/address/{addressId}/set-default', \Jiny\Auth\Http\Controllers\Home\Account\Address\SetDefaultController::class)
+            ->name('address.set-default');
+        Route::delete('/address/{addressId}', \Jiny\Auth\Http\Controllers\Home\Account\Address\DeleteController::class)
+            ->name('address.delete');
+
+        // 활동 로그
+        Route::get('/logs', \Jiny\Auth\Http\Controllers\Home\Account\Logs\IndexController::class)
+            ->name('logs');
+    });
+
 
     /*
     |--------------------------------------------------------------------------
@@ -92,12 +147,19 @@ Route::middleware(['web', 'jwt.auth'])->group(function () {
     // });
 
     // Message (메시지)
-    // Route::prefix('account/message')->name('account.message.')->group(function () {
-    //     Route::get('/', \Jiny\Auth\Http\Controllers\Home\Message\IndexController::class)->name('index');
-    //     Route::get('/compose', \Jiny\Auth\Http\Controllers\Home\Message\ComposeController::class)->name('compose');
-    //     Route::post('/send', \Jiny\Auth\Http\Controllers\Home\Message\SendController::class)->name('send');
-    //     Route::get('/{id}', \Jiny\Auth\Http\Controllers\Home\Message\ShowController::class)->name('show');
-    // });
+    Route::prefix('home/message')->name('home.message.')->group(function () {
+        Route::get('/', \Jiny\Auth\Http\Controllers\Home\Message\IndexController::class)->name('index');
+        Route::get('/compose', \Jiny\Auth\Http\Controllers\Home\Message\ComposeController::class)->name('compose');
+        Route::post('/send', \Jiny\Auth\Http\Controllers\Home\Message\SendController::class)->name('send');
+        Route::get('/{id}', \Jiny\Auth\Http\Controllers\Home\Message\ShowController::class)->name('show');
+    });
+
+    // Notifications (알림)
+    Route::prefix('home/notifications')->name('home.notifications.')->group(function () {
+        Route::get('/', \Jiny\Auth\Http\Controllers\Home\Notifications\IndexController::class)->name('index');
+        Route::post('/{id}/mark-read', \Jiny\Auth\Http\Controllers\Home\Notifications\MarkReadController::class)->name('mark-read');
+        Route::post('/mark-all-read', \Jiny\Auth\Http\Controllers\Home\Notifications\MarkAllReadController::class)->name('mark-all-read');
+    });
 
     // Wallet (전자지갑)
     // Route::prefix('account/wallet')->name('account.wallet.')->group(function () {

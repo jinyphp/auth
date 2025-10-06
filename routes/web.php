@@ -111,3 +111,71 @@ Route::middleware('web')->group(function () {
         return view('jiny-auth::privacy.index');
     })->name('privacy');
 });
+
+// 회원가입 약관 동의 (우선 처리)
+Route::middleware(['web', 'guest.jwt'])->group(function () {
+    // 약관 동의 페이지
+    Route::get('/register/terms', \App\Http\Controllers\Auth\Register\TermsController::class)
+        ->name('register.terms');
+
+    // 약관 동의 처리
+    Route::post('/register/terms', \App\Http\Controllers\Auth\Register\TermsAcceptController::class)
+        ->name('register.terms.accept');
+
+    // 회원가입 폼 (약관 체크 기능 추가)
+    Route::get('/register', \App\Http\Controllers\Auth\Register\ShowController::class)
+        ->name('register');
+
+    // 회원가입 처리 (약관 처리 확장)
+    Route::post('/register', \App\Http\Controllers\Auth\Register\StoreController::class)
+        ->name('register.store');
+});
+
+
+
+// 로그아웃 (GET)
+Route::get('/logout', function () {
+    // JWT 토큰 해제
+    if ($jwtService = app(\Jiny\Auth\Services\JwtService::class)) {
+        $token = $jwtService->getTokenFromRequest(request());
+        if ($token) {
+            try {
+                $parsedToken = $jwtService->validateToken($token);
+                $tokenId = $parsedToken->claims()->get('jti');
+                $jwtService->revokeToken($tokenId);
+
+                // 인증된 사용자가 있을 때만 모든 토큰 폐기
+                if (auth()->check()) {
+                    $jwtService->revokeAllUserTokens(auth()->id());
+                }
+            } catch (\Exception $e) {
+                // 토큰 해제 실패 시 무시
+            }
+        }
+    }
+
+    // 로그아웃 처리
+    if (auth()->check()) {
+        auth()->logout();
+    }
+
+    // 세션 처리 (세션이 있을 때만)
+    try {
+        if (request()->hasSession() && request()->session()) {
+            request()->session()->invalidate();
+            request()->session()->regenerateToken();
+        }
+    } catch (\Exception $e) {
+        // 세션 처리 실패 시 무시
+    }
+
+    // JWT 토큰 쿠키 제거
+    $accessTokenCookie = cookie('access_token', '', -2628000, '/', null, false, true);
+    $refreshTokenCookie = cookie('refresh_token', '', -2628000, '/', null, false, true);
+    $tokenCookie = cookie('token', '', -2628000, '/', null, false, true);
+
+    return redirect('/login')
+        ->withCookie($accessTokenCookie)
+        ->withCookie($refreshTokenCookie)
+        ->withCookie($tokenCookie);
+})->name('logout.get');

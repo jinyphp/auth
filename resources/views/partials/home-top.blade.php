@@ -3,36 +3,96 @@
     <a class="navbar-brand" href="../index.html"><img src="../assets/images/brand/logo/logo.svg" alt="Geeks" /></a>
     <!-- Mobile view nav wrap -->
     <div class="ms-auto d-flex align-items-center order-lg-3">
-      <div class="dropdown">
-        <button class="btn btn-light btn-icon rounded-circle d-flex align-items-center" type="button" aria-expanded="false" data-bs-toggle="dropdown" aria-label="Toggle theme (auto)">
-          <i class="bi theme-icon-active"></i>
-          <span class="visually-hidden bs-theme-text">Toggle theme</span>
-        </button>
-        <ul class="dropdown-menu dropdown-menu-end shadow" aria-labelledby="bs-theme-text">
-          <li>
-            <button type="button" class="dropdown-item d-flex align-items-center" data-bs-theme-value="light" aria-pressed="false">
-              <i class="bi theme-icon bi-sun-fill"></i>
-              <span class="ms-2">Light</span>
-            </button>
-          </li>
-          <li>
-            <button type="button" class="dropdown-item d-flex align-items-center" data-bs-theme-value="dark" aria-pressed="false">
-              <i class="bi theme-icon bi-moon-stars-fill"></i>
-              <span class="ms-2">Dark</span>
-            </button>
-          </li>
-          <li>
-            <button type="button" class="dropdown-item d-flex align-items-center active" data-bs-theme-value="auto" aria-pressed="true">
-              <i class="bi theme-icon bi-circle-half"></i>
-              <span class="ms-2">Auto</span>
-            </button>
-          </li>
-        </ul>
-      </div>
-      <ul class="navbar-nav navbar-right-wrap ms-2 flex-row d-none d-md-block">
-        <li class="dropdown d-inline-block stopevent position-static">
+      <ul class="navbar-nav navbar-right-wrap flex-row d-none d-md-block">
+        <!-- 메시지 알림 -->
+        <li class="dropdown d-inline-block stopevent position-static me-2">
+          @php
+            $unreadMessages = \Illuminate\Support\Facades\DB::table('user_messages')
+              ->where('user_id', auth()->id())
+              ->whereNull('readed_at')
+              ->orderBy('created_at', 'desc')
+              ->limit(5)
+              ->get();
+            $unreadCount = $unreadMessages->count();
+          @endphp
           <a
-            class="btn btn-light btn-icon rounded-circle indicator indicator-primary"
+            class="btn btn-light btn-icon rounded-circle {{ $unreadCount > 0 ? 'indicator indicator-primary' : '' }}"
+            href="#"
+            role="button"
+            id="dropdownMessageSecond"
+            data-bs-toggle="dropdown"
+            aria-haspopup="true"
+            aria-expanded="false">
+            <i class="fe fe-mail"></i>
+          </a>
+          <div class="dropdown-menu dropdown-menu-end dropdown-menu-lg position-absolute mx-3 my-5" aria-labelledby="dropdownMessageSecond">
+            <div>
+              <div class="border-bottom px-3 pb-3 d-flex align-items-center justify-content-between">
+                <span class="h5 mb-0">메시지</span>
+                <a href="{{ route('home.message.index') }}" class="text-muted">
+                  <span class="align-middle"><i class="fe fe-settings me-1"></i></span>
+                </a>
+              </div>
+              <ul class="list-group list-group-flush" style="height: 300px" data-simplebar>
+                @forelse($unreadMessages as $msg)
+                  <li class="list-group-item bg-light">
+                    <div class="row">
+                      <div class="col">
+                        <a class="text-body" href="{{ route('home.message.show', $msg->id) }}">
+                          <div class="d-flex">
+                            <div class="avatar avatar-md me-3">
+                              <div class="avatar-initials rounded-circle bg-primary text-white">
+                                {{ substr($msg->from_name ?: 'S', 0, 1) }}
+                              </div>
+                            </div>
+                            <div class="ms-3">
+                              <h5 class="fw-bold mb-1">
+                                @if($msg->notice)
+                                  <span class="badge bg-warning me-1">공지</span>
+                                @endif
+                                {{ \Illuminate\Support\Str::limit($msg->subject, 30) }}
+                              </h5>
+                              <p class="mb-3 text-body">
+                                <strong>{{ $msg->from_name ?: '시스템' }}</strong> -
+                                {{ \Illuminate\Support\Str::limit(strip_tags($msg->message), 50) }}
+                              </p>
+                              <span class="fs-6">
+                                <span class="fe fe-clock me-1"></span>
+                                {{ \Carbon\Carbon::parse($msg->created_at)->diffForHumans() }}
+                              </span>
+                            </div>
+                          </div>
+                        </a>
+                      </div>
+                    </div>
+                  </li>
+                @empty
+                  <li class="list-group-item text-center py-5">
+                    <i class="fe fe-inbox mb-2" style="font-size: 32px; opacity: 0.3;"></i>
+                    <p class="text-muted mb-0">새로운 메시지가 없습니다</p>
+                  </li>
+                @endforelse
+              </ul>
+              <div class="border-top px-3 pt-3 pb-0">
+                <a href="{{ route('home.message.index') }}" class="text-link fw-semibold">모든 메시지 보기</a>
+              </div>
+            </div>
+          </div>
+        </li>
+
+        <!-- 일반 알림 -->
+        <li class="dropdown d-inline-block stopevent position-static">
+          @php
+            $unreadNotifications = \Illuminate\Support\Facades\DB::table('user_notifications')
+              ->where('user_id', auth()->id())
+              ->whereNull('read_at')
+              ->orderBy('created_at', 'desc')
+              ->limit(5)
+              ->get();
+            $unreadNotifCount = $unreadNotifications->count();
+          @endphp
+          <a
+            class="btn btn-light btn-icon rounded-circle {{ $unreadNotifCount > 0 ? 'indicator indicator-primary' : '' }}"
             href="#"
             role="button"
             id="dropdownNotificationSecond"
@@ -43,121 +103,67 @@
           </a>
           <div class="dropdown-menu dropdown-menu-end dropdown-menu-lg position-absolute mx-3 my-5" aria-labelledby="dropdownNotificationSecond">
             <div>
-              <div class="border-bottom px-3 pb-3 d-flex align-items-center">
-                <span class="h5 mb-0">Notifications</span>
-                <a href="# ">
+              <div class="border-bottom px-3 pb-3 d-flex align-items-center justify-content-between">
+                <span class="h5 mb-0">알림</span>
+                <a href="{{ route('home.notifications.index') }}" class="text-muted">
                   <span class="align-middle"><i class="fe fe-settings me-1"></i></span>
                 </a>
               </div>
               <ul class="list-group list-group-flush" style="height: 300px" data-simplebar>
-                <li class="list-group-item bg-light">
-                  <div class="row">
-                    <div class="col">
-                      <a class="text-body" href="#">
-                        <div class="d-flex">
-                          <img src="../assets/images/avatar/avatar-1.jpg" alt="" class="avatar-md rounded-circle" />
-                          <div class="ms-3">
-                            <h5 class="fw-bold mb-1">Kristin Watson:</h5>
-                            <p class="mb-3 text-body">Krisitn Watsan like your comment on course Javascript Introduction!</p>
-                            <span class="fs-6">
-                              <span>
-                                <span class="fe fe-thumbs-up text-success me-1"></span>
-                                2 hours ago,
+                @forelse($unreadNotifications as $notif)
+                  <li class="list-group-item bg-light">
+                    <div class="row">
+                      <div class="col">
+                        <a class="text-body" href="{{ $notif->action_url ?: route('home.notifications.index') }}">
+                          <div class="d-flex">
+                            <div class="me-3">
+                              @php
+                                $iconClass = match($notif->type) {
+                                    'message' => 'fe-mail text-primary',
+                                    'system' => 'fe-bell text-info',
+                                    'achievement' => 'fe-award text-warning',
+                                    'warning' => 'fe-alert-triangle text-danger',
+                                    default => 'fe-info text-secondary'
+                                };
+                                $bgClass = match($notif->priority) {
+                                    'urgent' => 'bg-danger',
+                                    'high' => 'bg-warning',
+                                    'low' => 'bg-secondary',
+                                    default => 'bg-primary'
+                                };
+                              @endphp
+                              <div class="icon-shape icon-md rounded-circle {{ $bgClass }} bg-opacity-10 d-flex align-items-center justify-content-center">
+                                <i class="fe {{ $iconClass }}"></i>
+                              </div>
+                            </div>
+                            <div class="ms-3">
+                              <h5 class="fw-bold mb-1">{{ \Illuminate\Support\Str::limit($notif->title, 30) }}</h5>
+                              <p class="mb-3 text-body">{{ \Illuminate\Support\Str::limit($notif->message, 60) }}</p>
+                              <span class="fs-6">
+                                <span class="fe fe-clock me-1"></span>
+                                {{ \Carbon\Carbon::parse($notif->created_at)->diffForHumans() }}
                               </span>
-                              <span class="ms-1">2:19 PM</span>
-                            </span>
+                            </div>
                           </div>
-                        </div>
-                      </a>
-                    </div>
-                    <div class="col-auto text-center me-2">
-                      <a href="#" class="badge-dot bg-info" data-bs-toggle="tooltip" data-bs-placement="top" title="Mark as read"></a>
-                      <div>
-                        <a href="#" class="bg-transparent" data-bs-toggle="tooltip" data-bs-placement="top" title="Remove">
-                          <i class="fe fe-x"></i>
                         </a>
                       </div>
+                      <div class="col-auto text-center me-2">
+                        <form action="{{ route('home.notifications.mark-read', $notif->id) }}" method="POST">
+                          @csrf
+                          <button type="submit" class="badge-dot bg-info border-0" data-bs-toggle="tooltip" data-bs-placement="top" title="읽음 처리"></button>
+                        </form>
+                      </div>
                     </div>
-                  </div>
-                </li>
-                <li class="list-group-item">
-                  <div class="row">
-                    <div class="col">
-                      <a class="text-body" href="#">
-                        <div class="d-flex">
-                          <img src="../assets/images/avatar/avatar-2.jpg" alt="" class="avatar-md rounded-circle" />
-                          <div class="ms-3">
-                            <h5 class="fw-bold mb-1">Brooklyn Simmons</h5>
-                            <p class="mb-3 text-body">Just launched a new Courses React for Beginner.</p>
-                            <span class="fs-6">
-                              <span>
-                                <span class="fe fe-thumbs-up text-success me-1"></span>
-                                Oct 9,
-                              </span>
-                              <span class="ms-1">1:20 PM</span>
-                            </span>
-                          </div>
-                        </div>
-                      </a>
-                    </div>
-                    <div class="col-auto text-center me-2">
-                      <a href="#" class="badge-dot bg-secondary" data-bs-toggle="tooltip" data-bs-placement="top" title="Mark as unread"></a>
-                    </div>
-                  </div>
-                </li>
-                <li class="list-group-item">
-                  <div class="row">
-                    <div class="col">
-                      <a class="text-body" href="#">
-                        <div class="d-flex">
-                          <img src="../assets/images/avatar/avatar-3.jpg" alt="" class="avatar-md rounded-circle" />
-                          <div class="ms-3">
-                            <h5 class="fw-bold mb-1">Jenny Wilson</h5>
-                            <p class="mb-3 text-body">Krisitn Watsan like your comment on course Javascript Introduction!</p>
-                            <span class="fs-6">
-                              <span>
-                                <span class="fe fe-thumbs-up text-info me-1"></span>
-                                Oct 9,
-                              </span>
-                              <span class="ms-1">1:56 PM</span>
-                            </span>
-                          </div>
-                        </div>
-                      </a>
-                    </div>
-                    <div class="col-auto text-center me-2">
-                      <a href="#" class="badge-dot bg-secondary" data-bs-toggle="tooltip" data-bs-placement="top" title="Mark as unread"></a>
-                    </div>
-                  </div>
-                </li>
-                <li class="list-group-item">
-                  <div class="row">
-                    <div class="col">
-                      <a class="text-body" href="#">
-                        <div class="d-flex">
-                          <img src="../assets/images/avatar/avatar-4.jpg" alt="" class="avatar-md rounded-circle" />
-                          <div class="ms-3">
-                            <h5 class="fw-bold mb-1">Sina Ray</h5>
-                            <p class="mb-3 text-body">You earn new certificate for complete the Javascript Beginner course.</p>
-                            <span class="fs-6">
-                              <span>
-                                <span class="fe fe-award text-warning me-1"></span>
-                                Oct 9,
-                              </span>
-                              <span class="ms-1">1:56 PM</span>
-                            </span>
-                          </div>
-                        </div>
-                      </a>
-                    </div>
-                    <div class="col-auto text-center me-2">
-                      <a href="#" class="badge-dot bg-secondary" data-bs-toggle="tooltip" data-bs-placement="top" title="Mark as unread"></a>
-                    </div>
-                  </div>
-                </li>
+                  </li>
+                @empty
+                  <li class="list-group-item text-center py-5">
+                    <i class="fe fe-bell mb-2" style="font-size: 32px; opacity: 0.3;"></i>
+                    <p class="text-muted mb-0">새로운 알림이 없습니다</p>
+                  </li>
+                @endforelse
               </ul>
               <div class="border-top px-3 pt-3 pb-0">
-                <a href="../pages/notification-history.html" class="text-link fw-semibold">See all Notifications</a>
+                <a href="{{ route('home.notifications.index') }}" class="text-link fw-semibold">모든 알림 보기</a>
               </div>
             </div>
           </div>
@@ -166,84 +172,128 @@
         <li class="dropdown ms-2 d-inline-block position-static">
           <a class="rounded-circle" href="#" data-bs-toggle="dropdown" data-bs-display="static" aria-expanded="false">
             <div class="avatar avatar-md avatar-indicators avatar-online">
-              <img alt="avatar" src="../assets/images/avatar/avatar-1.jpg" class="rounded-circle" />
+              @if(auth()->check())
+                @if(auth()->user()->avatar)
+                  <img alt="avatar" src="{{ auth()->user()->avatar }}" class="rounded-circle" />
+                @else
+                  <div class="rounded-circle bg-primary d-flex align-items-center justify-content-center text-white" style="width: 40px; height: 40px; font-weight: bold;">
+                    {{ mb_substr(auth()->user()->name, 0, 1) }}
+                  </div>
+                @endif
+              @else
+                <img alt="avatar" src="../assets/images/avatar/avatar-1.jpg" class="rounded-circle" />
+              @endif
             </div>
           </a>
           <div class="dropdown-menu dropdown-menu-end position-absolute mx-3 my-5">
             <div class="dropdown-item">
               <div class="d-flex">
                 <div class="avatar avatar-md avatar-indicators avatar-online">
-                  <img alt="avatar" src="../assets/images/avatar/avatar-1.jpg" class="rounded-circle" />
+                  @if(auth()->check())
+                    @if(auth()->user()->avatar)
+                      <img alt="avatar" src="{{ auth()->user()->avatar }}" class="rounded-circle" />
+                    @else
+                      <div class="rounded-circle bg-primary d-flex align-items-center justify-content-center text-white" style="width: 40px; height: 40px; font-weight: bold;">
+                        {{ mb_substr(auth()->user()->name, 0, 1) }}
+                      </div>
+                    @endif
+                  @else
+                    <img alt="avatar" src="../assets/images/avatar/avatar-1.jpg" class="rounded-circle" />
+                  @endif
                 </div>
                 <div class="ms-3 lh-1">
-                  <h5 class="mb-1">Annette Black</h5>
-                  <p class="mb-0">annette@geeksui.com</p>
+                  @if(auth()->check())
+                    <h5 class="mb-1">{{ auth()->user()->name }}</h5>
+                    <p class="mb-0">{{ auth()->user()->email }}</p>
+                  @else
+                    <h5 class="mb-1">Guest</h5>
+                    <p class="mb-0">guest@example.com</p>
+                  @endif
                 </div>
               </div>
             </div>
             <div class="dropdown-divider"></div>
             <ul class="list-unstyled">
-              <li class="dropdown-submenu dropstart-lg">
-                <a class="dropdown-item dropdown-list-group-item dropdown-toggle" href="#">
-                  <i class="fe fe-circle me-2"></i>
-                  Status
+              <li>
+                <a class="dropdown-item" href="{{ route('home.dashboard') }}">
+                  <i class="fe fe-home me-2"></i>
+                  대시보드
                 </a>
-                <ul class="dropdown-menu">
-                  <li>
-                    <a class="dropdown-item" href="#">
-                      <span class="badge-dot bg-success me-2"></span>
-                      Online
-                    </a>
-                  </li>
-                  <li>
-                    <a class="dropdown-item" href="#">
-                      <span class="badge-dot bg-secondary me-2"></span>
-                      Offline
-                    </a>
-                  </li>
-                  <li>
-                    <a class="dropdown-item" href="#">
-                      <span class="badge-dot bg-warning me-2"></span>
-                      Away
-                    </a>
-                  </li>
-                  <li>
-                    <a class="dropdown-item" href="#">
-                      <span class="badge-dot bg-danger me-2"></span>
-                      Busy
-                    </a>
-                  </li>
-                </ul>
               </li>
               <li>
-                <a class="dropdown-item" href="../pages/profile-edit.html">
+                <a class="dropdown-item" href="{{ route('home.account.edit') }}">
                   <i class="fe fe-user me-2"></i>
-                  Profile
+                  프로필 수정
                 </a>
               </li>
               <li>
-                <a class="dropdown-item" href="../pages/student-subscriptions.html">
-                  <i class="fe fe-star me-2"></i>
-                  Subscription
+                <a class="dropdown-item" href="{{ route('home.account.avatar') }}">
+                  <i class="fe fe-image me-2"></i>
+                  아바타 관리
                 </a>
               </li>
               <li>
-                <a class="dropdown-item" href="#">
-                  <i class="fe fe-settings me-2"></i>
-                  Settings
+                <a class="dropdown-item" href="{{ route('home.account.phones') }}">
+                  <i class="fe fe-phone me-2"></i>
+                  전화번호 관리
+                </a>
+              </li>
+              <li>
+                <a class="dropdown-item" href="{{ route('home.account.address') }}">
+                  <i class="fe fe-map-pin me-2"></i>
+                  주소 관리
+                </a>
+              </li>
+              <li>
+                <a class="dropdown-item" href="{{ route('home.notifications.index') }}">
+                  <i class="fe fe-bell me-2"></i>
+                  알림
+                  @php
+                    $userNotifCount = \Illuminate\Support\Facades\DB::table('user_notifications')
+                      ->where('user_id', auth()->id())
+                      ->whereNull('read_at')
+                      ->count();
+                  @endphp
+                  @if($userNotifCount > 0)
+                    <span class="badge bg-danger ms-1">{{ $userNotifCount }}</span>
+                  @endif
+                </a>
+              </li>
+              <li>
+                <a class="dropdown-item" href="{{ route('home.message.index') }}">
+                  <i class="fe fe-mail me-2"></i>
+                  메시지
+                  @php
+                    $unreadMsgCount = \Illuminate\Support\Facades\DB::table('user_messages')
+                      ->where('user_id', auth()->id())
+                      ->whereNull('readed_at')
+                      ->count();
+                  @endphp
+                  @if($unreadMsgCount > 0)
+                    <span class="badge bg-primary ms-1">{{ $unreadMsgCount }}</span>
+                  @endif
+                </a>
+              </li>
+              <li>
+                <a class="dropdown-item" href="{{ route('home.account.logs') }}">
+                  <i class="fe fe-clock me-2"></i>
+                  활동 로그
+                </a>
+              </li>
+              <li>
+                <a class="dropdown-item" href="{{ route('account.terms.index') }}">
+                  <i class="fe fe-file-text me-2"></i>
+                  약관 동의
                 </a>
               </li>
             </ul>
             <div class="dropdown-divider"></div>
             <ul class="list-unstyled">
               <li>
-                <a class="dropdown-item" href="#" onclick="event.preventDefault(); document.getElementById('logout-form-top').submit();">
+                <a class="dropdown-item" href="/logout">
                   <i class="fe fe-power me-2"></i>
-                  Sign Out
+                  로그아웃
                 </a>
-                <form id="logout-form-top" action="/sign-out" method="POST" style="display: none;">
-                  @csrf
-                </form>
               </li>
             </ul>
           </div>

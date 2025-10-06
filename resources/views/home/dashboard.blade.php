@@ -21,6 +21,112 @@
       </div>
     </div>
   </div>
+
+  <!-- User Profile & Connection Info Card -->
+  <div class="row mb-4">
+    <div class="col-12">
+      <div class="card">
+        <div class="card-body">
+          <div class="row align-items-center">
+            <!-- Avatar -->
+            <div class="col-auto">
+              <a href="{{ route('home.account.avatar') }}" title="아바타 변경" style="text-decoration: none;">
+                @if($user->avatar)
+                  <img src="{{ $user->avatar }}" alt="{{ $user->name }}" class="rounded-circle" style="width: 80px; height: 80px; object-fit: cover; cursor: pointer;">
+                @else
+                  <div class="rounded-circle bg-primary d-flex align-items-center justify-content-center text-white" style="width: 80px; height: 80px; font-size: 32px; font-weight: bold; cursor: pointer;">
+                    {{ mb_substr($user->name, 0, 1) }}
+                  </div>
+                @endif
+              </a>
+            </div>
+
+            <!-- User Info -->
+            <div class="col">
+              <h3 class="mb-1">{{ $user->name }}</h3>
+              <p class="text-muted mb-2">{{ $user->email }}</p>
+              <div class="d-flex gap-3 flex-wrap">
+                <span class="badge bg-success">{{ $user->status ?? 'active' }}</span>
+                @if($user->grade)
+                  <span class="badge bg-info">{{ $user->grade }}</span>
+                @endif
+              </div>
+            </div>
+
+            <!-- Connection Info -->
+            <div class="col-lg-4">
+              <div class="small">
+                <div class="d-flex justify-content-between mb-2">
+                  <span class="text-muted">현재 IP:</span>
+                  <span class="fw-semibold">{{ $connectionInfo['ip'] }}</span>
+                </div>
+                <div class="d-flex justify-content-between mb-2">
+                  <span class="text-muted">총 로그인 횟수:</span>
+                  <span class="fw-semibold">{{ number_format($connectionInfo['login_count']) }}회</span>
+                </div>
+                @if($connectionInfo['last_login_at'])
+                <div class="d-flex justify-content-between mb-2">
+                  <span class="text-muted">마지막 로그인:</span>
+                  <span class="fw-semibold">{{ $connectionInfo['last_login_at']->format('Y-m-d H:i') }}</span>
+                </div>
+                @endif
+                @if($connectionInfo['last_activity_at'])
+                <div class="d-flex justify-content-between">
+                  <span class="text-muted">마지막 활동:</span>
+                  <span class="fw-semibold">{{ $connectionInfo['last_activity_at']->diffForHumans() }}</span>
+                </div>
+                @endif
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Recent Login History -->
+  @if($recentLogins && count($recentLogins) > 0)
+  <div class="row mb-4">
+    <div class="col-12">
+      <div class="card">
+        <div class="card-header">
+          <h4 class="mb-0">최근 로그인 기록</h4>
+        </div>
+        <div class="card-body">
+          <div class="table-responsive">
+            <table class="table table-hover mb-0">
+              <thead>
+                <tr>
+                  <th>일시</th>
+                  <th>IP 주소</th>
+                  <th>브라우저</th>
+                  <th>상태</th>
+                </tr>
+              </thead>
+              <tbody>
+                @foreach($recentLogins as $login)
+                <tr>
+                  <td>{{ \Carbon\Carbon::parse($login->attempted_at)->format('Y-m-d H:i:s') }}</td>
+                  <td>{{ $login->ip_address }}</td>
+                  <td class="text-truncate" style="max-width: 200px;">{{ $login->user_agent ?? '-' }}</td>
+                  <td>
+                    @if($login->successful)
+                      <span class="badge bg-success">성공</span>
+                    @else
+                      <span class="badge bg-danger">실패</span>
+                    @endif
+                  </td>
+                </tr>
+                @endforeach
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  @endif
+
   <div class="row">
     <div class="col-lg-4 col-md-12 col-12">
       <!-- Card -->

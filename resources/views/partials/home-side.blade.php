@@ -21,7 +21,7 @@
         <ul class="list-unstyled mb-0">
           <!-- Nav item -->
           <li class="nav-item">
-            <a class="nav-link" href="../pages/dashboard-instructor.html">
+            <a class="nav-link" href="{{ route('home.dashboard') }}">
               <i class="fe fe-home nav-icon"></i>
               My Dashboard
             </a>
@@ -90,9 +90,69 @@
           <ul class="list-unstyled mb-0">
             <!-- Nav item -->
             <li class="nav-item">
-              <a class="nav-link" href="../pages/profile-edit.html">
+              <a class="nav-link" href="{{ route('home.account.edit') }}">
                 <i class="fe fe-settings nav-icon"></i>
-                Edit Profile
+                프로필 수정
+              </a>
+            </li>
+            <!-- Nav item -->
+            <li class="nav-item">
+              <a class="nav-link" href="{{ route('home.account.avatar') }}">
+                <i class="fe fe-image nav-icon"></i>
+                아바타 관리
+              </a>
+            </li>
+            <!-- Nav item -->
+            <li class="nav-item">
+              <a class="nav-link" href="{{ route('home.account.phones') }}">
+                <i class="fe fe-phone nav-icon"></i>
+                전화번호 관리
+              </a>
+            </li>
+            <!-- Nav item -->
+            <li class="nav-item">
+              <a class="nav-link" href="{{ route('home.account.address') }}">
+                <i class="fe fe-map-pin nav-icon"></i>
+                주소 관리
+              </a>
+            </li>
+            <!-- Nav item -->
+            <li class="nav-item">
+              <a class="nav-link" href="{{ route('home.notifications.index') }}">
+                <i class="fe fe-bell nav-icon"></i>
+                알림
+                @php
+                  $unreadNotifCount = \Illuminate\Support\Facades\DB::table('user_notifications')
+                    ->where('user_id', auth()->id())
+                    ->whereNull('read_at')
+                    ->count();
+                @endphp
+                @if($unreadNotifCount > 0)
+                  <span class="badge bg-danger ms-1">{{ $unreadNotifCount }}</span>
+                @endif
+              </a>
+            </li>
+            <!-- Nav item -->
+            <li class="nav-item">
+              <a class="nav-link" href="{{ route('home.message.index') }}">
+                <i class="fe fe-mail nav-icon"></i>
+                메시지
+                @php
+                  $unreadMessageCount = \Illuminate\Support\Facades\DB::table('user_messages')
+                    ->where('user_id', auth()->id())
+                    ->whereNull('readed_at')
+                    ->count();
+                @endphp
+                @if($unreadMessageCount > 0)
+                  <span class="badge bg-primary ms-1">{{ $unreadMessageCount }}</span>
+                @endif
+              </a>
+            </li>
+            <!-- Nav item -->
+            <li class="nav-item">
+              <a class="nav-link" href="{{ route('home.account.logs') }}">
+                <i class="fe fe-clock nav-icon"></i>
+                활동 로그
               </a>
             </li>
             <!-- Nav item -->
@@ -137,15 +197,19 @@
                 Linked Accounts
               </a>
             </li>
+             <!-- Nav item -->
+            <li class="nav-item">
+              <a class="nav-link" href="{{ route('account.terms.index') }}">
+                <i class="fe fe-file-text nav-icon"></i>
+                약관동의
+              </a>
+            </li>
             <!-- Nav item -->
             <li class="nav-item">
-              <a class="nav-link" href="#" onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
+              <a class="nav-link" href="/logout">
                 <i class="fe fe-power nav-icon"></i>
-                Sign Out
+                로그아웃
               </a>
-              <form id="logout-form" action="/sign-out" method="POST" style="display: none;">
-                @csrf
-              </form>
             </li>
           </ul>
         </div>

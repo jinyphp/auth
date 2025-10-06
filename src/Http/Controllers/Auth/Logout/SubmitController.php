@@ -49,7 +49,7 @@ class SubmitController extends Controller
                 'description' => '사용자 로그아웃',
                 'ip' => $request->ip(),
                 'user_agent' => $request->userAgent(),
-                'session_id' => session()->getId(),
+                'session_id' => $request->hasSession() ? $request->session()->getId() : null,
             ]);
 
             // API 토큰 삭제 (Sanctum 사용 시)
@@ -62,8 +62,15 @@ class SubmitController extends Controller
 
         Auth::logout();
 
-        $request->session()->invalidate();
-        $request->session()->regenerateToken();
+        // 세션 처리 (세션이 있을 때만)
+        try {
+            if ($request->hasSession() && $request->session()) {
+                $request->session()->invalidate();
+                $request->session()->regenerateToken();
+            }
+        } catch (\Exception $e) {
+            \Log::warning('Session invalidation failed', ['error' => $e->getMessage()]);
+        }
 
         // JWT 토큰 쿠키 제거 (명시적으로 만료시킴)
         $accessTokenCookie = cookie('access_token', '', -2628000, '/', null, false, true);
