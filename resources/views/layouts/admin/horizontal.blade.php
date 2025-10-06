@@ -228,7 +228,7 @@
                                         </li>
                                     </ul>
                                     <div class="border-top px-3 pt-3 pb-0">
-                                        <a href="{{ route('admin.notification-history') }}"
+                                        <a href="{{ '#' }}"
                                             class="text-link fw-semibold">See all Notifications</a>
                                     </div>
                                 </div>
@@ -350,7 +350,7 @@
                                 </li>
                                 <li>
                                     <a class="dropdown-item"
-                                        href="{{ route('admin.analytics') }}">Analytics</a>
+                                        href="{{ '#' }}">Analytics</a>
                                 </li>
                             </ul>
                         </li>
@@ -363,15 +363,15 @@
                                         href="#">Courses</a>
                                     <ul class="dropdown-menu">
                                         <li>
-                                            <a href="{{ route('admin.course-overview') }}"
+                                            <a href="{{ '#' }}"
                                                 class="dropdown-item">All Courses</a>
                                         </li>
                                         <li>
-                                            <a href="{{ route('admin.course-category') }}"
+                                            <a href="{{ '#' }}"
                                                 class="dropdown-item">Course Category</a>
                                         </li>
                                         <li>
-                                            <a href="{{ route('admin.course-category-single') }}"
+                                            <a href="{{ '#' }}"
                                                 class="dropdown-item">Category Single</a>
                                         </li>
                                     </ul>
@@ -382,11 +382,11 @@
                                         href="#">Users</a>
                                     <ul class="dropdown-menu">
                                         <li>
-                                            <a href="{{ route('admin.instructor') }}"
+                                            <a href="{{ '#' }}"
                                                 class="dropdown-item">Instructor</a>
                                         </li>
                                         <li>
-                                            <a href="{{ route('admin.students') }}"
+                                            <a href="{{ '#' }}"
                                                 class="dropdown-item">Students</a>
                                         </li>
                                     </ul>
@@ -396,19 +396,19 @@
                                         href="#">CMS</a>
                                     <ul class="dropdown-menu">
                                         <li>
-                                            <a href="{{ route('admin.cms-overview') }}"
+                                            <a href="{{ '#' }}"
                                                 class="dropdown-item">Overview</a>
                                         </li>
                                         <li>
-                                            <a href="{{ route('admin.cms-post') }}"
+                                            <a href="{{ '#' }}"
                                                 class="dropdown-item">All Post</a>
                                         </li>
                                         <li>
-                                            <a href="{{ route('admin.cms-post-new') }}"
+                                            <a href="{{ '#' }}"
                                                 class="dropdown-item">New Post</a>
                                         </li>
                                         <li>
-                                            <a href="{{ route('admin.cms-post-category') }}"
+                                            <a href="{{ '#' }}"
                                                 class="dropdown-item">Category</a>
                                         </li>
                                     </ul>
@@ -420,11 +420,11 @@
                                     <ul class="dropdown-menu">
                                         <li>
                                             <a class="dropdown-item"
-                                                href="{{ route('admin.project-grid') }}">Grid</a>
+                                                href="{{ '#' }}">Grid</a>
                                         </li>
                                         <li>
                                             <a class="dropdown-item"
-                                                href="{{ route('admin.project-list') }}">List</a>
+                                                href="{{ '#' }}">List</a>
                                         </li>
 
                                         <li class="dropdown-submenu dropend">
@@ -433,33 +433,33 @@
                                             <ul class="dropdown-menu">
                                                 <li>
                                                     <a class="dropdown-item"
-                                                        href="{{ route('admin.project-overview') }}">Overview</a>
+                                                        href="{{ '#' }}">Overview</a>
                                                 </li>
                                                 <li>
                                                     <a class="dropdown-item"
-                                                        href="{{ route('admin.project-task') }}">Task</a>
+                                                        href="{{ '#' }}">Task</a>
                                                 </li>
                                                 <li>
                                                     <a class="dropdown-item"
-                                                        href="{{ route('admin.project-budget') }}">Budget</a>
+                                                        href="{{ '#' }}">Budget</a>
                                                 </li>
                                                 <li>
                                                     <a class="dropdown-item"
-                                                        href="{{ route('admin.project-team') }}">Team</a>
+                                                        href="{{ '#' }}">Team</a>
                                                 </li>
                                                 <li>
                                                     <a class="dropdown-item"
-                                                        href="{{ route('admin.project-files') }}">Files</a>
+                                                        href="{{ '#' }}">Files</a>
                                                 </li>
                                                 <li>
                                                     <a class="dropdown-item"
-                                                        href="{{ route('admin.project-summary') }}">Summary</a>
+                                                        href="{{ '#' }}">Summary</a>
                                                 </li>
                                             </ul>
                                         </li>
                                         <li>
                                             <a class="dropdown-item"
-                                                href="{{ route('admin.add-project') }}">Create Project</a>
+                                                href="{{ '#' }}">Create Project</a>
                                         </li>
                                     </ul>
                                 </li>
@@ -469,28 +469,28 @@
                                     <ul class="dropdown-menu">
                                         <li>
                                             <a class="dropdown-item"
-                                                href="{{ route('admin.setting-general') }}">General</a>
+                                                href="{{ '#' }}">General</a>
                                         </li>
                                         <li>
                                             <a class="dropdown-item"
-                                                href="{{ route('admin.setting-google') }}">google</a>
+                                                href="{{ '#' }}">google</a>
                                         </li>
                                         <li>
                                             <a class="dropdown-item"
-                                                href="{{ route('admin.setting-social') }}">Social</a>
+                                                href="{{ '#' }}">Social</a>
                                         </li>
                                         <li>
                                             <a class="dropdown-item"
-                                                href="{{ route('admin.setting-social-login') }}">Social
+                                                href="{{ '#' }}">Social
                                                 Login</a>
                                         </li>
                                         <li>
                                             <a class="dropdown-item"
-                                                href="{{ route('admin.setting-payment') }}">Payment</a>
+                                                href="{{ '#' }}">Payment</a>
                                         </li>
                                         <li>
                                             <a class="dropdown-item"
-                                                href="{{ route('admin.setting-smpt') }}">SMPT</a>
+                                                href="{{ '#' }}">SMPT</a>
                                         </li>
                                     </ul>
                                 </li>
@@ -502,17 +502,17 @@
                                 data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Apps</a>
                             <ul class="dropdown-menu dropdown-menu-arrow" aria-labelledby="navbarApps">
                                 <li>
-                                    <a class="dropdown-item" href="{{ route('admin.chat-app') }}">Chat</a>
+                                    <a class="dropdown-item" href="{{ '#' }}">Chat</a>
                                 </li>
                                 <li>
-                                    <a class="dropdown-item" href="{{ route('admin.task-kanban') }}">Task</a>
+                                    <a class="dropdown-item" href="{{ '#' }}">Task</a>
                                 </li>
                                 <li>
-                                    <a class="dropdown-item" href="{{ route('admin.mail') }}">Mail</a>
+                                    <a class="dropdown-item" href="{{ '#' }}">Mail</a>
                                 </li>
                                 <li>
                                     <a class="dropdown-item"
-                                        href="{{ route('admin.calendar') }}">Calendar</a>
+                                        href="{{ '#' }}">Calendar</a>
                                 </li>
                             </ul>
                         </li>
@@ -533,7 +533,7 @@
                                 </li>
                                 <li>
                                     <a class="dropdown-item"
-                                        href="{{ route('admin.notification-history') }}">Notifications</a>
+                                        href="{{ '#' }}">Notifications</a>
                                 </li>
                                 <li>
                                     <a class="dropdown-item" href="{{ route('404-error') }}">404 Error</a>
@@ -551,71 +551,71 @@
                                     <ul class="dropdown-menu">
                                         <li class="nav-item">
                                             <a class="dropdown-item"
-                                                href="{{ route('admin.ecommerce.product-grid') }}">Grid</a>
+                                                href="{{ '#' }}">Grid</a>
                                         </li>
                                         <li class="nav-item">
                                             <a class="dropdown-item"
-                                                href="{{ route('admin.ecommerce.product-grid-with-sidebar') }}">Grid
+                                                href="{{ '#' }}">Grid
                                                 Sidebar</a>
                                         </li>
                                         <li class="nav-item">
                                             <a class="dropdown-item"
-                                                href="{{ route('admin.ecommerce.products') }}">Products</a>
+                                                href="{{ '#' }}">Products</a>
                                         </li>
                                         <li class="nav-item">
                                             <a class="dropdown-item"
-                                                href="{{ route('admin.ecommerce.product-single') }}">Product
+                                                href="{{ '#' }}">Product
                                                 Single</a>
                                         </li>
                                         <li class="nav-item">
                                             <a class="dropdown-item"
-                                                href="{{ route('admin.ecommerce.product-single-v2') }}">Product
+                                                href="{{ '#' }}">Product
                                                 Single v2</a>
                                         </li>
                                         <li class="nav-item">
                                             <a class="dropdown-item"
-                                                href="{{ route('admin.ecommerce.add-product') }}">Add
+                                                href="{{ '#' }}">Add
                                                 Product</a>
                                         </li>
                                     </ul>
                                 </li>
                                 <li class="nav-item">
                                     <a class="dropdown-item"
-                                        href="{{ route('admin.ecommerce.shopping-cart') }}">Shopping Cart</a>
+                                        href="{{ '#' }}">Shopping Cart</a>
                                 </li>
                                 <li class="nav-item">
                                     <a class="dropdown-item"
-                                        href="{{ route('admin.ecommerce.checkout') }}">Checkout</a>
+                                        href="{{ '#' }}">Checkout</a>
                                 </li>
                                 <li class="nav-item">
                                     <a class="dropdown-item"
-                                        href="{{ route('admin.ecommerce.order') }}">Order</a>
+                                        href="{{ '#' }}">Order</a>
                                 </li>
                                 <li class="nav-item">
                                     <a class="dropdown-item"
-                                        href="{{ route('admin.ecommerce.order-single') }}">Order Single</a>
+                                        href="{{ '#' }}">Order Single</a>
                                 </li>
                                 <li class="nav-item">
                                     <a class="dropdown-item"
-                                        href="{{ route('admin.ecommerce.order-history') }}">Order History</a>
+                                        href="{{ '#' }}">Order History</a>
                                 </li>
                                 <li class="nav-item">
                                     <a class="dropdown-item"
-                                        href="{{ route('admin.ecommerce.order-summary') }}">Order Summary</a>
+                                        href="{{ '#' }}">Order Summary</a>
                                 </li>
 
                                 <li class="nav-item">
                                     <a class="dropdown-item"
-                                        href="{{ route('admin.ecommerce.customers') }}">Customers</a>
+                                        href="{{ '#' }}">Customers</a>
                                 </li>
                                 <li class="nav-item">
                                     <a class="dropdown-item"
-                                        href="{{ route('admin.ecommerce.customer-single') }}">Customer
+                                        href="{{ '#' }}">Customer
                                         Single</a>
                                 </li>
                                 <li class="nav-item">
                                     <a class="dropdown-item"
-                                        href="{{ route('admin.ecommerce.add-customer') }}">Add Customer</a>
+                                        href="{{ '#' }}">Add Customer</a>
                                 </li>
                             </ul>
                         </li>
@@ -627,15 +627,15 @@
 
                                 <li class="nav-item">
                                     <a class="dropdown-item"
-                                        href="{{ route('admin.layouts.horizontal') }}">Top</a>
+                                        href="{{ '#' }}">Top</a>
                                 </li>
                                 <li class="nav-item">
                                     <a class="dropdown-item"
-                                        href="{{ route('admin.layouts.compact') }}">Compact</a>
+                                        href="{{ '#' }}">Compact</a>
                                 </li>
                                 <li class="nav-item">
                                     <a class="dropdown-item"
-                                        href="{{ route('admin.layouts.vertical') }}">Vertical</a>
+                                        href="{{ '#' }}">Vertical</a>
                                 </li>
                             </ul>
                         </li>
@@ -646,11 +646,11 @@
                             <ul class="dropdown-menu dropdown-menu-arrow" aria-labelledby="navbarTables">
                                 <li>
                                     <a class="dropdown-item"
-                                        href="{{ route('admin.basic-table') }}">Basic</a>
+                                        href="{{ '#' }}">Basic</a>
                                 </li>
                                 <li>
                                     <a class="dropdown-item"
-                                        href="{{ route('admin.datatables') }}">Datatables</a>
+                                        href="{{ '#' }}">Datatables</a>
                                 </li>
                             </ul>
                         </li>

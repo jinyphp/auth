@@ -55,7 +55,10 @@
             "content": "required|string",
             "version": "nullable|string|max:50",
             "pos": "nullable|integer",
-            "enable": "required|boolean"
+            "enable": "boolean",
+            "required": "boolean",
+            "valid_from": "nullable|date",
+            "valid_to": "nullable|date|after_or_equal:valid_from"
         },
         "messages": {
             "success": "이용약관이 성공적으로 생성되었습니다.",
@@ -74,7 +77,10 @@
             "content": "required|string",
             "version": "nullable|string|max:50",
             "pos": "nullable|integer",
-            "enable": "required|boolean"
+            "enable": "boolean",
+            "required": "boolean",
+            "valid_from": "nullable|date",
+            "valid_to": "nullable|date|after_or_equal:valid_from"
         },
         "messages": {
             "success": "이용약관이 성공적으로 업데이트되었습니다.",

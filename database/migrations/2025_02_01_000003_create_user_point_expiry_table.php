@@ -14,6 +14,8 @@ return new class extends Migration
         Schema::create('user_point_expiry', function (Blueprint $table) {
             $table->id();
             $table->unsignedBigInteger('user_id'); // 사용자 ID
+            $table->string('user_uuid', 36)->nullable()->index()->comment('User UUID for sharding');
+            $table->integer('shard_id')->nullable()->index()->comment('Shard number (0-15)');
             $table->unsignedBigInteger('point_log_id'); // 포인트 로그 ID
             $table->decimal('amount', 15, 2); // 만료 예정 포인트
             $table->timestamp('expires_at'); // 만료 예정일

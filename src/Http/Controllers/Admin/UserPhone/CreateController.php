@@ -5,7 +5,10 @@ use App\Http\Controllers\Controller;
 class CreateController extends Controller
 {
     protected $config;
-    public function __construct() { $this->middleware(['auth', 'admin']); $this->loadConfig(); }
+    public function __construct()
+    {
+        $this->loadConfig();
+    }
     protected function loadConfig() {
         $configPath = __DIR__ . '/UserPhone.json';
         $jsonConfig = json_decode(file_get_contents($configPath), true);

@@ -50,7 +50,7 @@ return new class extends Migration
             // 인덱스
             $table->index('user_id');
             $table->index('user_uuid');
-            $table->index('email');
+            // email 인덱스는 18번 라인에서 이미 생성됨
             $table->index('status');
             $table->index('auto_delete_at');
             $table->index('requested_at');

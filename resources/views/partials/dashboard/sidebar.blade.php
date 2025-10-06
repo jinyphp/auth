@@ -57,18 +57,22 @@
                                 사용자 유형
                             </a>
                         </li>
+                        {{-- 사용자 등급 (라우트 미정의)
                         <li class="nav-item">
                             <a class="nav-link" href="{{ route('admin.auth.grades.index') }}">
                                 <i class="fe fe-award me-2"></i>
                                 사용자 등급
                             </a>
                         </li>
+                        --}}
+                        {{-- 이용약관 (라우트 미정의)
                         <li class="nav-item">
                             <a class="nav-link" href="{{ route('admin.auth.terms.index') }}">
                                 <i class="fe fe-file-text me-2"></i>
                                 이용약관
                             </a>
                         </li>
+                        --}}
                         <li class="nav-item">
                             <a class="nav-link" href="#">
                                 <i class="fe fe-shield me-2"></i>
@@ -79,6 +83,7 @@
                 </div>
             </li>
 
+            {{-- 사용자 정보 (라우트 미정의)
             <li class="nav-item">
                 <a class="nav-link collapsed" href="#" data-bs-toggle="collapse"
                     data-bs-target="#navUserInfo" aria-expanded="false" aria-controls="navUserInfo">
@@ -108,7 +113,9 @@
                     </ul>
                 </div>
             </li>
+            --}}
 
+            {{-- 사용자 설정 (라우트 미정의)
             <li class="nav-item">
                 <a class="nav-link collapsed" href="#" data-bs-toggle="collapse"
                     data-bs-target="#navUserSettings" aria-expanded="false" aria-controls="navUserSettings">
@@ -132,7 +139,9 @@
                     </ul>
                 </div>
             </li>
+            --}}
 
+            {{-- 보안 관리 (라우트 미정의)
             <li class="nav-item">
                 <a class="nav-link collapsed" href="#" data-bs-toggle="collapse"
                     data-bs-target="#navSecurity" aria-expanded="false" aria-controls="navSecurity">
@@ -162,7 +171,9 @@
                     </ul>
                 </div>
             </li>
+            --}}
 
+            {{-- 커뮤니케이션 (라우트 미정의)
             <li class="nav-item">
                 <a class="nav-link collapsed" href="#" data-bs-toggle="collapse"
                     data-bs-target="#navCommunication" aria-expanded="false" aria-controls="navCommunication">
@@ -186,7 +197,9 @@
                     </ul>
                 </div>
             </li>
+            --}}
 
+            {{-- 금융 관리 (라우트 미정의)
             <li class="nav-item">
                 <a class="nav-link collapsed" href="#" data-bs-toggle="collapse"
                     data-bs-target="#navFinance" aria-expanded="false" aria-controls="navFinance">
@@ -216,7 +229,9 @@
                     </ul>
                 </div>
             </li>
+            --}}
 
+            {{-- 통합 설정 (라우트 미정의)
             <li class="nav-item">
                 <a class="nav-link collapsed" href="#" data-bs-toggle="collapse"
                     data-bs-target="#navIntegration" aria-expanded="false" aria-controls="navIntegration">
@@ -234,6 +249,7 @@
                     </ul>
                 </div>
             </li>
+            --}}
 
             <li class="nav-item">
                 <a class="nav-link collapsed" href="#" data-bs-toggle="collapse"

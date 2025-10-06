@@ -9,9 +9,6 @@
     <!-- Favicon icon-->
     <link rel="shortcut icon" type="image/x-icon" href="{{ asset('assets/images/favicon/favicon.ico') }}" />
 
-    <!-- darkmode js -->
-    <script src="{{ asset('assets/js/vendors/darkMode.js') }}"></script>
-
     <!-- Libs CSS -->
     <link href="{{ asset('assets/fonts/feather/feather.css') }}" rel="stylesheet" />
     <link href="{{ asset('assets/libs/bootstrap-icons/font/bootstrap-icons.min.css') }}" rel="stylesheet" />

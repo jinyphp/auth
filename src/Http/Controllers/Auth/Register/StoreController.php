@@ -102,6 +102,9 @@ class StoreController extends Controller
 
             // 디버그 모드
             'app_debug' => config('app.debug', false),
+
+            // 샤딩 설정
+            'sharding_enabled' => config('admin.auth.sharding.enable', false),
         ];
     }
 
@@ -237,8 +240,8 @@ class StoreController extends Controller
             'password' => 'required|min:8|confirmed',
             'phone' => 'nullable|string',
             'birth_date' => 'nullable|date|before:today',
-            'terms' => 'required|array',
-            'terms.*' => 'required|exists:user_terms,id',
+            'terms' => 'nullable|array',  // required → nullable (약관 없을 수 있음)
+            'terms.*' => 'nullable',  // exists 제거 (약관 없을 수 있음)
         ], [
             'name.required' => '이름을 입력해주세요.',
             'email.required' => '이메일을 입력해주세요.',
@@ -381,8 +384,13 @@ class StoreController extends Controller
         $mandatoryTerms = $this->termsService->getMandatoryTerms();
         $mandatoryIds = $mandatoryTerms->pluck('id')->toArray();
 
+        // 약관이 없으면 검증 통과
+        if (empty($mandatoryIds)) {
+            return ['status' => 'success'];
+        }
+
         // 동의한 약관 목록
-        $agreedTerms = $request->input('terms', []);
+        $agreedTerms = array_keys($request->input('terms', []));
 
         // 필수 약관 동의 확인
         foreach ($mandatoryIds as $mandatoryId) {
@@ -538,15 +546,19 @@ class StoreController extends Controller
      */
     protected function createUserProfile($user, Request $request)
     {
-        return UserProfile::create([
-            'user_id' => $user->id ?? null, // 기존 호환성
-            'user_uuid' => $user->uuid, // UUID 기반 식별
+        $profileData = [
             'phone' => $request->phone,
-            'birth_date' => $request->birth_date,
-            'gender' => $request->gender,
-            'marketing_consent' => $request->boolean('marketing_consent'),
-            'sms_consent' => $request->boolean('sms_consent'),
-        ]);
+        ];
+
+        // 샤딩 활성화 시 UUID 사용
+        if ($this->config['sharding_enabled']) {
+            $profileData['user_uuid'] = $user->uuid;
+            $profileData['user_id'] = $user->uuid; // UUID를 user_id에도 저장 (호환성)
+        } else {
+            $profileData['user_id'] = $user->id;
+        }
+
+        return UserProfile::create($profileData);
     }
 
     /**
@@ -554,16 +566,20 @@ class StoreController extends Controller
      *
      * 진입: createUserAccount() → recordTermsAgreement()
      *
-     * @param User $user
+     * @param User|ShardedUser $user
      * @param Request $request
      */
-    protected function recordTermsAgreement(User $user, Request $request)
+    protected function recordTermsAgreement($user, Request $request)
     {
-        $this->termsService->recordAgreement(
-            $user->id,
-            $request->terms,
-            $request
-        );
+        // 약관 동의가 있을 때만 기록
+        $terms = $request->terms;
+        if ($terms && is_array($terms) && !empty($terms)) {
+            $this->termsService->recordAgreement(
+                $user->id,
+                $terms,
+                $request
+            );
+        }
     }
 
     /**
@@ -571,23 +587,35 @@ class StoreController extends Controller
      *
      * 진입: createUserAccount() → createEmailVerification()
      *
-     * @param User $user
+     * @param User|ShardedUser $user
      */
-    protected function createEmailVerification(User $user)
+    protected function createEmailVerification($user)
     {
+        $token = \Str::random(64);
+        $verificationCode = rand(100000, 999999);
+
         DB::table('auth_email_verifications')->insert([
             'user_id' => $user->id,
             'email' => $user->email,
-            'token' => \Str::random(64),
-            'verification_code' => rand(100000, 999999),
+            'token' => $token,
+            'verification_code' => $verificationCode,
             'type' => 'register',
             'expires_at' => now()->addHours(24),
             'created_at' => now(),
             'updated_at' => now(),
         ]);
 
-        // 이메일 발송 (큐 사용 권장)
-        // Mail::to($user->email)->send(new VerifyEmail($user));
+        // 인증 URL 생성
+        $verificationUrl = url('/email/verify/' . $token);
+
+        // 이메일 발송
+        try {
+            \Mail::to($user->email)->send(
+                new \Jiny\Auth\Mail\VerificationMail($user, $verificationUrl, $verificationCode)
+            );
+        } catch (\Exception $e) {
+            \Log::warning('Email verification mail send failed: ' . $e->getMessage());
+        }
     }
 
     /**
@@ -595,9 +623,9 @@ class StoreController extends Controller
      *
      * 진입: createUserAccount() → giveSignupBonus()
      *
-     * @param User $user
+     * @param User|ShardedUser $user
      */
-    protected function giveSignupBonus(User $user)
+    protected function giveSignupBonus($user)
     {
         // 포인트 기능이 활성화되어 있는 경우
         if ($this->config['point_enable']) {
@@ -634,10 +662,10 @@ class StoreController extends Controller
      *
      * 진입: createUserAccount() → logRegistration()
      *
-     * @param User $user
+     * @param User|ShardedUser $user
      * @param Request $request
      */
-    protected function logRegistration(User $user, Request $request)
+    protected function logRegistration($user, Request $request)
     {
         $this->activityLogService->logUserRegistration($user, $request->ip());
     }
@@ -647,11 +675,11 @@ class StoreController extends Controller
      *
      * 진입: __invoke() → handlePostRegistration()
      *
-     * @param User $user
+     * @param User|ShardedUser $user
      * @param Request $request
      * @return array
      */
-    protected function handlePostRegistration(User $user, Request $request)
+    protected function handlePostRegistration($user, Request $request)
     {
         $result = [
             'auto_login' => false,
@@ -678,7 +706,26 @@ class StoreController extends Controller
             $result['tokens'] = $this->jwtService->generateTokenPair($user);
         }
 
+        // 환영 이메일 발송 (이메일 인증 불필요한 경우)
+        if (!$this->config['require_email_verification']) {
+            $this->sendWelcomeMail($user);
+        }
+
         return $result;
+    }
+
+    /**
+     * 환영 이메일 발송
+     */
+    protected function sendWelcomeMail($user)
+    {
+        try {
+            \Mail::to($user->email)->send(
+                new \Jiny\Auth\Mail\WelcomeMail($user)
+            );
+        } catch (\Exception $e) {
+            \Log::warning('Welcome mail send failed: ' . $e->getMessage());
+        }
     }
 
     /**
@@ -686,12 +733,12 @@ class StoreController extends Controller
      *
      * 진입: __invoke() → generateResponse()
      *
-     * @param User $user
+     * @param User|ShardedUser $user
      * @param array $postRegistration
      * @param Request $request
      * @return \Illuminate\Http\JsonResponse|\Illuminate\Http\RedirectResponse
      */
-    protected function generateResponse(User $user, array $postRegistration, Request $request)
+    protected function generateResponse($user, array $postRegistration, Request $request)
     {
         // API 요청인 경우
         if ($request->expectsJson()) {

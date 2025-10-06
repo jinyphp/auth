@@ -13,6 +13,9 @@ return new class extends Migration
     {
         Schema::create('auth_login_attempts', function (Blueprint $table) {
             $table->id();
+            $table->unsignedBigInteger('user_id')->nullable(); // 사용자 ID (성공 시)
+            $table->string('user_uuid', 36)->nullable()->index()->comment('User UUID for sharding');
+            $table->integer('shard_id')->nullable()->index()->comment('Shard number (0-15)');
             $table->string('email')->nullable(); // 시도한 이메일
             $table->string('username')->nullable(); // 시도한 사용자명
             $table->string('ip_address', 45); // IP 주소

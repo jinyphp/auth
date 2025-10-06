@@ -15,6 +15,8 @@ return new class extends Migration
             $table->id();
             $table->string('session_id')->unique(); // 세션 ID
             $table->unsignedBigInteger('user_id'); // 사용자 ID
+            $table->string('user_uuid', 36)->nullable()->index()->comment('User UUID for sharding');
+            $table->integer('shard_id')->nullable()->index()->comment('Shard number (0-15)');
             $table->string('ip_address', 45)->nullable(); // IP 주소
             $table->text('user_agent')->nullable(); // User Agent
             $table->text('payload'); // 세션 데이터

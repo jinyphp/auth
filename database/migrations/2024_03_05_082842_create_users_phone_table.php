@@ -21,6 +21,8 @@ class CreateUsersPhoneTable extends Migration
 
             // 사용자 id 연동
             $table->unsignedBigInteger('user_id');
+            $table->string('user_uuid', 36)->nullable()->index()->comment('User UUID for sharding');
+            $table->integer('shard_id')->nullable()->index()->comment('Shard number (0-15)');
             $table->string('name')->nullable();
             $table->string('email')->nullable();
 

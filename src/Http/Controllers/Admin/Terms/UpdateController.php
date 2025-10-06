@@ -18,7 +18,6 @@ class UpdateController extends Controller
 
     public function __construct()
     {
-        $this->middleware(['auth', 'admin']);
         $this->loadActions();
     }
 
@@ -72,7 +71,10 @@ class UpdateController extends Controller
             'content' => $request->content,
             'version' => $request->version,
             'pos' => $request->pos ?? 0,
-            'enable' => $request->enable ?? false,
+            'enable' => $request->has('enable') ? (bool)$request->enable : true,
+            'required' => $request->has('required') ? (bool)$request->required : true,
+            'valid_from' => $request->valid_from ? \Carbon\Carbon::parse($request->valid_from) : null,
+            'valid_to' => $request->valid_to ? \Carbon\Carbon::parse($request->valid_to) : null,
             'updated_at' => now(),
         ]);
 

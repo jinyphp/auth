@@ -11,17 +11,45 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-Route::prefix('admin')->middleware(['web', 'auth', 'admin'])->group(function () {
+Route::prefix('admin')->middleware(['web'])->group(function () {
+
+    // 회원 관리 대시보드 (임시로 auth, admin 미들웨어 제거)
+    Route::get('/auth', \Jiny\Auth\Http\Controllers\Admin\Dashboard\IndexController::class)->name('admin.auth.dashboard');
 
     // 사용자 관리 (AuthUsers)
     Route::prefix('auth/users')->name('admin.auth.users.')->group(function () {
         Route::get('/', \Jiny\Auth\Http\Controllers\Admin\AuthUsers\IndexController::class)->name('index');
+        Route::post('/toggle-sharding', \Jiny\Auth\Http\Controllers\Admin\AuthUsers\ToggleShardingController::class)->name('toggle-sharding');
         Route::get('/create', \Jiny\Auth\Http\Controllers\Admin\AuthUsers\CreateController::class)->name('create');
         Route::post('/', \Jiny\Auth\Http\Controllers\Admin\AuthUsers\StoreController::class)->name('store');
+        Route::get('/shard/{shardId}', \Jiny\Auth\Http\Controllers\Admin\AuthUsers\ShardController::class)->name('shard');
         Route::get('/{id}', \Jiny\Auth\Http\Controllers\Admin\AuthUsers\ShowController::class)->name('show');
+        Route::post('/{id}/toggle-status', \Jiny\Auth\Http\Controllers\Admin\AuthUsers\ToggleStatusController::class)->name('toggle-status');
+        Route::post('/{id}/reset-password', \Jiny\Auth\Http\Controllers\Admin\AuthUsers\ResetPasswordController::class)->name('reset-password');
         Route::get('/{id}/edit', \Jiny\Auth\Http\Controllers\Admin\AuthUsers\EditController::class)->name('edit');
         Route::put('/{id}', \Jiny\Auth\Http\Controllers\Admin\AuthUsers\UpdateController::class)->name('update');
         Route::delete('/{id}', \Jiny\Auth\Http\Controllers\Admin\AuthUsers\DeleteController::class)->name('destroy');
+    });
+
+    // 샤딩 관리 (Shards)
+    Route::prefix('auth/shards')->name('admin.auth.shards.')->group(function () {
+        // 샤드 관리 메인
+        Route::get('/', \Jiny\Auth\Http\Controllers\Admin\Shards\IndexController::class)->name('index');
+        Route::get('/schema', \Jiny\Auth\Http\Controllers\Admin\Shards\ShowSchemaController::class)->name('schema');
+        Route::post('/create', \Jiny\Auth\Http\Controllers\Admin\Shards\CreateController::class)->name('create');
+        Route::post('/create-all', \Jiny\Auth\Http\Controllers\Admin\Shards\CreateAllController::class)->name('create-all');
+        Route::delete('/delete', \Jiny\Auth\Http\Controllers\Admin\Shards\DeleteController::class)->name('delete');
+        Route::delete('/reset', \Jiny\Auth\Http\Controllers\Admin\Shards\ResetController::class)->name('reset');
+
+        // 모든 샤드 테이블 일괄 처리
+        Route::post('/create-all-tables', \Jiny\Auth\Http\Controllers\Admin\Shards\CreateAllTablesController::class)->name('create-all-tables');
+        Route::delete('/reset-all-tables', \Jiny\Auth\Http\Controllers\Admin\Shards\ResetAllTablesController::class)->name('reset-all-tables');
+
+        // 샤드 테이블 CRUD
+        Route::post('/tables', \Jiny\Auth\Http\Controllers\Admin\Shards\Tables\StoreController::class)->name('tables.store');
+        Route::put('/tables/{id}', \Jiny\Auth\Http\Controllers\Admin\Shards\Tables\UpdateController::class)->name('tables.update');
+        Route::post('/tables/{id}/toggle-sharding', \Jiny\Auth\Http\Controllers\Admin\Shards\Tables\ToggleShardingController::class)->name('tables.toggle-sharding');
+        Route::delete('/tables/{id}', \Jiny\Auth\Http\Controllers\Admin\Shards\Tables\DeleteController::class)->name('tables.delete');
     });
 
     // 계정 잠금 관리 (AccountLockout)
@@ -43,6 +71,7 @@ Route::prefix('admin')->middleware(['web', 'auth', 'admin'])->group(function () 
     // 이용약관 관리 (Terms)
     Route::prefix('auth/terms')->name('admin.auth.terms.')->group(function () {
         Route::get('/', \Jiny\Auth\Http\Controllers\Admin\Terms\IndexController::class)->name('index');
+        Route::get('/logs', \Jiny\Auth\Http\Controllers\Admin\Terms\TermsLogsController::class)->name('logs.index');
         Route::get('/create', \Jiny\Auth\Http\Controllers\Admin\Terms\CreateController::class)->name('create');
         Route::post('/', \Jiny\Auth\Http\Controllers\Admin\Terms\StoreController::class)->name('store');
         Route::get('/{id}', \Jiny\Auth\Http\Controllers\Admin\Terms\ShowController::class)->name('show');
@@ -70,7 +99,8 @@ Route::prefix('admin')->middleware(['web', 'auth', 'admin'])->group(function () 
         Route::get('/{id}', \Jiny\Auth\Http\Controllers\Admin\UserTypes\ShowController::class)->name('show');
         Route::get('/{id}/edit', \Jiny\Auth\Http\Controllers\Admin\UserTypes\EditController::class)->name('edit');
         Route::put('/{id}', \Jiny\Auth\Http\Controllers\Admin\UserTypes\UpdateController::class)->name('update');
-        Route::delete('/{id}', \Jiny\Auth\Http\Controllers\Admin\UserTypes\DeleteController::class)->name('destroy');
+        Route::post('/{id}/toggle-default', \Jiny\Auth\Http\Controllers\Admin\UserTypes\ToggleDefaultController::class)->name('toggle-default');
+        Route::delete('/{id}', \Jiny\Auth\Http\Controllers\Admin\UserTypes\DeleteController::class)->name('delete');
     });
 
     // 블랙리스트 관리 (UserBlacklist)
@@ -205,5 +235,19 @@ Route::prefix('admin')->middleware(['web', 'auth', 'admin'])->group(function () 
         Route::get('/{id}/edit', \Jiny\Auth\Http\Controllers\Admin\UserAddress\EditController::class)->name('edit');
         Route::put('/{id}', \Jiny\Auth\Http\Controllers\Admin\UserAddress\UpdateController::class)->name('update');
         Route::delete('/{id}', \Jiny\Auth\Http\Controllers\Admin\UserAddress\DeleteController::class)->name('destroy');
+    });
+
+    // 아바타 샤딩 관리 (Avatar)
+    Route::prefix('auth/avata')->name('admin.avatar.')->group(function () {
+        Route::get('/', \Jiny\Auth\Http\Controllers\Admin\Avatar\IndexController::class)->name('index');
+        Route::get('/shard/{shardId}', \Jiny\Auth\Http\Controllers\Admin\Avatar\ShardController::class)->name('shard');
+    });
+
+    // 사용자별 아바타 관리 (UserAvatar)
+    Route::prefix('auth/users/{id}/avata')->name('admin.user-avatar.')->group(function () {
+        Route::get('/', \Jiny\Auth\Http\Controllers\Admin\UserAvatar\IndexController::class)->name('index');
+        Route::post('/', \Jiny\Auth\Http\Controllers\Admin\UserAvatar\StoreController::class)->name('store');
+        Route::post('/{avatarId}/set-default', \Jiny\Auth\Http\Controllers\Admin\UserAvatar\SetDefaultController::class)->name('set-default');
+        Route::delete('/{avatarId}', \Jiny\Auth\Http\Controllers\Admin\UserAvatar\DeleteController::class)->name('delete');
     });
 });

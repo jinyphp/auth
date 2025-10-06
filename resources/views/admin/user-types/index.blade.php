@@ -1,4 +1,4 @@
-@extends('jiny-auth::layouts.dashboard')
+@extends('jiny-auth::layouts.admin.sidebar')
 
 @section('title', '사용자 유형 관리')
 
@@ -87,6 +87,7 @@
                                     <th>유형명</th>
                                     <th>설명</th>
                                     <th>사용자 수</th>
+                                    <th>기본 설정</th>
                                     <th>상태</th>
                                     <th>생성일</th>
                                     <th>작업</th>
@@ -106,6 +107,18 @@
                                     </td>
                                     <td>
                                         <span class="badge bg-info">{{ $userType->users }} 명</span>
+                                    </td>
+                                    <td>
+                                        <form action="{{ route('admin.auth.user.types.toggle-default', $userType->id) }}"
+                                              method="POST" class="d-inline">
+                                            @csrf
+                                            <div class="form-check form-switch">
+                                                <input class="form-check-input"
+                                                       type="checkbox"
+                                                       {{ $userType->is_default ? 'checked' : '' }}
+                                                       onchange="this.form.submit()">
+                                            </div>
+                                        </form>
                                     </td>
                                     <td>
                                         <span class="badge bg-{{ $userType->status_badge_color }}">
@@ -146,7 +159,7 @@
                                 </tr>
                                 @empty
                                 <tr>
-                                    <td colspan="7" class="text-center py-4">
+                                    <td colspan="8" class="text-center py-4">
                                         <p class="mb-0">등록된 사용자 유형이 없습니다.</p>
                                     </td>
                                 </tr>

@@ -1,4 +1,4 @@
-@extends('layouts.app')
+@extends('jiny-auth::layouts.app')
 
 @section('title', '회원가입')
 

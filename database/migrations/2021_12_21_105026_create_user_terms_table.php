@@ -20,8 +20,10 @@ class CreateUserTermsTable extends Migration
             $table->id();
             $table->timestamps();
 
-            $table->string('enable')->default(1);
-            $table->string('required')->default(1);
+            // 활성화/비활성화
+            $table->boolean('enable')->default(true);
+            // 필수/선택 약관
+            $table->boolean('required')->default(true);
 
             $table->string('title');
             $table->string('slug')->nullable();
@@ -31,6 +33,13 @@ class CreateUserTermsTable extends Migration
             $table->integer('pos')->default(1);
 
             $table->text('description')->nullable();
+
+            // 버전 관리
+            $table->string('version', 50)->nullable()->comment('약관 버전 (예: 1.0.0)');
+
+            // 유효기간
+            $table->timestamp('valid_from')->nullable()->comment('약관 시작일');
+            $table->timestamp('valid_to')->nullable()->comment('약관 종료일');
 
             // 작업자ID
             $table->string('manager')->nullable();

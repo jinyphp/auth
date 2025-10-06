@@ -74,8 +74,23 @@ class ShardingService
             return DB::table('users')->where('uuid', $uuid)->first();
         }
 
-        $tableName = $this->getShardTableName($uuid);
-        return DB::table($tableName)->where('uuid', $uuid)->first();
+        // 전체 샤드 검색 (UUID 해시 불일치 대응)
+        for ($i = 1; $i <= $this->shardCount; $i++) {
+            $shardNumber = str_pad($i, 3, '0', STR_PAD_LEFT);
+            $tableName = "users_{$shardNumber}";
+
+            try {
+                $user = DB::table($tableName)->where('uuid', $uuid)->first();
+                if ($user) {
+                    return $user;
+                }
+            } catch (\Exception $e) {
+                // 샤드 테이블이 없으면 다음 샤드로
+                continue;
+            }
+        }
+
+        return null;
     }
 
     /**
@@ -91,25 +106,39 @@ class ShardingService
         }
 
         // 이메일 인덱스 테이블 사용 (성능 최적화)
-        $indexRecord = DB::table('user_email_index')
-            ->where('email', $email)
-            ->first();
+        try {
+            $indexRecord = DB::table('user_email_index')
+                ->where('email', $email)
+                ->first();
 
-        if ($indexRecord) {
-            return $this->getUserByUuid($indexRecord->uuid);
+            if ($indexRecord) {
+                return $this->getUserByUuid($indexRecord->uuid);
+            }
+        } catch (\Exception $e) {
+            // 인덱스 테이블이 없으면 무시하고 전체 샤드 검색
+            \Log::info('user_email_index table not found, searching all shards');
         }
 
-        // 인덱스 테이블에 없으면 전체 샤드 검색 (느림)
+        // 인덱스 테이블에 없거나 테이블이 없으면 전체 샤드 검색
         for ($i = 1; $i <= $this->shardCount; $i++) {
             $shardNumber = str_pad($i, 3, '0', STR_PAD_LEFT);
             $tableName = "users_{$shardNumber}";
 
-            $user = DB::table($tableName)->where('email', $email)->first();
+            try {
+                $user = DB::table($tableName)->where('email', $email)->first();
 
-            if ($user) {
-                // 인덱스 테이블에 추가
-                $this->addToEmailIndex($user->email, $user->uuid);
-                return $user;
+                if ($user) {
+                    // 인덱스 테이블에 추가 시도 (테이블이 없으면 무시)
+                    try {
+                        $this->addToEmailIndex($user->email, $user->uuid);
+                    } catch (\Exception $e) {
+                        // 인덱스 테이블 추가 실패 무시
+                    }
+                    return $user;
+                }
+            } catch (\Exception $e) {
+                // 샤드 테이블이 없으면 다음 샤드로
+                continue;
             }
         }
 

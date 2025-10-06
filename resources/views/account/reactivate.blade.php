@@ -1,4 +1,4 @@
-@extends('layouts.app')
+@extends('jiny-auth::layouts.app')
 
 @section('title', '휴면 계정 재활성화')
 

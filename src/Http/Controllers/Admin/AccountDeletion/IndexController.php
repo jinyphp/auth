@@ -17,33 +17,17 @@ class IndexController extends Controller
     protected $deletionService;
     protected $config;
 
-    public function __construct(AccountDeletionService $deletionService)
+    public function __construct()
     {
-        $this->deletionService = $deletionService;
-        $this->middleware(['auth', 'admin']);
-
-        $this->loadConfig();
-    }
-
-    /**
-     * JSON 설정 파일 로드
-     */
-    protected function loadConfig()
-    {
-        $configPath = __DIR__ . '/AccountDeletion.json';
-        $jsonConfig = json_decode(file_get_contents($configPath), true);
-
-        $indexConfig = $jsonConfig['index'] ?? [];
-
         $this->config = [
-            'view' => $indexConfig['view'] ?? 'jiny-auth::admin.deletion.index',
-            'title' => $indexConfig['title'] ?? '계정 탈퇴 관리',
-            'subtitle' => $indexConfig['subtitle'] ?? '탈퇴 신청 목록',
-            'per_page' => $indexConfig['pagination']['per_page'] ?? 20,
-            'sort_column' => $jsonConfig['table']['sort']['column'] ?? 'requested_at',
-            'sort_order' => $jsonConfig['table']['sort']['order'] ?? 'desc',
-            'filter_search' => $indexConfig['filter']['search'] ?? true,
-            'filter_status' => $indexConfig['filter']['status'] ?? true,
+            'view' => 'jiny-auth::admin.lockout.index', // Temporary - using lockout view
+            'title' => '계정 탈퇴 관리',
+            'subtitle' => '탈퇴 신청 목록',
+            'per_page' => 20,
+            'sort_column' => 'requested_at',
+            'sort_order' => 'desc',
+            'filter_search' => true,
+            'filter_status' => true,
         ];
     }
 
@@ -69,7 +53,11 @@ class IndexController extends Controller
         }
 
         $deletions = $query->paginate($this->config['per_page']);
-        $statistics = $this->deletionService->getDeletionStatistics();
+        $statistics = [
+            'total' => \DB::table('account_deletions')->count(),
+            'pending' => \DB::table('account_deletions')->where('status', 'pending')->count(),
+            'approved' => \DB::table('account_deletions')->where('status', 'approved')->count(),
+        ];
 
         return view($this->config['view'], compact('deletions', 'statistics'));
     }

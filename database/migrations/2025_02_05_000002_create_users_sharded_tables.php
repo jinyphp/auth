@@ -15,7 +15,7 @@ return new class extends Migration
     public function up(): void
     {
         // 샤딩 설정 확인
-        $shardCount = config('admin.auth.sharding.shard_count', 10);
+        $shardCount = config('admin.auth.sharding.shard_count', 2);
         $enabled = config('admin.auth.sharding.enable', false);
 
         if (!$enabled) {
@@ -66,7 +66,7 @@ return new class extends Migration
 
     public function down(): void
     {
-        $shardCount = config('admin.auth.sharding.shard_count', 10);
+        $shardCount = config('admin.auth.sharding.shard_count', 2);
 
         for ($i = 1; $i <= $shardCount; $i++) {
             $shardNumber = str_pad($i, 3, '0', STR_PAD_LEFT);

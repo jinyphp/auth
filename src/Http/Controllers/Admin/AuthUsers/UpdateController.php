@@ -5,6 +5,9 @@ namespace Jiny\Auth\Http\Controllers\Admin\AuthUsers;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Jiny\Auth\Models\AuthUser;
+use Jiny\Auth\Models\ShardTable;
+use Jiny\Auth\Models\UserType;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
@@ -21,7 +24,6 @@ class UpdateController extends Controller
 
     public function __construct()
     {
-        $this->middleware(['auth', 'admin']);
         $this->loadActions();
     }
 
@@ -57,57 +59,151 @@ class UpdateController extends Controller
      */
     public function __invoke(Request $request, $id)
     {
-        $user = AuthUser::findOrFail($id);
+        $shardId = $request->get('shard_id');
+        $tableName = 'users';
+
+        if ($shardId) {
+            // 샤드 테이블에서 조회
+            $shardTable = ShardTable::where('table_name', 'users')->first();
+            $tableName = $shardTable->getShardTableName($shardId);
+
+            $userData = DB::table($tableName)->where('id', $id)->first();
+
+            if (!$userData) {
+                abort(404, '사용자를 찾을 수 없습니다.');
+            }
+
+            $user = AuthUser::hydrate([(array)$userData])->first();
+            $user->setTable($tableName);
+        } else {
+            // 일반 테이블에서 조회
+            $user = AuthUser::findOrFail($id);
+        }
 
         // Validation rules with unique ignore
-        $rules = $this->actions['validation'];
-        $rules['username'] = [
-            'required',
-            'string',
-            'max:255',
-            Rule::unique('users')->ignore($user->id),
-        ];
-        $rules['email'] = [
-            'required',
-            'string',
-            'email',
-            'max:255',
-            Rule::unique('users')->ignore($user->id),
+        $rules = [
+            'name' => 'required|string|max:255',
+            'username' => [
+                'nullable',
+                'string',
+                'max:255',
+                Rule::unique($tableName)->ignore($user->id),
+            ],
+            'email' => [
+                'required',
+                'string',
+                'email',
+                'max:255',
+                Rule::unique($tableName)->ignore($user->id),
+            ],
+            'utype' => 'required|string|exists:user_type,type',
+            'account_status' => 'required|string|in:active,inactive,suspended',
         ];
 
-        $validator = Validator::make($request->all(), $rules);
+        // 비밀번호가 제공된 경우에만 validation 추가
+        if ($request->filled('password')) {
+            $passwordRules = config('admin.auth.password_rules', [
+                'min_length' => 8,
+                'require_uppercase' => true,
+                'require_lowercase' => true,
+                'require_numbers' => true,
+                'require_symbols' => false,
+            ]);
+
+            $passwordValidation = ['required', 'string', 'min:' . $passwordRules['min_length'], 'confirmed'];
+
+            // 추가 규칙 적용
+            if ($passwordRules['require_uppercase']) {
+                $passwordValidation[] = 'regex:/[A-Z]/';
+            }
+            if ($passwordRules['require_lowercase']) {
+                $passwordValidation[] = 'regex:/[a-z]/';
+            }
+            if ($passwordRules['require_numbers']) {
+                $passwordValidation[] = 'regex:/[0-9]/';
+            }
+            if ($passwordRules['require_symbols']) {
+                $passwordValidation[] = 'regex:/[!@#$%^&*(),.?":{}|<>]/';
+            }
+
+            $rules['password'] = $passwordValidation;
+
+            // Custom validation messages
+            $messages = [
+                'password.regex' => '비밀번호는 ',
+            ];
+
+            if ($passwordRules['require_uppercase']) {
+                $messages['password.regex'] .= '대문자, ';
+            }
+            if ($passwordRules['require_lowercase']) {
+                $messages['password.regex'] .= '소문자, ';
+            }
+            if ($passwordRules['require_numbers']) {
+                $messages['password.regex'] .= '숫자, ';
+            }
+            if ($passwordRules['require_symbols']) {
+                $messages['password.regex'] .= '특수문자, ';
+            }
+            $messages['password.regex'] = rtrim($messages['password.regex'], ', ') . '를 포함해야 합니다.';
+        } else {
+            $messages = [];
+        }
+
+        $validator = Validator::make($request->all(), $rules, $messages);
 
         if ($validator->fails()) {
-            return redirect()
-                ->route($this->actions['routes']['error'], $id)
+            $redirectUrl = route($this->actions['routes']['error'], $id);
+            if ($shardId) {
+                $redirectUrl .= '?shard_id=' . $shardId;
+            }
+            return redirect($redirectUrl)
                 ->withErrors($validator)
                 ->withInput();
         }
 
-        $data = $request->except(['password', 'password_confirmation']);
+        $data = $request->except(['password', 'password_confirmation', 'shard_id', '_token', '_method', 'phone', 'phone_number', 'address', 'avatar']);
 
         // 비밀번호가 제공된 경우에만 업데이트
         if ($request->filled('password')) {
             $data['password'] = Hash::make($request->password);
         }
 
-        // 아바타 이미지 처리
-        if ($request->hasFile('avatar')) {
-            // 기존 아바타 삭제
-            if ($user->avatar) {
-                \Storage::delete($this->actions['storage']['avatar_path'] . '/' . basename($user->avatar));
+        // 사용자 타입 변경 시 UserType 카운트 조정
+        $oldUtype = $user->utype;
+        $newUtype = $request->get('utype');
+
+        if ($oldUtype !== $newUtype) {
+            // 이전 타입 카운트 감소
+            if ($oldUtype) {
+                $oldUserType = UserType::where('type', $oldUtype)->first();
+                if ($oldUserType) {
+                    $oldUserType->decrementUsers();
+                }
             }
 
-            $avatar = $request->file('avatar');
-            $filename = time() . '_' . $avatar->getClientOriginalName();
-            $avatar->storeAs($this->actions['storage']['avatar_path'], $filename);
-            $data['avatar'] = $this->actions['storage']['avatar_public'] . '/' . $filename;
+            // 새 타입 카운트 증가
+            if ($newUtype) {
+                $newUserType = UserType::where('type', $newUtype)->first();
+                if ($newUserType) {
+                    $newUserType->incrementUsers();
+                }
+            }
         }
 
-        $user->update($data);
+        if ($shardId) {
+            // 샤드 테이블 직접 업데이트
+            DB::table($tableName)->where('id', $id)->update($data);
+        } else {
+            $user->update($data);
+        }
 
-        return redirect()
-            ->route($this->actions['routes']['success'], $id)
+        $redirectUrl = route($this->actions['routes']['success'], $id);
+        if ($shardId) {
+            $redirectUrl .= '?shard_id=' . $shardId;
+        }
+
+        return redirect($redirectUrl)
             ->with('success', $this->actions['messages']['success']);
     }
 }

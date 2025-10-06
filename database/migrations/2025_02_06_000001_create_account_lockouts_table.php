@@ -44,7 +44,7 @@ return new class extends Migration
             // 인덱스
             $table->index('user_id');
             $table->index('user_uuid');
-            $table->index('email');
+            // email 인덱스는 20번 라인에서 이미 생성됨
             $table->index('ip_address');
             $table->index('status');
             $table->index('unlocks_at');

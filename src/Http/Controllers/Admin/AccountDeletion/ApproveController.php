@@ -20,7 +20,6 @@ class ApproveController extends Controller
     public function __construct(AccountDeletionService $deletionService)
     {
         $this->deletionService = $deletionService;
-        $this->middleware(['auth', 'admin']);
         $this->loadActions();
     }
 

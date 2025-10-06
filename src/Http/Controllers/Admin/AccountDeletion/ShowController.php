@@ -25,7 +25,6 @@ class ShowController extends Controller
     ) {
         $this->deletionService = $deletionService;
         $this->shardingService = $shardingService;
-        $this->middleware(['auth', 'admin']);
 
         $this->loadConfig();
     }

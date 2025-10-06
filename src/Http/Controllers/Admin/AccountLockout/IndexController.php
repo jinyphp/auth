@@ -17,35 +17,19 @@ class IndexController extends Controller
     protected $lockoutService;
     protected $config;
 
-    public function __construct(AccountLockoutService $lockoutService)
+    public function __construct()
     {
-        $this->lockoutService = $lockoutService;
-        $this->middleware(['auth', 'admin']);
-
-        $this->loadConfig();
-    }
-
-    /**
-     * JSON 설정 파일 로드
-     */
-    protected function loadConfig()
-    {
-        $configPath = __DIR__ . '/AccountLockout.json';
-        $jsonConfig = json_decode(file_get_contents($configPath), true);
-
-        $indexConfig = $jsonConfig['index'] ?? [];
-
         $this->config = [
-            'view' => $indexConfig['view'] ?? 'jiny-auth::admin.lockout.index',
-            'title' => $indexConfig['title'] ?? '계정 잠금 관리',
-            'subtitle' => $indexConfig['subtitle'] ?? '잠긴 계정 목록',
-            'per_page' => $indexConfig['pagination']['per_page'] ?? 20,
-            'sort_column' => $jsonConfig['table']['sort']['column'] ?? 'created_at',
-            'sort_order' => $jsonConfig['table']['sort']['order'] ?? 'desc',
-            'filter_search' => $indexConfig['filter']['search'] ?? true,
-            'filter_status' => $indexConfig['filter']['status'] ?? true,
-            'filter_requires_admin' => $indexConfig['filter']['requires_admin'] ?? true,
-            'filter_level' => $indexConfig['filter']['level'] ?? true,
+            'view' => 'jiny-auth::admin.lockout.index',
+            'title' => '계정 잠금 관리',
+            'subtitle' => '잠긴 계정 목록',
+            'per_page' => 20,
+            'sort_column' => 'created_at',
+            'sort_order' => 'desc',
+            'filter_search' => true,
+            'filter_status' => true,
+            'filter_requires_admin' => true,
+            'filter_level' => true,
         ];
     }
 
@@ -79,7 +63,11 @@ class IndexController extends Controller
         }
 
         $lockouts = $query->paginate($this->config['per_page']);
-        $statistics = $this->lockoutService->getLockoutStatistics();
+        $statistics = [
+            'total' => \DB::table('account_lockouts')->count(),
+            'active' => \DB::table('account_lockouts')->where('status', 'active')->count(),
+            'pending' => \DB::table('account_lockouts')->where('status', 'pending')->count(),
+        ];
 
         return view($this->config['view'], compact('lockouts', 'statistics'));
     }

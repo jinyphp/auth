@@ -3,12 +3,9 @@
 namespace Jiny\Auth\Models;
 
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\SoftDeletes;
 
 class UserTerms extends Model
 {
-    use SoftDeletes;
-
     protected $table = 'user_terms';
 
     protected $fillable = [

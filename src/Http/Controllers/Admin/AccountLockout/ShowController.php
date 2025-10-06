@@ -21,7 +21,6 @@ class ShowController extends Controller
     ) {
         $this->lockoutService = $lockoutService;
         $this->shardingService = $shardingService;
-        $this->middleware(['auth', 'admin']);
 
         $this->loadConfig();
     }

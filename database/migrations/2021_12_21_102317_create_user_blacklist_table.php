@@ -25,8 +25,11 @@ class CreateUserBlacklistTable extends Migration
             $table->string('black_ip')->nullable();
 
             $table->string('description')->nullable();
+
             // 작업자ID
             $table->unsignedBigInteger('user_id')->default(0);
+            $table->string('user_uuid', 36)->nullable()->index()->comment('User UUID for sharding');
+            $table->integer('shard_id')->nullable()->index()->comment('Shard number (0-15)');
         });
     }
 

@@ -20,7 +20,6 @@ class UnlockController extends Controller
     public function __construct(AccountLockoutService $lockoutService)
     {
         $this->lockoutService = $lockoutService;
-        $this->middleware(['auth', 'admin']);
         $this->loadActions();
     }
 

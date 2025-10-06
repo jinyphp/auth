@@ -19,6 +19,8 @@ class CreateAccountsTable extends Migration
 
             // 사용자 id 연동
             $table->unsignedBigInteger('user_id');
+            $table->string('user_uuid', 36)->nullable()->index()->comment('User UUID for sharding');
+            $table->integer('shard_id')->nullable()->index()->comment('Shard number (0-15)');
             $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
 
             // 사용자이름

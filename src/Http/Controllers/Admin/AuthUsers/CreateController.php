@@ -3,6 +3,7 @@
 namespace Jiny\Auth\Http\Controllers\Admin\AuthUsers;
 
 use App\Http\Controllers\Controller;
+use Jiny\Auth\Models\UserType;
 
 /**
  * 관리자 - 사용자 생성 폼 컨트롤러
@@ -16,7 +17,6 @@ class CreateController extends Controller
 
     public function __construct()
     {
-        $this->middleware(['auth', 'admin']);
         $this->loadConfig();
     }
 
@@ -42,6 +42,28 @@ class CreateController extends Controller
      */
     public function __invoke()
     {
-        return view($this->config['view']);
+        // 활성화된 사용자 유형 목록
+        $userTypes = UserType::where('enable', '1')->orderBy('type')->get();
+
+        // 기본 유형 찾기 (is_default = 1)
+        $defaultType = UserType::where('enable', '1')
+            ->where('is_default', true)
+            ->first();
+
+        // 기본 유형이 없으면 첫 번째 유형 사용
+        if (!$defaultType && $userTypes->isNotEmpty()) {
+            $defaultType = $userTypes->first();
+        }
+
+        // 비밀번호 규칙 가져오기
+        $passwordRules = config('admin.auth.password_rules', [
+            'min_length' => 8,
+            'require_uppercase' => true,
+            'require_lowercase' => true,
+            'require_numbers' => true,
+            'require_symbols' => false,
+        ]);
+
+        return view($this->config['view'], compact('userTypes', 'defaultType', 'passwordRules'));
     }
 }

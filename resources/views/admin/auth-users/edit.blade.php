@@ -1,4 +1,4 @@
-@extends('jiny-auth::layouts.dashboard')
+@extends('jiny-auth::layouts.admin.sidebar')
 
 @section('title', '사용자 편집')
 
@@ -31,9 +31,12 @@
             <div class="col-lg-8 col-md-12">
                 <div class="card">
                     <div class="card-body">
-                        <form method="POST" action="{{ route('admin.auth.users.update', $user->id) }}" enctype="multipart/form-data">
+                        <form method="POST" action="{{ route('admin.auth.users.update', $user->id) }}{{ isset($shardId) ? '?shard_id=' . $shardId : '' }}" enctype="multipart/form-data">
                             @csrf
                             @method('PUT')
+                            @if(isset($shardId))
+                                <input type="hidden" name="shard_id" value="{{ $shardId }}">
+                            @endif
 
                             <!-- Basic Information -->
                             <h5 class="mb-3">기본 정보</h5>
@@ -52,7 +55,7 @@
                                     @enderror
                                 </div>
                                 <div class="col-md-6">
-                                    <label for="username" class="form-label">사용자명 <span class="text-danger">*</span></label>
+                                    <label for="username" class="form-label">닉네임</label>
                                     <div class="input-group">
                                         <span class="input-group-text">@</span>
                                         <input type="text"
@@ -60,7 +63,7 @@
                                                id="username"
                                                name="username"
                                                value="{{ old('username', $user->username) }}"
-                                               required>
+                                               placeholder="선택사항">
                                     </div>
                                     @error('username')
                                         <div class="invalid-feedback d-block">{{ $message }}</div>
@@ -68,40 +71,15 @@
                                 </div>
                             </div>
 
-                            <div class="row mb-3">
-                                <div class="col-md-6">
-                                    <label for="email" class="form-label">이메일 <span class="text-danger">*</span></label>
-                                    <input type="email"
-                                           class="form-control @error('email') is-invalid @enderror"
-                                           id="email"
-                                           name="email"
-                                           value="{{ old('email', $user->email) }}"
-                                           required>
-                                    @error('email')
-                                        <div class="invalid-feedback">{{ $message }}</div>
-                                    @enderror
-                                </div>
-                                <div class="col-md-6">
-                                    <label for="phone" class="form-label">전화번호</label>
-                                    <input type="text"
-                                           class="form-control @error('phone') is-invalid @enderror"
-                                           id="phone"
-                                           name="phone"
-                                           value="{{ old('phone', $user->phone) }}"
-                                           placeholder="010-0000-0000">
-                                    @error('phone')
-                                        <div class="invalid-feedback">{{ $message }}</div>
-                                    @enderror
-                                </div>
-                            </div>
-
                             <div class="mb-3">
-                                <label for="address" class="form-label">주소</label>
-                                <textarea class="form-control @error('address') is-invalid @enderror"
-                                          id="address"
-                                          name="address"
-                                          rows="2">{{ old('address', $user->address) }}</textarea>
-                                @error('address')
+                                <label for="email" class="form-label">이메일 <span class="text-danger">*</span></label>
+                                <input type="email"
+                                       class="form-control @error('email') is-invalid @enderror"
+                                       id="email"
+                                       name="email"
+                                       value="{{ old('email', $user->email) }}"
+                                       required>
+                                @error('email')
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
                             </div>
@@ -110,7 +88,10 @@
 
                             <!-- Security -->
                             <h5 class="mb-3">비밀번호 변경</h5>
-                            <p class="text-muted mb-3">비밀번호를 변경하려면 아래 필드를 입력하세요. 변경하지 않으려면 비워두세요.</p>
+                            <div class="alert alert-info mb-3">
+                                <i class="fe fe-info me-2"></i>
+                                비밀번호를 변경하려면 아래 필드를 입력하세요. 비워두면 기존 비밀번호가 유지됩니다.
+                            </div>
 
                             <div class="row mb-3">
                                 <div class="col-md-6">
@@ -118,89 +99,102 @@
                                     <input type="password"
                                            class="form-control @error('password') is-invalid @enderror"
                                            id="password"
-                                           name="password">
-                                    <small class="text-muted">최소 8자 이상</small>
+                                           name="password"
+                                           placeholder="변경하지 않으려면 비워두세요">
                                     @error('password')
                                         <div class="invalid-feedback">{{ $message }}</div>
                                     @enderror
+
+                                    <!-- 비밀번호 규칙 표시 -->
+                                    <div class="mt-2" id="password-rules-container" style="display: none;">
+                                        <small class="text-muted d-block mb-1"><strong>비밀번호 규칙:</strong></small>
+                                        <ul class="small mb-0 ps-3" id="password-rules">
+                                            <li id="rule-length" class="text-muted">
+                                                <i class="fe fe-x-circle text-danger"></i>
+                                                최소 {{ $passwordRules['min_length'] ?? 8 }}자 이상
+                                            </li>
+                                            @if($passwordRules['require_uppercase'] ?? false)
+                                            <li id="rule-uppercase" class="text-muted">
+                                                <i class="fe fe-x-circle text-danger"></i>
+                                                대문자 포함 (A-Z)
+                                            </li>
+                                            @endif
+                                            @if($passwordRules['require_lowercase'] ?? false)
+                                            <li id="rule-lowercase" class="text-muted">
+                                                <i class="fe fe-x-circle text-danger"></i>
+                                                소문자 포함 (a-z)
+                                            </li>
+                                            @endif
+                                            @if($passwordRules['require_numbers'] ?? false)
+                                            <li id="rule-numbers" class="text-muted">
+                                                <i class="fe fe-x-circle text-danger"></i>
+                                                숫자 포함 (0-9)
+                                            </li>
+                                            @endif
+                                            @if($passwordRules['require_symbols'] ?? false)
+                                            <li id="rule-symbols" class="text-muted">
+                                                <i class="fe fe-x-circle text-danger"></i>
+                                                특수문자 포함 (!@#$%)
+                                            </li>
+                                            @endif
+                                        </ul>
+                                    </div>
                                 </div>
                                 <div class="col-md-6">
                                     <label for="password_confirmation" class="form-label">비밀번호 확인</label>
                                     <input type="password"
                                            class="form-control"
                                            id="password_confirmation"
-                                           name="password_confirmation">
+                                           name="password_confirmation"
+                                           placeholder="비밀번호를 다시 입력하세요">
+                                    <div id="password-match-feedback" class="mt-2"></div>
                                 </div>
                             </div>
 
                             <hr class="my-4">
 
-                            <!-- Role & Status -->
-                            <h5 class="mb-3">역할 및 상태</h5>
+                            <!-- User Type & Status -->
+                            <h5 class="mb-3">사용자 타입 및 상태</h5>
 
                             <div class="row mb-3">
                                 <div class="col-md-6">
-                                    <label for="role" class="form-label">역할 <span class="text-danger">*</span></label>
-                                    <select class="form-select @error('role') is-invalid @enderror"
-                                            id="role"
-                                            name="role"
+                                    <label for="utype" class="form-label">사용자 타입 <span class="text-danger">*</span></label>
+                                    <select class="form-select @error('utype') is-invalid @enderror"
+                                            id="utype"
+                                            name="utype"
                                             required>
-                                        <option value="admin" {{ old('role', $user->role) == 'admin' ? 'selected' : '' }}>관리자</option>
-                                        <option value="editor" {{ old('role', $user->role) == 'editor' ? 'selected' : '' }}>편집자</option>
-                                        <option value="user" {{ old('role', $user->role) == 'user' ? 'selected' : '' }}>사용자</option>
+                                        @php
+                                            $currentUtype = old('utype', $user->utype ?? '');
+                                        @endphp
+                                        @foreach($userTypes as $userType)
+                                            <option value="{{ $userType->type }}" {{ $currentUtype == $userType->type ? 'selected' : '' }}>
+                                                {{ $userType->type }} - {{ $userType->description }}
+                                            </option>
+                                        @endforeach
                                     </select>
-                                    @error('role')
+                                    @error('utype')
                                         <div class="invalid-feedback">{{ $message }}</div>
                                     @enderror
+                                    <small class="text-muted">현재: {{ $user->utype ?? 'N/A' }}</small>
                                 </div>
                                 <div class="col-md-6">
-                                    <label for="status" class="form-label">상태 <span class="text-danger">*</span></label>
-                                    <select class="form-select @error('status') is-invalid @enderror"
-                                            id="status"
-                                            name="status"
+                                    <label for="account_status" class="form-label">상태 <span class="text-danger">*</span></label>
+                                    <select class="form-select @error('account_status') is-invalid @enderror"
+                                            id="account_status"
+                                            name="account_status"
                                             required>
-                                        <option value="active" {{ old('status', $user->status) == 'active' ? 'selected' : '' }}>활성</option>
-                                        <option value="inactive" {{ old('status', $user->status) == 'inactive' ? 'selected' : '' }}>비활성</option>
-                                        <option value="suspended" {{ old('status', $user->status) == 'suspended' ? 'selected' : '' }}>정지</option>
+                                        <option value="active" {{ old('account_status', $user->account_status ?? 'active') == 'active' ? 'selected' : '' }}>활성</option>
+                                        <option value="inactive" {{ old('account_status', $user->account_status ?? 'active') == 'inactive' ? 'selected' : '' }}>비활성</option>
+                                        <option value="suspended" {{ old('account_status', $user->account_status ?? 'active') == 'suspended' ? 'selected' : '' }}>정지</option>
                                     </select>
-                                    @error('status')
+                                    @error('account_status')
                                         <div class="invalid-feedback">{{ $message }}</div>
                                     @enderror
                                 </div>
-                            </div>
-
-                            <hr class="my-4">
-
-                            <!-- Profile -->
-                            <h5 class="mb-3">프로필</h5>
-
-                            @if($user->avatar)
-                                <div class="mb-3">
-                                    <label class="form-label">현재 프로필 이미지</label>
-                                    <div>
-                                        <img src="{{ Storage::url($user->avatar) }}"
-                                             alt="Current avatar"
-                                             class="rounded-circle"
-                                             style="width: 100px; height: 100px; object-fit: cover;">
-                                    </div>
-                                </div>
-                            @endif
-
-                            <div class="mb-3">
-                                <label for="avatar" class="form-label">새 프로필 이미지</label>
-                                <input type="file"
-                                       class="form-control @error('avatar') is-invalid @enderror"
-                                       id="avatar"
-                                       name="avatar"
-                                       accept="image/*">
-                                <small class="text-muted">JPG, PNG, GIF 형식 (최대 2MB)</small>
-                                @error('avatar')
-                                    <div class="invalid-feedback">{{ $message }}</div>
-                                @enderror
                             </div>
 
                             <div class="d-flex justify-content-end gap-2">
-                                <a href="{{ route('admin.auth.users.show', $user->id) }}" class="btn btn-secondary">취소</a>
+                                <a href="{{ route('admin.auth.users.show', $user->id) }}{{ isset($shardId) ? '?shard_id=' . $shardId : '' }}" class="btn btn-secondary">취소</a>
                                 <button type="submit" class="btn btn-primary">변경사항 저장</button>
                             </div>
                         </form>
@@ -215,19 +209,6 @@
                         <h5 class="mb-0">사용자 정보</h5>
                     </div>
                     <div class="card-body">
-                        <div class="text-center mb-3">
-                            @if($user->avatar)
-                                <img src="{{ Storage::url($user->avatar) }}"
-                                     alt="{{ $user->name }}"
-                                     class="rounded-circle avatar-xl" />
-                            @else
-                                <div class="avatar avatar-xl avatar-primary">
-                                    <span class="avatar-initials rounded-circle">
-                                        {{ substr($user->name, 0, 1) }}
-                                    </span>
-                                </div>
-                            @endif
-                        </div>
                         <dl class="row">
                             <dt class="col-sm-5">ID:</dt>
                             <dd class="col-sm-7">#{{ $user->id }}</dd>
@@ -262,20 +243,16 @@
                         <h5 class="mb-0">도움말</h5>
                     </div>
                     <div class="card-body">
-                        <h6 class="mb-2">역할 설명</h6>
+                        <h6 class="mb-2">사용자 타입 설명</h6>
                         <ul class="list-unstyled mb-3">
-                            <li class="mb-2">
-                                <span class="badge bg-danger">관리자</span>
-                                <small class="d-block text-muted mt-1">모든 권한을 가진 최고 관리자</small>
-                            </li>
-                            <li class="mb-2">
-                                <span class="badge bg-primary">편집자</span>
-                                <small class="d-block text-muted mt-1">콘텐츠 편집 및 관리 권한</small>
-                            </li>
-                            <li class="mb-2">
-                                <span class="badge bg-secondary">사용자</span>
-                                <small class="d-block text-muted mt-1">일반 사용자 권한</small>
-                            </li>
+                            @foreach($userTypes as $userType)
+                                <li class="mb-2">
+                                    <span class="badge bg-{{ $userType->type === 'ADM' ? 'danger' : ($userType->type === 'EDI' ? 'warning' : 'primary') }}">
+                                        {{ $userType->type }}
+                                    </span>
+                                    <small class="d-block text-muted mt-1">{{ $userType->description }}</small>
+                                </li>
+                            @endforeach
                         </ul>
 
                         <hr>
@@ -301,3 +278,110 @@
         </div>
     </section>
 @endsection
+
+@push('scripts')
+<script>
+(function() {
+    'use strict';
+
+    const passwordRules = @json($passwordRules);
+    const passwordInput = document.getElementById('password');
+    const confirmInput = document.getElementById('password_confirmation');
+    const rulesContainer = document.getElementById('password-rules-container');
+
+    // 비밀번호 입력 시 규칙 표시
+    passwordInput.addEventListener('focus', function() {
+        if (this.value || true) {
+            rulesContainer.style.display = 'block';
+        }
+    });
+
+    passwordInput.addEventListener('input', function() {
+        const password = this.value;
+
+        // 입력이 있으면 규칙 표시
+        if (password) {
+            rulesContainer.style.display = 'block';
+            validatePasswordRules(password);
+        } else {
+            rulesContainer.style.display = 'none';
+        }
+    });
+
+    // 비밀번호 확인 실시간 검증
+    confirmInput.addEventListener('input', function() {
+        validatePasswordMatch();
+    });
+
+    passwordInput.addEventListener('input', function() {
+        validatePasswordMatch();
+    });
+
+    function validatePasswordRules(password) {
+        // 길이 검증
+        const lengthValid = password.length >= passwordRules.min_length;
+        updateRule('rule-length', lengthValid);
+
+        // 대문자 검증
+        if (passwordRules.require_uppercase) {
+            const uppercaseValid = /[A-Z]/.test(password);
+            updateRule('rule-uppercase', uppercaseValid);
+        }
+
+        // 소문자 검증
+        if (passwordRules.require_lowercase) {
+            const lowercaseValid = /[a-z]/.test(password);
+            updateRule('rule-lowercase', lowercaseValid);
+        }
+
+        // 숫자 검증
+        if (passwordRules.require_numbers) {
+            const numbersValid = /[0-9]/.test(password);
+            updateRule('rule-numbers', numbersValid);
+        }
+
+        // 특수문자 검증
+        if (passwordRules.require_symbols) {
+            const symbolsValid = /[!@#$%^&*(),.?":{}|<>]/.test(password);
+            updateRule('rule-symbols', symbolsValid);
+        }
+    }
+
+    function validatePasswordMatch() {
+        const password = passwordInput.value;
+        const confirm = confirmInput.value;
+        const feedback = document.getElementById('password-match-feedback');
+
+        if (!confirm) {
+            feedback.innerHTML = '';
+            return;
+        }
+
+        if (password === confirm) {
+            feedback.innerHTML = '<small class="text-success"><i class="fe fe-check-circle me-1"></i>비밀번호가 일치합니다</small>';
+        } else {
+            feedback.innerHTML = '<small class="text-danger"><i class="fe fe-x-circle me-1"></i>비밀번호가 일치하지 않습니다</small>';
+        }
+    }
+
+    function updateRule(ruleId, isValid) {
+        const ruleElement = document.getElementById(ruleId);
+        if (!ruleElement) return;
+
+        const icon = ruleElement.querySelector('i');
+
+        if (isValid) {
+            ruleElement.classList.remove('text-muted');
+            ruleElement.classList.add('text-success');
+            icon.classList.remove('fe-x-circle', 'text-danger');
+            icon.classList.add('fe-check-circle', 'text-success');
+        } else {
+            ruleElement.classList.remove('text-success');
+            ruleElement.classList.add('text-muted');
+            icon.classList.remove('fe-check-circle', 'text-success');
+            icon.classList.add('fe-x-circle', 'text-danger');
+        }
+    }
+})();
+</script>
+@endpush

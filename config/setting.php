@@ -6,9 +6,9 @@ return [
     | 인증 시스템 전역 설정
     |--------------------------------------------------------------------------
     */
-    'enable' => env('AUTH_ENABLE', true), // 인증 시스템 전체 활성화
-    'method' => env('AUTH_METHOD', 'jwt'), // session|jwt
-    'maintenance_mode' => env('AUTH_MAINTENANCE', false),
+    'enable' => true, // 인증 시스템 전체 활성화
+    'method' => 'jwt', // session|jwt
+    'maintenance_mode' => false,
     'maintenance_message' => '시스템 유지보수 중입니다.',
     'maintenance_exclude_ips' => [], // 유지보수 모드 제외 IP
 
@@ -18,8 +18,8 @@ return [
     |--------------------------------------------------------------------------
     */
     'login' => [
-        'enable' => env('LOGIN_ENABLE', true),
-        'view' => 'jiny-auth::auth.login.form', // 로그인 화면
+        'enable' => true,
+        'view' => 'jiny-auth::auth.login.index', // 로그인 화면 (Bootstrap 테마)
         'disable_view' => 'jiny-auth::auth.login.disabled', // 비활성화 화면
 
         // 로그인 시도 제한 (단계별)
@@ -33,7 +33,7 @@ return [
         'session_lifetime' => 120, // 세션 수명 (분)
 
         // 휴면 계정
-        'dormant_enable' => env('DORMANT_ENABLE', true),
+        'dormant_enable' => true,
         'dormant_days' => 365, // 휴면 전환 기간 (일)
         'dormant_view' => 'jiny-auth::account.dormant',
         'dormant_unlock_view' => 'jiny-auth::account.reactivate',
@@ -49,24 +49,24 @@ return [
     |--------------------------------------------------------------------------
     */
     'register' => [
-        'enable' => env('REGISTER_ENABLE', true),
+        'enable' => true,
         'mode' => 'simple', // simple|step (단일 페이지|단계별)
-        'view' => 'jiny-auth::auth.register.form', // 회원가입 폼
+        'view' => 'jiny-auth::auth.register.index', // 회원가입 폼 (simple 모드)
         'terms_view' => 'jiny-auth::auth.register.terms', // 약관 동의 페이지 (step 모드)
-        'info_view' => 'jiny-auth::auth.register.info', // 정보 입력 페이지 (step 모드)
+        'info_view' => 'jiny-auth::auth.register.index', // 정보 입력 페이지 (step 모드 - index 재사용)
         'disable_view' => 'jiny-auth::auth.register.disabled', // 비활성화 화면
 
         // 승인 정책
-        'require_approval' => env('REGISTER_REQUIRE_APPROVAL', false),
+        'require_approval' => false,
         'approval_view' => 'jiny-auth::account.pending', // 승인 대기 화면
 
         // 이메일 인증
-        'require_email_verification' => env('REGISTER_REQUIRE_EMAIL', true),
+        'require_email_verification' => true,
         'email_verification_view' => 'jiny-auth::auth.verification.notice', // 이메일 인증 안내
         'email_verified_view' => 'jiny-auth::auth.verification.success', // 인증 완료 화면
 
         // 가입 후 처리
-        'auto_login' => env('REGISTER_AUTO_LOGIN', false),
+        'auto_login' => false,
         'redirect_after_register' => '/login',
         'success_view' => 'jiny-auth::auth.register.success', // 가입 완료 화면
 
@@ -100,7 +100,7 @@ return [
 
     'password' => [
         // 비밀번호 만료
-        'expire' => env('PASSWORD_EXPIRE', true),
+        'expire' => true,
         'expire_days' => 90, // 비밀번호 유효 기간
 
         // 비밀번호 관련 뷰
@@ -136,7 +136,7 @@ return [
     |--------------------------------------------------------------------------
     */
     'two_factor' => [
-        'enable' => env('TWO_FACTOR_ENABLE', false),
+        'enable' => false,
         'methods' => ['email', 'sms', 'authenticator'], // 지원 방식
         'code_length' => 6,
         'code_expiry' => 300, // 코드 유효 시간 (초)
@@ -153,7 +153,7 @@ return [
     |--------------------------------------------------------------------------
     */
     'social' => [
-        'enable' => env('SOCIAL_AUTH_ENABLE', false),
+        'enable' => false,
 
         // 소셜 로그인 관련 뷰
         'link_view' => 'jiny-auth::social.link', // 계정 연동 화면
@@ -161,34 +161,34 @@ return [
 
         'providers' => [
             'google' => [
-                'enabled' => env('GOOGLE_AUTH_ENABLE', false),
-                'client_id' => env('GOOGLE_CLIENT_ID'),
-                'client_secret' => env('GOOGLE_CLIENT_SECRET'),
-                'redirect' => env('GOOGLE_REDIRECT_URL'),
+                'enabled' => false,
+                'client_id' => '',
+                'client_secret' => '',
+                'redirect' => '',
             ],
             'facebook' => [
-                'enabled' => env('FACEBOOK_AUTH_ENABLE', false),
-                'client_id' => env('FACEBOOK_CLIENT_ID'),
-                'client_secret' => env('FACEBOOK_CLIENT_SECRET'),
-                'redirect' => env('FACEBOOK_REDIRECT_URL'),
+                'enabled' => false,
+                'client_id' => '',
+                'client_secret' => '',
+                'redirect' => '',
             ],
             'github' => [
-                'enabled' => env('GITHUB_AUTH_ENABLE', false),
-                'client_id' => env('GITHUB_CLIENT_ID'),
-                'client_secret' => env('GITHUB_CLIENT_SECRET'),
-                'redirect' => env('GITHUB_REDIRECT_URL'),
+                'enabled' => false,
+                'client_id' => '',
+                'client_secret' => '',
+                'redirect' => '',
             ],
             'kakao' => [
-                'enabled' => env('KAKAO_AUTH_ENABLE', false),
-                'client_id' => env('KAKAO_CLIENT_ID'),
-                'client_secret' => env('KAKAO_CLIENT_SECRET'),
-                'redirect' => env('KAKAO_REDIRECT_URL'),
+                'enabled' => false,
+                'client_id' => '',
+                'client_secret' => '',
+                'redirect' => '',
             ],
             'naver' => [
-                'enabled' => env('NAVER_AUTH_ENABLE', false),
-                'client_id' => env('NAVER_CLIENT_ID'),
-                'client_secret' => env('NAVER_CLIENT_SECRET'),
-                'redirect' => env('NAVER_REDIRECT_URL'),
+                'enabled' => false,
+                'client_id' => '',
+                'client_secret' => '',
+                'redirect' => '',
             ],
         ],
     ],
@@ -199,7 +199,7 @@ return [
     |--------------------------------------------------------------------------
     */
     'jwt' => [
-        'secret' => env('JWT_SECRET', ''),
+        'secret' => '', // JWT_SECRET (비어있으면 APP_KEY 사용)
         'access_token_expiry' => 3600, // Access Token 유효 시간 (초) - 1시간
         'refresh_token_expiry' => 2592000, // Refresh Token 유효 시간 (초) - 30일
         'algorithm' => 'HS256',
@@ -219,9 +219,9 @@ return [
 
         // reCAPTCHA
         'recaptcha' => [
-            'enable' => env('RECAPTCHA_ENABLE', false),
-            'site_key' => env('RECAPTCHA_SITE_KEY'),
-            'secret_key' => env('RECAPTCHA_SECRET_KEY'),
+            'enable' => false,
+            'site_key' => '',
+            'secret_key' => '',
             'version' => 'v3', // v2|v3
             'min_score' => 0.5, // v3 최소 점수
         ],
@@ -275,8 +275,8 @@ return [
     */
     'mail' => [
         'from' => [
-            'address' => env('MAIL_FROM_ADDRESS', 'noreply@example.com'),
-            'name' => env('MAIL_FROM_NAME', 'Application'),
+            'address' => 'noreply@example.com',
+            'name' => 'Application',
         ],
         'verification_expiry' => 24, // 이메일 인증 유효 시간 (시간)
         'password_reset_expiry' => 1, // 비밀번호 재설정 유효 시간 (시간)
@@ -288,7 +288,7 @@ return [
     |--------------------------------------------------------------------------
     */
     'point' => [
-        'enable' => env('POINT_ENABLE', true),
+        'enable' => true,
         'currency' => 'P', // 포인트 단위
         'decimal_places' => 0,
 
@@ -326,7 +326,7 @@ return [
     |--------------------------------------------------------------------------
     */
     'emoney' => [
-        'enable' => env('EMONEY_ENABLE', false),
+        'enable' => false,
         'currency' => 'KRW',
         'decimal_places' => 0,
 
@@ -380,7 +380,7 @@ return [
     |--------------------------------------------------------------------------
     */
     'localization' => [
-        'enable' => env('LOCALIZATION_ENABLE', false),
+        'enable' => false,
         'default_locale' => 'ko',
         'supported_locales' => ['ko', 'en', 'ja', 'zh'],
         'fallback_locale' => 'ko',
@@ -404,8 +404,8 @@ return [
     |--------------------------------------------------------------------------
     */
     'sharding' => [
-        'enable' => env('SHARDING_ENABLE', false), // 샤딩 활성화
-        'shard_count' => env('SHARDING_COUNT', 10), // 샤드 개수
+        'enable' => env('SHARDING_ENABLE', true), // 샤딩 활성화 (환경변수로 제어)
+        'shard_count' => env('SHARDING_COUNT', 2), // 샤드 개수
         'shard_key' => 'uuid', // 샤딩 키
         'strategy' => 'hash', // hash|range
 
@@ -423,10 +423,10 @@ return [
     |--------------------------------------------------------------------------
     */
     'account_deletion' => [
-        'enable' => env('ACCOUNT_DELETION_ENABLE', true), // 탈퇴 기능 활성화
-        'require_approval' => env('DELETION_REQUIRE_APPROVAL', false), // 관리자 승인 필요
+        'enable' => true, // 탈퇴 기능 활성화
+        'require_approval' => false, // 관리자 승인 필요
         'require_password_confirm' => true, // 비밀번호 확인 필요
-        'auto_delete_days' => env('DELETION_AUTO_DELETE_DAYS', 30), // 자동 삭제 기간 (일)
+        'auto_delete_days' => 30, // 자동 삭제 기간 (일)
         'create_backup' => true, // 사용자 데이터 백업 생성
         'backup_retention_days' => 90, // 백업 보관 기간 (일)
 
@@ -450,7 +450,7 @@ return [
     |--------------------------------------------------------------------------
     */
     'lockout' => [
-        'enable' => env('LOCKOUT_ENABLE', true), // 계정 잠금 기능 활성화
+        'enable' => true, // 계정 잠금 기능 활성화
         'time_window' => 60, // 실패 횟수 집계 시간 (분)
 
         // 단계별 잠금 정책

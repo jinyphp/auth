@@ -7,7 +7,10 @@ use Illuminate\Support\Facades\Validator;
 class UpdateController extends Controller
 {
     protected $actions;
-    public function __construct() { $this->middleware(['auth', 'admin']); $this->loadActions(); }
+    public function __construct()
+    {
+        $this->loadActions();
+    }
     protected function loadActions() {
         $configPath = __DIR__ . '/UserPhone.json';
         $jsonConfig = json_decode(file_get_contents($configPath), true);

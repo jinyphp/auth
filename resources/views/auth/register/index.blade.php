@@ -1,4 +1,4 @@
-@extends('jiny-auth::layouts.app')
+@extends('jiny-auth::layouts.auth')
 
 @section('title', '회원가입')
 
@@ -11,7 +11,18 @@
     <div class="row align-items-center justify-content-center g-0 min-vh-100 py-8">
         <div class="col-lg-7 col-md-10 py-8 py-xl-0">
             <!-- Card -->
-            <div class="card shadow">
+            <div class="card shadow" style="position: relative;">
+                @if($dev_info)
+                <!-- 개발 정보 (localhost에서만 표시) -->
+                <div style="position: absolute; top: 10px; right: 10px; z-index: 1000; display: flex; gap: 8px;">
+                    <div class="badge bg-primary text-white" style="font-size: 0.75rem; padding: 6px 10px;">
+                        {{ strtoupper($dev_info['auth_method']) }}
+                    </div>
+                    <div class="badge {{ $dev_info['sharding_enabled'] ? 'bg-success' : 'bg-secondary' }} text-white" style="font-size: 0.75rem; padding: 6px 10px;">
+                        Sharding: {{ $dev_info['sharding_enabled'] ? 'ON' : 'OFF' }}
+                    </div>
+                </div>
+                @endif
                 <!-- Card body -->
                 <div class="card-body p-6 d-flex flex-column gap-4">
                     <div>
@@ -27,9 +38,19 @@
 
                     @if($errors->any())
                         <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                            @foreach ($errors->all() as $error)
-                                {{ $error }}<br>
-                            @endforeach
+                            <strong>입력값 검증에 실패했습니다:</strong>
+                            <ul class="mb-0 mt-2">
+                                @foreach ($errors->all() as $error)
+                                    <li>{{ $error }}</li>
+                                @endforeach
+                            </ul>
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                    @endif
+
+                    @if(session('error'))
+                        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                            {{ session('error') }}
                             <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                         </div>
                     @endif
@@ -68,34 +89,62 @@
                             </div>
 
                             <!-- Password -->
-                            <div class="mb-3 col-12 col-md-6">
+                            <div class="mb-3 col-12">
                                 <label for="password" class="form-label">비밀번호</label>
                                 <input type="password" id="password" name="password"
                                        class="form-control @error('password') is-invalid @enderror"
-                                       placeholder="8자 이상 입력하세요" required />
+                                       placeholder="8자 이상, 대소문자, 숫자, 특수문자 포함" required />
                                 @error('password')
-                                    <div class="invalid-feedback">{{ $message }}</div>
-                                @else
-                                    <div class="invalid-feedback">비밀번호는 8자 이상이어야 합니다.</div>
+                                    <div class="invalid-feedback d-block">{{ $message }}</div>
                                 @enderror
+
+                                <!-- Password Strength Indicator -->
+                                <div class="mt-2">
+                                    <div class="progress" style="height: 5px;">
+                                        <div class="progress-bar" id="password-strength-bar" role="progressbar" style="width: 0%"></div>
+                                    </div>
+                                    <small class="text-muted" id="password-strength-text">비밀번호 강도: -</small>
+                                </div>
+
+                                <!-- Password Rules Checklist -->
+                                <div class="mt-2 small">
+                                    <div class="d-flex flex-column gap-1">
+                                        <div id="rule-length" class="text-muted">
+                                            <i class="bi bi-circle"></i> 8자 이상
+                                        </div>
+                                        <div id="rule-uppercase" class="text-muted">
+                                            <i class="bi bi-circle"></i> 대문자 포함 (A-Z)
+                                        </div>
+                                        <div id="rule-lowercase" class="text-muted">
+                                            <i class="bi bi-circle"></i> 소문자 포함 (a-z)
+                                        </div>
+                                        <div id="rule-number" class="text-muted">
+                                            <i class="bi bi-circle"></i> 숫자 포함 (0-9)
+                                        </div>
+                                        <div id="rule-symbol" class="text-muted">
+                                            <i class="bi bi-circle"></i> 특수문자 포함 (!@#$%^&*)
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
 
                             <!-- Password Confirmation -->
-                            <div class="mb-3 col-12 col-md-6">
+                            <div class="mb-3 col-12">
                                 <label for="password_confirmation" class="form-label">비밀번호 확인</label>
                                 <input type="password" id="password_confirmation" name="password_confirmation"
                                        class="form-control"
                                        placeholder="비밀번호를 다시 입력하세요" required />
                                 <div class="invalid-feedback">비밀번호가 일치하지 않습니다.</div>
+                                <div id="password-match-message" class="mt-1 small"></div>
                             </div>
                         </div>
 
                         <!-- Terms -->
-                        @if(isset($terms) && $terms->count() > 0)
+                        @if(isset($terms['all']) && count($terms['all']) > 0)
                         <div class="mb-4">
                             <label class="form-label">약관 동의</label>
                             <div class="border rounded p-3">
-                                @foreach($terms as $term)
+                                @foreach($terms['all'] as $term)
                                 <div class="form-check mb-2">
                                     <input type="checkbox" class="form-check-input"
                                            id="terms_{{ $term->id }}" name="terms[{{ $term->id }}]"
@@ -125,18 +174,8 @@
                                 </div>
                             </div>
                         </div>
-                        @else
-                        <!-- Default Terms (if no terms in DB) -->
-                        <div class="mb-4">
-                            <div class="form-check">
-                                <input type="checkbox" class="form-check-input" id="terms_default" name="terms[0]" required>
-                                <label class="form-check-label" for="terms_default">
-                                    <a href="#">이용약관</a> 및 <a href="#">개인정보처리방침</a>에 동의합니다.
-                                </label>
-                                <div class="invalid-feedback">약관에 동의해주세요.</div>
-                            </div>
-                        </div>
                         @endif
+                        {{-- 약관 없으면 약관 섹션 표시 안 함 --}}
 
                         <!-- Submit Button -->
                         <div class="d-grid">
@@ -181,8 +220,8 @@
 </section>
 
 <!-- Terms Modals -->
-@if(isset($terms) && $terms->count() > 0)
-    @foreach($terms as $term)
+@if(isset($terms['all']) && count($terms['all']) > 0)
+    @foreach($terms['all'] as $term)
     <div class="modal fade" id="termsModal{{ $term->id }}" tabindex="-1">
         <div class="modal-dialog modal-lg">
             <div class="modal-content">
@@ -211,6 +250,81 @@
             checkbox.checked = this.checked;
         });
     });
+
+    // 비밀번호 실시간 검증
+    const passwordInput = document.getElementById('password');
+    const passwordConfirmation = document.getElementById('password_confirmation');
+    const strengthBar = document.getElementById('password-strength-bar');
+    const strengthText = document.getElementById('password-strength-text');
+    const matchMessage = document.getElementById('password-match-message');
+
+    const rules = {
+        length: { el: document.getElementById('rule-length'), regex: /.{8,}/, text: '8자 이상' },
+        uppercase: { el: document.getElementById('rule-uppercase'), regex: /[A-Z]/, text: '대문자 포함' },
+        lowercase: { el: document.getElementById('rule-lowercase'), regex: /[a-z]/, text: '소문자 포함' },
+        number: { el: document.getElementById('rule-number'), regex: /[0-9]/, text: '숫자 포함' },
+        symbol: { el: document.getElementById('rule-symbol'), regex: /[!@#$%^&*]/, text: '특수문자 포함' }
+    };
+
+    passwordInput?.addEventListener('input', function() {
+        const password = this.value;
+        let score = 0;
+        let passedRules = 0;
+
+        // 각 규칙 체크
+        for (const [key, rule] of Object.entries(rules)) {
+            const passed = rule.regex.test(password);
+            if (passed) {
+                score += 20;
+                passedRules++;
+                rule.el.className = 'text-success';
+                rule.el.innerHTML = '<i class="bi bi-check-circle-fill"></i> ' + rule.text;
+            } else {
+                rule.el.className = 'text-muted';
+                rule.el.innerHTML = '<i class="bi bi-circle"></i> ' + rule.text;
+            }
+        }
+
+        // 강도 표시
+        strengthBar.style.width = score + '%';
+        if (score === 0) {
+            strengthBar.className = 'progress-bar bg-secondary';
+            strengthText.textContent = '비밀번호 강도: -';
+        } else if (score < 60) {
+            strengthBar.className = 'progress-bar bg-danger';
+            strengthText.textContent = '비밀번호 강도: 약함';
+        } else if (score < 100) {
+            strengthBar.className = 'progress-bar bg-warning';
+            strengthText.textContent = '비밀번호 강도: 보통';
+        } else {
+            strengthBar.className = 'progress-bar bg-success';
+            strengthText.textContent = '비밀번호 강도: 강함';
+        }
+
+        // 비밀번호 확인 체크
+        checkPasswordMatch();
+    });
+
+    passwordConfirmation?.addEventListener('input', checkPasswordMatch);
+
+    function checkPasswordMatch() {
+        const password = passwordInput?.value || '';
+        const confirmation = passwordConfirmation?.value || '';
+
+        if (confirmation.length === 0) {
+            matchMessage.textContent = '';
+            matchMessage.className = 'mt-1 small';
+            return;
+        }
+
+        if (password === confirmation) {
+            matchMessage.textContent = '✅ 비밀번호가 일치합니다';
+            matchMessage.className = 'mt-1 small text-success';
+        } else {
+            matchMessage.textContent = '❌ 비밀번호가 일치하지 않습니다';
+            matchMessage.className = 'mt-1 small text-danger';
+        }
+    }
 </script>
 @endpush
 

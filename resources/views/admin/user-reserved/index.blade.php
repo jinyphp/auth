@@ -1,4 +1,4 @@
-@extends('jiny-auth::layouts.dashboard')
+@extends('jiny-auth::layouts.admin.sidebar')
 
 @section('title', '예약어 관리')
 

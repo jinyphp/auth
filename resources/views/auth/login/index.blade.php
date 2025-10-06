@@ -1,4 +1,4 @@
-@extends('layouts.app')
+@extends('jiny-auth::layouts.auth')
 
 @section('header')
 @endsection
@@ -14,12 +14,23 @@
 
 @section('content')
 <!-- Page content -->
-    
+
       <section class="container d-flex flex-column vh-100">
         <div class="row align-items-center justify-content-center g-0 h-lg-100 py-8">
           <div class="col-lg-5 col-md-8 py-8 py-xl-0">
             <!-- Card -->
-            <div class="card shadow">
+            <div class="card shadow" style="position: relative;">
+              @if($dev_info)
+              <!-- 개발 정보 (localhost에서만 표시) -->
+              <div style="position: absolute; top: 10px; right: 10px; z-index: 1000; display: flex; gap: 8px;">
+                <div class="badge bg-primary text-white" style="font-size: 0.75rem; padding: 6px 10px;">
+                  {{ strtoupper($dev_info['auth_method']) }}
+                </div>
+                <div class="badge {{ $dev_info['sharding_enabled'] ? 'bg-success' : 'bg-secondary' }} text-white" style="font-size: 0.75rem; padding: 6px 10px;">
+                  Sharding: {{ $dev_info['sharding_enabled'] ? 'ON' : 'OFF' }}
+                </div>
+              </div>
+              @endif
               <!-- Card body -->
               <div class="card-body p-6 d-flex flex-column gap-4">
                 <div>
@@ -28,33 +39,65 @@
                     <h1 class="mb-0 fw-bold">로그인</h1>
                     <span>
                       계정이 없으신가요?
-                      <a href="/sign-up" class="ms-1">회원가입</a>
+                      <a href="{{ route('register') }}" class="ms-1">회원가입</a>
                     </span>
                   </div>
                 </div>
+
+                {{-- 알림 메시지 --}}
+                @if(session('success'))
+                <div class="alert alert-success" role="alert">
+                  {{ session('success') }}
+                </div>
+                @endif
+
+                @if(session('error'))
+                <div class="alert alert-danger" role="alert">
+                  {{ session('error') }}
+                </div>
+                @endif
+
+                @if(session('info'))
+                <div class="alert alert-info" role="alert">
+                  {{ session('info') }}
+                </div>
+                @endif
                 <!-- Form -->
-                <form class="needs-validation" novalidate>
-                  <!-- Username -->
+                <form class="needs-validation" action="{{ route('login.submit') }}" method="POST" novalidate>
+                  @csrf
+
+                  <!-- Email -->
                   <div class="mb-3">
-                    <label for="signInEmail" class="form-label">사용자명 또는 이메일</label>
-                    <input type="email" id="signInEmail" class="form-control" name="signInEmail" placeholder="이메일 주소를 입력하세요" required />
-                    <div class="invalid-feedback">유효한 사용자명을 입력해주세요.</div>
+                    <label for="email" class="form-label">이메일</label>
+                    <input type="email" id="email" class="form-control @error('email') is-invalid @enderror"
+                           name="email" placeholder="이메일 주소를 입력하세요" value="{{ old('email') }}" required />
+                    @error('email')
+                    <div class="invalid-feedback d-block">{{ $message }}</div>
+                    @else
+                    <div class="invalid-feedback">유효한 이메일을 입력해주세요.</div>
+                    @enderror
                   </div>
+
                   <!-- Password -->
                   <div class="mb-3">
-                    <label for="signInPassword" class="form-label">비밀번호</label>
-                    <input type="password" id="signInPassword" class="form-control" name="signInPassword" placeholder="**************" required />
+                    <label for="password" class="form-label">비밀번호</label>
+                    <input type="password" id="password" class="form-control @error('password') is-invalid @enderror"
+                           name="password" placeholder="**************" required />
+                    @error('password')
+                    <div class="invalid-feedback d-block">{{ $message }}</div>
+                    @else
                     <div class="invalid-feedback">유효한 비밀번호를 입력해주세요.</div>
+                    @enderror
                   </div>
+
                   <!-- Checkbox -->
                   <div class="d-lg-flex justify-content-between align-items-center mb-4">
                     <div class="form-check">
-                      <input type="checkbox" class="form-check-input" id="rememberme" required />
-                      <label class="form-check-label" for="rememberme">로그인 상태 유지</label>
-                      <div class="invalid-feedback">동의하셔야 합니다.</div>
+                      <input type="checkbox" class="form-check-input" id="remember" name="remember" />
+                      <label class="form-check-label" for="remember">로그인 상태 유지</label>
                     </div>
                     <div>
-                      <a href="/forget-password">비밀번호를 잊으셨나요?</a>
+                      <a href="{{ route('password.request') }}">비밀번호를 잊으셨나요?</a>
                     </div>
                   </div>
                   <div>
@@ -100,35 +143,7 @@
           </div>
         </div>
       </section>
-      <div class="position-absolute bottom-0 m-4">
-        <div class="dropdown">
-          <button class="btn btn-light btn-icon rounded-circle d-flex align-items-center" type="button" aria-expanded="false" data-bs-toggle="dropdown" aria-label="Toggle theme (auto)">
-            <i class="bi theme-icon-active"></i>
-            <span class="visually-hidden bs-theme-text">Toggle theme</span>
-          </button>
-          <ul class="dropdown-menu dropdown-menu-end shadow" aria-labelledby="bs-theme-text">
-            <li>
-              <button type="button" class="dropdown-item d-flex align-items-center" data-bs-theme-value="light" aria-pressed="false">
-                <i class="bi theme-icon bi-sun-fill"></i>
-                <span class="ms-2">라이트</span>
-              </button>
-            </li>
-            <li>
-              <button type="button" class="dropdown-item d-flex align-items-center" data-bs-theme-value="dark" aria-pressed="false">
-                <i class="bi theme-icon bi-moon-stars-fill"></i>
-                <span class="ms-2">다크</span>
-              </button>
-            </li>
-            <li>
-              <button type="button" class="dropdown-item d-flex align-items-center active" data-bs-theme-value="auto" aria-pressed="true">
-                <i class="bi theme-icon bi-circle-half"></i>
-                <span class="ms-2">자동</span>
-              </button>
-            </li>
-          </ul>
-        </div>
-      </div>
-    
+
     <!-- Scripts -->
     <!-- Libs JS -->
 <script src="{{ asset('assets/libs/@popperjs/core/dist/umd/popper.min.js') }}"></script>

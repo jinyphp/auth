@@ -18,6 +18,8 @@ return new class extends Migration
             $table->timestamps();
 
             $table->bigInteger('user_id')->unsigned();
+            $table->string('user_uuid', 36)->nullable()->index()->comment('User UUID for sharding');
+            $table->integer('shard_id')->nullable()->index()->comment('Shard number (0-15)');
             $table->string('provider')->nullable();
             $table->string('ref')->nullable();
         });

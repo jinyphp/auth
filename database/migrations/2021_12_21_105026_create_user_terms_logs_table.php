@@ -23,6 +23,8 @@ class CreateUserTermsLogsTable extends Migration
 
             // 회원
             $table->unsignedBigInteger('user_id')->default(0);
+            $table->string('user_uuid', 36)->nullable()->index()->comment('User UUID for sharding');
+            $table->integer('shard_id')->nullable()->index()->comment('Shard number (0-15)');
             $table->string('email')->nullable();
             $table->string('name')->nullable();
 

@@ -23,6 +23,7 @@ class UserType extends Model
      */
     protected $fillable = [
         'enable',
+        'is_default',
         'type',
         'description',
         'users',
@@ -35,6 +36,7 @@ class UserType extends Model
      */
     protected $casts = [
         'enable' => 'boolean',
+        'is_default' => 'boolean',
         'users' => 'integer',
     ];
 

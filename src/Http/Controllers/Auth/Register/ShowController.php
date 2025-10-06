@@ -55,7 +55,7 @@ class ShowController extends Controller
             'register_mode' => config('admin.auth.register.mode', 'simple'),
 
             // 뷰 설정
-            'register_view' => config('admin.auth.register.view', 'jiny-auth::auth.register.form'),
+            'register_view' => config('admin.auth.register.view', 'jiny-auth::auth.register.index'),
             'register_terms_view' => config('admin.auth.register.terms_view', 'jiny-auth::auth.register.terms'),
 
             // 비밀번호 규칙
@@ -89,6 +89,9 @@ class ShowController extends Controller
             'recaptcha_enabled' => config('admin.auth.security.recaptcha.enable', false),
             'recaptcha_site_key' => config('admin.auth.security.recaptcha.site_key'),
             'recaptcha_version' => config('admin.auth.security.recaptcha.version', 'v3'),
+
+            // 샤딩 설정
+            'sharding_enabled' => config('admin.auth.sharding.enable', false),
         ];
     }
 
@@ -281,6 +284,7 @@ class ShowController extends Controller
             'social_providers' => $this->getSocialProviders(),
             'form_config' => $this->getFormConfig(),
             'validation_messages' => $this->getValidationMessages(),
+            'dev_info' => $this->getDevInfo(),
         ];
     }
 
@@ -376,6 +380,26 @@ class ShowController extends Controller
             'password.confirmed' => '비밀번호 확인이 일치하지 않습니다.',
             'terms.required' => '약관에 동의해주세요.',
         ];
+    }
+
+    /**
+     * [4-6단계] 개발 환경 정보 조회 (localhost에서만)
+     *
+     * 진입: prepareFormData() → getDevInfo()
+     *
+     * @return array|null
+     */
+    protected function getDevInfo()
+    {
+        // localhost 또는 127.0.0.1에서만 개발 정보 표시
+        if (request()->getHost() === 'localhost' || request()->getHost() === '127.0.0.1') {
+            return [
+                'auth_method' => config('admin.auth.method', 'jwt'),
+                'sharding_enabled' => config('admin.auth.sharding.enable', false),
+            ];
+        }
+
+        return null;
     }
 
     /**
