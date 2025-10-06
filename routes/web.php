@@ -36,11 +36,11 @@ Route::middleware(['web', 'guest.jwt'])->group(function () {
     Route::post('/login', \Jiny\Auth\Http\Controllers\Auth\Login\SubmitController::class)
         ->name('login.submit');
 
-    // 회원가입
-    Route::get('/register', \Jiny\Auth\Http\Controllers\Auth\Register\ShowController::class)
-        ->name('register');
-    Route::post('/register', \Jiny\Auth\Http\Controllers\Auth\Register\StoreController::class)
-        ->name('register.store');
+    // 회원가입 (앱 레벨에서 오버라이드됨)
+    // Route::get('/register', \Jiny\Auth\Http\Controllers\Auth\Register\ShowController::class)
+    //     ->name('register');
+    // Route::post('/register', \Jiny\Auth\Http\Controllers\Auth\Register\StoreController::class)
+    //     ->name('register.store');
 
     // 비밀번호 찾기 / 재설정
     Route::get('/password/reset', \Jiny\Auth\Http\Controllers\Auth\Password\ForgotController::class)

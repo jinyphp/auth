@@ -173,12 +173,16 @@ class StoreController extends Controller
             }
         }
 
+
         // 8단계: 사용자 계정 생성 (트랜잭션)
         try {
             $user = $this->createUserAccount($request);
 
+            //dump("888");
             // 9단계: 가입 후 처리
             $postRegistration = $this->handlePostRegistration($user, $request);
+
+            //dd("999");
 
             // 10단계: 응답 생성
             return $this->generateResponse($user, $postRegistration, $request);
