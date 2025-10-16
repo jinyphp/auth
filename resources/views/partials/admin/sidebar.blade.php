@@ -119,19 +119,20 @@
                 </div>
             </li>
 
-            {{-- 소셜 정보 --}}
+            {{-- 소셜 정보 - 임시 비활성화 (jiny/social 패키지 라우트 로딩 문제) --}}
+            {{--
             <li class="nav-item">
-                <a class="nav-link collapsed" href="#" data-bs-toggle="collapse" data-bs-target="#navUserData"
-                    aria-expanded="false" aria-controls="navUserData">
-                    <i class="nav-icon fe fe-database me-2"></i>
+                <a class="nav-link collapsed" href="#" data-bs-toggle="collapse" data-bs-target="#navUserSocial"
+                    aria-expanded="false" aria-controls="navUserSocial">
+                    <i class="nav-icon fe fe-share-2 me-2"></i>
                     소셜 연동
                 </a>
-                <div id="navUserData" class="collapse" data-bs-parent="#sideNavbar">
+                <div id="navUserSocial" class="collapse" data-bs-parent="#sideNavbar">
                     <ul class="nav flex-column">
 
                         <li class="nav-item">
                             <a class="nav-link" href="{{ route('admin.auth.user.social.index') }}">
-                                소셜 계정
+                                소셜 계정 관리
                             </a>
                         </li>
                         <li class="nav-item">
@@ -142,6 +143,7 @@
                     </ul>
                 </div>
             </li>
+            --}}
 
             <li class="nav-item">
                 <div class="navbar-heading">커뮤니케이션</div>
