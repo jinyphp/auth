@@ -24,6 +24,25 @@ class CheckAccountStatus
             return redirect()->route('login');
         }
 
+        // 0. 탈퇴 승인 확인 (최우선)
+        $unregistRequest = \Jiny\Auth\Models\UserUnregist::where('user_id', $user->id)
+            ->where('status', 'approved')
+            ->first();
+
+        if ($unregistRequest) {
+            Auth::logout();
+
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'message' => '탈퇴 승인된 계정입니다.',
+                    'status' => 'deleted'
+                ], 403);
+            }
+
+            return redirect()->route('account.deleted')
+                ->with('error', '탈퇴 승인된 계정입니다. 더 이상 로그인할 수 없습니다.');
+        }
+
         // 1. 계정 차단 확인
         if ($user->status === 'blocked') {
             Auth::logout();
@@ -39,7 +58,7 @@ class CheckAccountStatus
                 ->with('error', '계정이 차단되었습니다. 관리자에게 문의하세요.');
         }
 
-        // 2. 계정 비활성화 확인
+        // 3. 계정 비활성화 확인
         if ($user->status === 'inactive') {
             Auth::logout();
 
@@ -54,8 +73,9 @@ class CheckAccountStatus
                 ->with('error', '계정이 비활성화되었습니다.');
         }
 
-        // 3. 승인 대기 확인
-        if (config('admin.auth.register.require_approval') && $user->status === 'pending') {
+        // 4. 승인 대기 확인
+        $approvalSettings = $this->getApprovalSettings();
+        if ($approvalSettings['require_approval'] && $user->status === 'pending') {
             // 승인 대기 중인 경우 특정 페이지만 허용
             $allowedRoutes = [
                 'account.pending',
@@ -78,8 +98,9 @@ class CheckAccountStatus
             }
         }
 
-        // 4. 이메일 인증 확인
-        if (config('admin.auth.register.require_email_verification') && !$user->hasVerifiedEmail()) {
+        // 5. 이메일 인증 확인
+        $authSettings = $this->loadAuthSettings();
+        if (($authSettings['register']['require_email_verification'] ?? true) && !$user->hasVerifiedEmail()) {
             // 이메일 인증이 필요한 경우 특정 페이지만 허용
             $allowedRoutes = [
                 'verification.notice',
@@ -101,7 +122,7 @@ class CheckAccountStatus
             }
         }
 
-        // 5. 휴면 계정 확인
+        // 6. 휴면 계정 확인
         if ($this->isDormant($user)) {
             // 휴면 해제 페이지로 리다이렉트
             $allowedRoutes = [
@@ -123,7 +144,7 @@ class CheckAccountStatus
             }
         }
 
-        // 6. 비밀번호 변경 필요 확인
+        // 7. 비밀번호 변경 필요 확인
         if ($this->needsPasswordChange($user)) {
             // 비밀번호 변경 페이지로 리다이렉트
             $allowedRoutes = [
@@ -145,10 +166,10 @@ class CheckAccountStatus
             }
         }
 
-        // 7. 세션 유효성 확인
+        // 8. 세션 유효성 확인
         $this->checkSessionValidity($user, $request);
 
-        // 8. 활동 로그 업데이트
+        // 9. 활동 로그 업데이트
         $this->updateLastActivity($user);
 
         return $next($request);
@@ -172,7 +193,8 @@ class CheckAccountStatus
         }
 
         // 마지막 로그인 확인
-        $dormantDays = config('admin.auth.dormant_days', 365);
+        $authSettings = $this->loadAuthSettings();
+        $dormantDays = $authSettings['security']['dormant_days'] ?? 365;
 
         if ($user->last_login_at && $user->last_login_at->lt(now()->subDays($dormantDays))) {
             // 휴면 처리
@@ -198,7 +220,8 @@ class CheckAccountStatus
      */
     protected function needsPasswordChange($user)
     {
-        $passwordExpireDays = config('admin.auth.password_expire_days', 90);
+        $authSettings = $this->loadAuthSettings();
+        $passwordExpireDays = $authSettings['security']['password_expire_days'] ?? 90;
 
         if ($passwordExpireDays <= 0) {
             return false; // 비밀번호 만료 정책 사용 안 함
@@ -285,5 +308,41 @@ class CheckAccountStatus
             $user->update(['last_activity_at' => now()]);
             \Cache::put($cacheKey, true, 300); // 5분
         }
+    }
+
+    /**
+     * JSON 설정 파일에서 approval 설정 읽기
+     *
+     * @return array
+     */
+    private function getApprovalSettings()
+    {
+        $settings = $this->loadAuthSettings();
+        return $settings['approval'] ?? ['require_approval' => false];
+    }
+
+    /**
+     * JSON 설정 파일에서 모든 인증 설정 읽기
+     *
+     * @return array
+     */
+    private function loadAuthSettings()
+    {
+        $configPath = base_path('vendor/jiny/auth/config/setting.json');
+
+        if (file_exists($configPath)) {
+            try {
+                $jsonContent = file_get_contents($configPath);
+                $settings = json_decode($jsonContent, true);
+
+                if (json_last_error() === JSON_ERROR_NONE) {
+                    return $settings;
+                }
+            } catch (\Exception $e) {
+                // JSON 파싱 실패 시 기본값 사용
+            }
+        }
+
+        return [];
     }
 }

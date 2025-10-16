@@ -2,7 +2,7 @@
 
 namespace Jiny\Auth\Http\Controllers\Admin\AccountLockout;
 
-use App\Http\Controllers\Controller;
+use Illuminate\Routing\Controller;
 
 /**
  * 관리자 - 계정 잠금 해제 폼 컨트롤러

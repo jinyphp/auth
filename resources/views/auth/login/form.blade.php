@@ -34,6 +34,16 @@
         @if(session('info'))
         <div class="rounded-md bg-blue-50 p-4">
             <div class="text-sm text-blue-700">{{ session('info') }}</div>
+            @if(session('approval_help'))
+            <div class="mt-3 text-xs text-blue-600">
+                <div class="font-medium mb-1">승인 대기 계정 안내:</div>
+                <ul class="list-disc list-inside space-y-1">
+                    <li>회원가입 시 입력한 이메일과 비밀번호로 로그인해주세요</li>
+                    <li>로그인 후 자동으로 승인 대기 페이지로 이동합니다</li>
+                    <li>관리자 승인까지 시간이 소요될 수 있습니다</li>
+                </ul>
+            </div>
+            @endif
         </div>
         @endif
 

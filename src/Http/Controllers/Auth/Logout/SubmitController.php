@@ -2,7 +2,7 @@
 
 namespace Jiny\Auth\Http\Controllers\Auth\Logout;
 
-use App\Http\Controllers\Controller;
+use Illuminate\Routing\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Jiny\Auth\Models\UserLogs;

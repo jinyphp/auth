@@ -1,0 +1,296 @@
+{
+    "enable": true,
+    "method": "jwt",
+    "maintenance_mode": false,
+    "maintenance_message": "시스템 유지보수 중입니다.",
+    "maintenance_exclude_ips": [],
+    "login": {
+        "enable": true,
+        "view": "jiny-auth::auth.login.index",
+        "disable_view": "jiny-auth::auth.login.disabled",
+        "max_attempts": 5,
+        "lockout_duration": 15,
+        "lockout_view": "jiny-auth::auth.login.locked",
+        "permanent_lockout_view": "jiny-auth::auth.login.permanent-locked",
+        "max_sessions": 3,
+        "session_lifetime": 120,
+        "dormant_enable": true,
+        "dormant_days": 365,
+        "dormant_view": "jiny-auth::account.dormant",
+        "dormant_unlock_view": "jiny-auth::account.reactivate",
+        "redirect_after_login": "\/home",
+        "redirect_after_logout": "\/login",
+        "auto_login": false
+    },
+    "register": {
+        "enable": false,
+        "mode": "simple",
+        "view": "jiny-auth::auth.register.index",
+        "disable_view": "jiny-auth::auth.register.disabled",
+        "info_view": "jiny-auth::auth.register.index",
+        "require_approval": true,
+        "approval_view": "jiny-auth::account.pending",
+        "require_email_verification": true,
+        "email_verification_view": "jiny-auth::auth.verification.notice",
+        "email_verified_view": "jiny-auth::auth.verification.success",
+        "auto_login": true,
+        "redirect_after_register": "\/login",
+        "success_view": "jiny-auth::auth.register.success",
+        "fields": {
+            "phone": true,
+            "birth_date": true,
+            "gender": true,
+            "address": true
+        },
+        "signup_bonus": {
+            "enable": true,
+            "amount": 1000
+        }
+    },
+    "password_rules": {
+        "min_length": 8,
+        "require_uppercase": true,
+        "require_lowercase": true,
+        "require_numbers": true,
+        "require_symbols": true
+    },
+    "password": {
+        "expire": true,
+        "expire_days": 90,
+        "reset_request_view": "jiny-auth::auth.password.request",
+        "reset_form_view": "jiny-auth::auth.password.reset",
+        "change_view": "jiny-auth::auth.password.change",
+        "expired_view": "jiny-auth::auth.password.expired",
+        "history_count": 5
+    },
+    "terms": {
+        "enable": true,
+        "require_agreement": true,
+        "show_version": true,
+        "cache_duration": 86400,
+        "list_view": "jiny-auth::auth.terms.index",
+        "detail_view": "jiny-auth::auth.terms.show",
+        "agreement_history_view": "jiny-auth::auth.terms.history"
+    },
+    "two_factor": {
+        "enable": true,
+        "methods": [
+            "email"
+        ],
+        "code_length": 6,
+        "code_expiry": 300,
+        "challenge_view": "jiny-auth::auth.two-factor.challenge",
+        "setup_view": "jiny-auth::auth.two-factor.setup",
+        "recovery_codes_view": "jiny-auth::auth.two-factor.recovery"
+    },
+    "social": {
+        "enable": false,
+        "link_view": "jiny-auth::social.link",
+        "unlink_view": "jiny-auth::social.unlink",
+        "providers": {
+            "google": {
+                "enabled": false,
+                "client_id": "",
+                "client_secret": "",
+                "redirect": ""
+            },
+            "facebook": {
+                "enabled": false,
+                "client_id": "",
+                "client_secret": "",
+                "redirect": ""
+            },
+            "github": {
+                "enabled": false,
+                "client_id": "",
+                "client_secret": "",
+                "redirect": ""
+            },
+            "kakao": {
+                "enabled": false,
+                "client_id": "",
+                "client_secret": "",
+                "redirect": ""
+            },
+            "naver": {
+                "enabled": false,
+                "client_id": "",
+                "client_secret": "",
+                "redirect": ""
+            }
+        }
+    },
+    "jwt": {
+        "secret": "",
+        "access_token_expiry": 3600,
+        "refresh_token_expiry": 2592000,
+        "algorithm": "HS256"
+    },
+    "security": {
+        "ip_whitelist": {
+            "enable": true,
+            "ips": [
+                ""
+            ]
+        },
+        "recaptcha": {
+            "enable": true,
+            "version": "v3",
+            "site_key": null,
+            "secret_key": null,
+            "min_score": 0.5
+        }
+    },
+    "blacklist": {
+        "enable": true,
+        "auto_block_attempts": 10,
+        "block_duration": 1440
+    },
+    "blocked_email_domains": [
+        "tempmail.com",
+        "10minutemail.com",
+        "guerrillamail.com",
+        "mailinator.com",
+        "throwaway.email"
+    ],
+    "log": {
+        "enable": true,
+        "retention_days": 60,
+        "retention": {
+            "auth": 730,
+            "activity": 365,
+            "security": 1825
+        }
+    },
+    "mail": {
+        "from": {
+            "address": "noreply@example.com",
+            "name": "Application"
+        },
+        "verification_expiry": 24,
+        "password_reset_expiry": 1
+    },
+    "point": {
+        "enable": true,
+        "currency": "P",
+        "decimal_places": 0,
+        "earn": {
+            "signup_bonus": 1000,
+            "daily_login": 10,
+            "review_write": 100,
+            "referral": 500,
+            "purchase_rate": 1
+        },
+        "use": {
+            "min_amount": 100,
+            "max_amount_per_order": 50000,
+            "max_rate_per_order": 50
+        },
+        "expiry": {
+            "enable": true,
+            "days": 365,
+            "notice_days": 30
+        },
+        "history_view": "jiny-auth::point.history",
+        "summary_view": "jiny-auth::point.summary"
+    },
+    "emoney": {
+        "enable": false,
+        "currency": "KRW",
+        "decimal_places": 0,
+        "limits": {
+            "deposit_per_transaction": 1000000,
+            "deposit_daily": 2000000,
+            "withdraw_per_transaction": 500000,
+            "balance_max": 5000000
+        },
+        "fees": {
+            "withdraw_rate": 0,
+            "withdraw_min": 1000
+        },
+        "history_view": "jiny-auth::emoney.history",
+        "deposit_view": "jiny-auth::emoney.deposit",
+        "withdraw_view": "jiny-auth::emoney.withdraw",
+        "summary_view": "jiny-auth::emoney.summary"
+    },
+    "account": {
+        "blocked_view": "jiny-auth::account.blocked",
+        "inactive_view": "jiny-auth::account.inactive",
+        "deleted_view": "jiny-auth::account.deleted",
+        "suspended_view": "jiny-auth::account.suspended"
+    },
+    "home": {
+        "default_route": "\/dashboard",
+        "guest_route": "\/",
+        "dashboard_view": "dashboard"
+    },
+    "localization": {
+        "enable": false,
+        "default_locale": "ko",
+        "supported_locales": [
+            "ko",
+            "en",
+            "ja",
+            "zh"
+        ],
+        "fallback_locale": "ko"
+    },
+    "notifications": {
+        "new_device_login": true,
+        "password_changed": true,
+        "email_changed": true,
+        "suspicious_activity": true
+    },
+    "sharding": {
+        "enable": true,
+        "shard_count": 2,
+        "shard_key": "uuid",
+        "strategy": "hash",
+        "use_uuid": true,
+        "uuid_version": 4,
+        "use_index_tables": true
+    },
+    "account_deletion": {
+        "enable": true,
+        "require_approval": false,
+        "require_password_confirm": true,
+        "auto_delete_days": 30,
+        "create_backup": true,
+        "backup_retention_days": 90,
+        "form_view": "jiny-auth::account.deletion.form",
+        "requested_view": "jiny-auth::account.deletion.requested",
+        "status_view": "jiny-auth::account.deletion.status",
+        "pending_view": "jiny-auth::account.deletion.pending",
+        "admin": {
+            "list_view": "jiny-auth::admin.deletion.index",
+            "detail_view": "jiny-auth::admin.deletion.show",
+            "approve_view": "jiny-auth::admin.deletion.approve"
+        }
+    },
+    "lockout": {
+        "enable": true,
+        "time_window": 60,
+        "levels": {
+            "1": {
+                "attempts": 5,
+                "duration": 15,
+                "message": "5회 이상 비밀번호를 잘못 입력하여 15분간 로그인이 제한됩니다."
+            },
+            "2": {
+                "attempts": 10,
+                "duration": 60,
+                "message": "10회 이상 비밀번호를 잘못 입력하여 60분간 로그인이 제한됩니다."
+            },
+            "3": {
+                "attempts": 15,
+                "duration": 0,
+                "message": "계정이 영구 잠금되었습니다. 관리자에게 문의하세요."
+            }
+        },
+        "admin": {
+            "list_view": "jiny-auth::admin.lockout.index",
+            "detail_view": "jiny-auth::admin.lockout.show",
+            "unlock_view": "jiny-auth::admin.lockout.unlock"
+        }
+    }
+}

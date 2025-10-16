@@ -12,25 +12,28 @@ class UserTermsLog extends Model
     protected $table = 'user_terms_logs';
 
     protected $fillable = [
+        'term_id',
+        'term',
         'user_id',
-        'terms_id',
-        'action',
-        'agreed_at',
-        'ip_address',
-        'user_agent',
+        'user_uuid',
+        'shard_id',
+        'email',
+        'name',
+        'checked',
+        'checked_at',
     ];
 
     protected $casts = [
-        'agreed_at' => 'datetime',
+        'checked_at' => 'datetime',
     ];
 
     public function user()
     {
-        return $this->belongsTo(AuthUser::class, 'user_id');
+        return $this->belongsTo(\App\Models\User::class, 'user_id');
     }
 
     public function terms()
     {
-        return $this->belongsTo(UserTerms::class, 'terms_id');
+        return $this->belongsTo(UserTerms::class, 'term_id');
     }
 }

@@ -21,58 +21,73 @@ return new class extends Migration
             $shardNumber = str_pad($i, 3, '0', STR_PAD_LEFT);
             $tableName = "user_avata_{$shardNumber}";
 
-            Schema::create($tableName, function (Blueprint $table) {
-                $table->id();
-                $table->timestamps();
+            // 테이블이 이미 존재하지 않는 경우에만 생성
+            if (!Schema::hasTable($tableName)) {
+                Schema::create($tableName, function (Blueprint $table) {
+                    $table->id();
+                    $table->timestamps();
 
-                $table->string('enable')->default(1);
+                    $table->string('enable')->default(1);
 
-                // 사용자 uuid 연동 (user_id 대신 user_uuid 사용)
-                $table->string('user_uuid');
+                    // 사용자 uuid 연동 (user_id 대신 user_uuid 사용)
+                    $table->string('user_uuid');
 
-                // 기본설정값
-                $table->string('selected')->nullable();
+                    // 기본설정값
+                    $table->string('selected')->nullable();
 
-                // 아바타 이미지 경로
-                $table->string('image')->nullable();
+                    // 아바타 이미지 경로
+                    $table->string('image')->nullable();
 
-                $table->text('description')->nullable();
+                    $table->text('description')->nullable();
 
-                // 관리 담당자
-                $table->unsignedBigInteger('manager_id')->default(0);
+                    // 관리 담당자
+                    $table->unsignedBigInteger('manager_id')->default(0);
 
-                // 인덱스
-                $table->index('user_uuid');
-                $table->index('selected');
-                $table->index('created_at');
-            });
+                    // 인덱스
+                    $table->index('user_uuid');
+                    $table->index('selected');
+                    $table->index('created_at');
+                });
+            }
         }
 
-        // 샤딩 설정 저장 (user_sharding_configs)
-        DB::table('user_sharding_configs')->insert([
-            'table_name' => 'user_avata',
-            'shard_count' => $shardCount,
-            'shard_key' => 'user_uuid',
-            'shard_strategy' => 'hash',
-            'is_active' => true,
-            'description' => '사용자 아바타 테이블 샤딩 - user_uuid 기반 해시',
-            'created_at' => now(),
-            'updated_at' => now(),
-        ]);
+        // 샤딩 설정 저장 (user_sharding_configs) - 중복 체크 후 삽입
+        $existingConfig = DB::table('user_sharding_configs')
+            ->where('table_name', 'user_avata')
+            ->first();
 
-        // shard_tables 테이블에 등록 (샤드 테이블 관리 UI용)
-        if (Schema::hasTable('shard_tables')) {
-            DB::table('shard_tables')->insert([
+        if (!$existingConfig) {
+            DB::table('user_sharding_configs')->insert([
                 'table_name' => 'user_avata',
-                'table_prefix' => 'user_avata_',
-                'description' => '사용자 아바타 샤딩 테이블',
-                'is_active' => true,
                 'shard_count' => $shardCount,
                 'shard_key' => 'user_uuid',
-                'strategy' => 'hash',
+                'shard_strategy' => 'hash',
+                'is_active' => true,
+                'description' => '사용자 아바타 테이블 샤딩 - user_uuid 기반 해시',
                 'created_at' => now(),
                 'updated_at' => now(),
             ]);
+        }
+
+        // shard_tables 테이블에 등록 (샤드 테이블 관리 UI용) - 중복 체크 후 삽입
+        if (Schema::hasTable('shard_tables')) {
+            $existingShardTable = DB::table('shard_tables')
+                ->where('table_name', 'user_avata')
+                ->first();
+
+            if (!$existingShardTable) {
+                DB::table('shard_tables')->insert([
+                    'table_name' => 'user_avata',
+                    'table_prefix' => 'user_avata_',
+                    'description' => '사용자 아바타 샤딩 테이블',
+                    'is_active' => true,
+                    'shard_count' => $shardCount,
+                    'shard_key' => 'user_uuid',
+                    'strategy' => 'hash',
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]);
+            }
         }
     }
 

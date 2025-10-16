@@ -18,10 +18,19 @@ class ShardingService
 
     public function __construct()
     {
+        // JinyAuthServiceProvider에서 admin.auth로 설정을 병합하므로 admin.auth 경로 사용
         $this->enabled = config('admin.auth.sharding.enable', false);
         $this->shardCount = config('admin.auth.sharding.shard_count', 10);
         $this->shardKey = config('admin.auth.sharding.shard_key', 'uuid');
         $this->strategy = config('admin.auth.sharding.strategy', 'hash');
+
+        // 디버깅을 위한 로그 추가
+        \Log::info('ShardingService 초기화', [
+            'enabled' => $this->enabled,
+            'shard_count' => $this->shardCount,
+            'shard_key' => $this->shardKey,
+            'strategy' => $this->strategy,
+        ]);
     }
 
     /**
@@ -188,41 +197,191 @@ class ShardingService
      *
      * @param array $data
      * @return string UUID
+     * @throws \Exception
      */
     public function createUser(array $data)
     {
-        // UUID 생성
-        $uuid = (string) \Str::uuid();
+        try {
+            // UUID 생성
+            $uuid = (string) \Str::uuid();
 
-        if (!$this->enabled) {
-            // 샤딩 비활성화 시 기본 테이블에 저장
+            \Log::info('ShardingService::createUser 시작', [
+                'enabled' => $this->enabled,
+                'uuid' => $uuid,
+                'email' => $data['email'] ?? 'no_email',
+            ]);
+
+            if (!$this->enabled) {
+                // 샤딩 비활성화 시 기본 테이블에 저장
+                \Log::info('샤딩 비활성화: 기본 테이블 사용');
+                $data['uuid'] = $uuid;
+
+                // 기본 테이블 존재 확인
+                if (!Schema::hasTable('users')) {
+                    throw new \Exception("기본 사용자 테이블(users)이 존재하지 않습니다.");
+                }
+
+                DB::table('users')->insert($data);
+                \Log::info('기본 테이블에 데이터 삽입 완료', ['uuid' => $uuid]);
+                return $uuid;
+            }
+
+            // 샤드 번호 계산
+            $shardNumber = $this->getShardNumber($uuid);
+            $tableName = $this->getShardTableName($uuid);
+
+            \Log::info('샤딩 활성화: 샤드 테이블 사용', [
+                'shard_number' => $shardNumber,
+                'table_name' => $tableName,
+                'uuid' => $uuid,
+            ]);
+
+            // 샤드 테이블 존재 확인
+            if (!Schema::hasTable($tableName)) {
+                throw new \Exception("샤딩 테이블({$tableName})이 존재하지 않습니다. 샤드 번호: {$shardNumber}");
+            }
+
+            // 데이터에 UUID 추가 (shard_id는 테이블에 컬럼이 없어서 제외)
             $data['uuid'] = $uuid;
-            DB::table('users')->insert($data);
+
+            // 샤드 테이블에 삽입
+            try {
+                \Log::info('샤드 테이블에 데이터 삽입 시도', [
+                    'table_name' => $tableName,
+                    'data_keys' => array_keys($data),
+                    'uuid' => $uuid,
+                ]);
+
+                DB::table($tableName)->insert($data);
+
+                \Log::info('샤드 테이블에 데이터 삽입 성공', [
+                    'table_name' => $tableName,
+                    'uuid' => $uuid,
+                ]);
+            } catch (\Exception $e) {
+                \Log::error('샤드 테이블에 데이터 삽입 실패', [
+                    'table_name' => $tableName,
+                    'error' => $e->getMessage(),
+                    'uuid' => $uuid,
+                ]);
+
+                if (strpos($e->getMessage(), 'UNIQUE constraint failed') !== false) {
+                    if (strpos($e->getMessage(), 'email') !== false) {
+                        throw new \Exception("이메일이 이미 존재합니다: " . ($data['email'] ?? 'unknown'));
+                    }
+                    if (strpos($e->getMessage(), 'username') !== false) {
+                        throw new \Exception("사용자명이 이미 존재합니다: " . ($data['username'] ?? 'unknown'));
+                    }
+                    if (strpos($e->getMessage(), 'uuid') !== false) {
+                        throw new \Exception("사용자 고유 식별자가 중복되었습니다. 다시 시도해주세요.");
+                    }
+                }
+                throw new \Exception("샤드 테이블({$tableName})에 데이터 삽입 실패: " . $e->getMessage());
+            }
+
+            // 이메일 인덱스 추가
+            if (isset($data['email'])) {
+                try {
+                    $this->addToEmailIndex($data['email'], $uuid);
+                } catch (\Exception $e) {
+                    // 인덱스 테이블 추가 실패 시 로그만 기록하고 계속 진행
+                    \Log::warning("이메일 인덱스 추가 실패 (사용자 생성은 성공): " . $e->getMessage());
+                }
+            }
+
+            // 사용자명 인덱스 추가
+            if (isset($data['username']) && $data['username']) {
+                try {
+                    $this->addToUsernameIndex($data['username'], $uuid);
+                } catch (\Exception $e) {
+                    // 인덱스 테이블 추가 실패 시 로그만 기록하고 계속 진행
+                    \Log::warning("사용자명 인덱스 추가 실패 (사용자 생성은 성공): " . $e->getMessage());
+                }
+            }
+
             return $uuid;
+
+        } catch (\Exception $e) {
+            // 구체적인 오류 정보 추가
+            throw new \Exception("ShardingService::createUser 실패 - " . $e->getMessage());
+        }
+    }
+
+    /**
+     * 표준화된 샤딩 관계 데이터 생성
+     *
+     * 다른 테이블에서 사용자 정보를 저장할 때 사용
+     * user_id, user_uuid, shard_id, email, name을 세트로 제공
+     *
+     * @param string|object $user UUID 문자열 또는 User 객체
+     * @return array
+     */
+    public function createShardingRelationData($user)
+    {
+        if (is_string($user)) {
+            // UUID만 주어진 경우 사용자 정보 조회
+            $userData = $this->getUserByUuid($user);
+            if (!$userData) {
+                throw new \Exception("사용자를 찾을 수 없습니다: {$user}");
+            }
+            $uuid = $user;
+            $email = $userData->email;
+            $name = $userData->name;
+        } else {
+            // User 객체가 주어진 경우
+            $uuid = $user->uuid ?? $user->id;
+            $email = $user->email;
+            $name = $user->name;
         }
 
-        // 샤드 번호 계산
         $shardNumber = $this->getShardNumber($uuid);
-        $tableName = $this->getShardTableName($uuid);
 
-        // 데이터에 UUID와 shard_id 추가
-        $data['uuid'] = $uuid;
-        $data['shard_id'] = $shardNumber;
+        return [
+            'user_id' => $this->enabled ? 0 : (is_string($user) ? 0 : $user->id), // 샤딩 환경에서는 더미값
+            'user_uuid' => $uuid,
+            'shard_id' => $shardNumber,
+            'email' => $email,
+            'name' => $name,
+        ];
+    }
 
-        // 샤드 테이블에 삽입
-        DB::table($tableName)->insert($data);
-
-        // 이메일 인덱스 추가
-        if (isset($data['email'])) {
-            $this->addToEmailIndex($data['email'], $uuid);
+    /**
+     * 샤딩 관계에서 사용자 데이터 조회
+     *
+     * @param string $uuid
+     * @param string $tableName
+     * @return \Illuminate\Support\Collection
+     */
+    public function getUserRelatedData($uuid, $tableName)
+    {
+        if (!$this->enabled) {
+            return DB::table($tableName)->where('user_uuid', $uuid)->get();
         }
 
-        // 사용자명 인덱스 추가
-        if (isset($data['username'])) {
-            $this->addToUsernameIndex($data['username'], $uuid);
-        }
+        // 샤딩 환경에서는 user_uuid로 조회
+        return DB::table($tableName)->where('user_uuid', $uuid)->get();
+    }
 
-        return $uuid;
+    /**
+     * 샤딩 관계 데이터 삽입
+     *
+     * @param string $tableName
+     * @param array $data (이미 샤딩 관계 데이터 포함)
+     * @return bool
+     */
+    public function insertRelatedData($tableName, array $data)
+    {
+        try {
+            DB::table($tableName)->insert($data);
+            return true;
+        } catch (\Exception $e) {
+            \Log::error("샤딩 관계 데이터 삽입 실패", [
+                'table' => $tableName,
+                'error' => $e->getMessage(),
+                'data' => $data
+            ]);
+            throw $e;
+        }
     }
 
     /**
@@ -280,15 +439,28 @@ class ShardingService
      *
      * @param string $email
      * @param string $uuid
+     * @throws \Exception
      */
     protected function addToEmailIndex($email, $uuid)
     {
-        DB::table('user_email_index')->insert([
-            'email' => $email,
-            'uuid' => $uuid,
-            'created_at' => now(),
-            'updated_at' => now(),
-        ]);
+        try {
+            // 인덱스 테이블 존재 확인
+            if (!Schema::hasTable('user_email_index')) {
+                throw new \Exception("이메일 인덱스 테이블(user_email_index)이 존재하지 않습니다.");
+            }
+
+            DB::table('user_email_index')->insert([
+                'email' => $email,
+                'uuid' => $uuid,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+        } catch (\Exception $e) {
+            if (strpos($e->getMessage(), 'UNIQUE constraint failed') !== false) {
+                throw new \Exception("이메일 인덱스 중복: {$email}");
+            }
+            throw new \Exception("이메일 인덱스 추가 실패: " . $e->getMessage());
+        }
     }
 
     /**
@@ -296,6 +468,7 @@ class ShardingService
      *
      * @param string $username
      * @param string $uuid
+     * @throws \Exception
      */
     protected function addToUsernameIndex($username, $uuid)
     {
@@ -303,12 +476,24 @@ class ShardingService
             return;
         }
 
-        DB::table('user_username_index')->insert([
-            'username' => $username,
-            'uuid' => $uuid,
-            'created_at' => now(),
-            'updated_at' => now(),
-        ]);
+        try {
+            // 인덱스 테이블 존재 확인
+            if (!Schema::hasTable('user_username_index')) {
+                throw new \Exception("사용자명 인덱스 테이블(user_username_index)이 존재하지 않습니다.");
+            }
+
+            DB::table('user_username_index')->insert([
+                'username' => $username,
+                'uuid' => $uuid,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+        } catch (\Exception $e) {
+            if (strpos($e->getMessage(), 'UNIQUE constraint failed') !== false) {
+                throw new \Exception("사용자명 인덱스 중복: {$username}");
+            }
+            throw new \Exception("사용자명 인덱스 추가 실패: " . $e->getMessage());
+        }
     }
 
     /**

@@ -2,7 +2,7 @@
 
 namespace Jiny\Auth\Http\Controllers\Admin\Shards;
 
-use App\Http\Controllers\Controller;
+use Illuminate\Routing\Controller;
 use Illuminate\Http\Request;
 use Jiny\Auth\Models\ShardTable;
 use Jiny\Auth\Services\ShardTableService;

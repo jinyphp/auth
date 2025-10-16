@@ -30,18 +30,16 @@ Route::middleware(['web', 'jwt.auth'])->group(function () {
     |--------------------------------------------------------------------------
     | Account Deletion (회원 탈퇴)
     |--------------------------------------------------------------------------
-    | Account namespace를 사용하는 컨트롤러들
+    | Home\Account\Deletion namespace를 사용하는 컨트롤러들
     */
-    Route::prefix('account/deletion')->name('account.deletion.')->group(function () {
-        Route::get('/', \Jiny\Auth\Http\Controllers\Account\Deletion\ShowController::class)
+    Route::prefix('home/account/deletion')->name('account.deletion.')->group(function () {
+        Route::get('/', \Jiny\Auth\Http\Controllers\Home\Account\Deletion\IndexController::class)
             ->name('show');
-        Route::post('/', \Jiny\Auth\Http\Controllers\Account\Deletion\StoreController::class)
+        Route::post('/', \Jiny\Auth\Http\Controllers\Home\Account\Deletion\StoreController::class)
             ->name('store');
-        Route::get('/status', \Jiny\Auth\Http\Controllers\Account\Deletion\StatusController::class)
-            ->name('status');
-        Route::post('/cancel', \Jiny\Auth\Http\Controllers\Account\Deletion\CancelController::class)
+        Route::post('/cancel', \Jiny\Auth\Http\Controllers\Home\Account\Deletion\CancelController::class)
             ->name('cancel');
-        Route::get('/requested', \Jiny\Auth\Http\Controllers\Account\Deletion\RequestedController::class)
+        Route::get('/requested', \Jiny\Auth\Http\Controllers\Home\Account\Deletion\RequestedController::class)
             ->name('requested');
     });
 
@@ -62,7 +60,7 @@ Route::middleware(['web', 'jwt.auth'])->group(function () {
 
     // 약관 동의 관리 (로그인 사용자)
     Route::prefix('home/account/terms')->name('account.terms.')->group(function () {
-        Route::get('/', \App\Http\Controllers\Home\Terms\IndexController::class)
+        Route::get('/', \Jiny\Auth\Http\Controllers\Home\Terms\IndexController::class)
             ->name('index');
         Route::post('/agree', \Jiny\Auth\Http\Controllers\Home\Terms\AgreeController::class)
             ->name('agree');
@@ -109,6 +107,12 @@ Route::middleware(['web', 'jwt.auth'])->group(function () {
         // 활동 로그
         Route::get('/logs', \Jiny\Auth\Http\Controllers\Home\Account\Logs\IndexController::class)
             ->name('logs');
+
+        // 소셜 프로필 관리
+        Route::get('/social', \Jiny\Auth\Http\Controllers\Home\Account\Social\IndexController::class)
+            ->name('social');
+        Route::post('/social', \Jiny\Auth\Http\Controllers\Home\Account\Social\UpdateController::class)
+            ->name('social.update');
     });
 
 

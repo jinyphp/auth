@@ -108,21 +108,31 @@
 
                                 <!-- Password Rules Checklist -->
                                 <div class="mt-2 small">
-                                    <div class="d-flex flex-column gap-1">
-                                        <div id="rule-length" class="text-muted">
-                                            <i class="bi bi-circle"></i> 8자 이상
+                                    <div class="row">
+                                        <div class="col-4">
+                                            <div id="rule-length" class="text-muted">
+                                                <i class="bi bi-circle"></i> 8자 이상
+                                            </div>
                                         </div>
-                                        <div id="rule-uppercase" class="text-muted">
-                                            <i class="bi bi-circle"></i> 대문자 포함 (A-Z)
+                                        <div class="col-4">
+                                            <div id="rule-uppercase" class="text-muted">
+                                                <i class="bi bi-circle"></i> 대문자 포함 (A-Z)
+                                            </div>
                                         </div>
-                                        <div id="rule-lowercase" class="text-muted">
-                                            <i class="bi bi-circle"></i> 소문자 포함 (a-z)
+                                        <div class="col-4">
+                                            <div id="rule-lowercase" class="text-muted">
+                                                <i class="bi bi-circle"></i> 소문자 포함 (a-z)
+                                            </div>
                                         </div>
-                                        <div id="rule-number" class="text-muted">
-                                            <i class="bi bi-circle"></i> 숫자 포함 (0-9)
+                                        <div class="col-4">
+                                            <div id="rule-number" class="text-muted">
+                                                <i class="bi bi-circle"></i> 숫자 포함 (0-9)
+                                            </div>
                                         </div>
-                                        <div id="rule-symbol" class="text-muted">
-                                            <i class="bi bi-circle"></i> 특수문자 포함 (!@#$%^&*)
+                                        <div class="col-4">
+                                            <div id="rule-symbol" class="text-muted">
+                                                <i class="bi bi-circle"></i> 특수문자 포함 (!@#$%^&*)
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
@@ -139,24 +149,73 @@
                             </div>
                         </div>
 
+                        <!-- Terms Agreement Status -->
+                        @if(isset($show_timeline) && $show_timeline)
+                        <div class="mb-4">
+                            <div class="alert alert-success" role="alert">
+                                <div class="d-flex align-items-center">
+                                    <i class="bi bi-check-circle-fill me-2"></i>
+                                    <div>
+                                        <strong>약관 동의 완료</strong>
+                                        <div class="small text-muted">이용약관 및 개인정보 처리방침에 동의하였습니다.</div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Progress Timeline -->
+                            <div class="progress mb-3" style="height: 8px;">
+                                <div class="progress-bar bg-success" role="progressbar" style="width: 50%"></div>
+                                <div class="progress-bar bg-primary" role="progressbar" style="width: 50%"></div>
+                            </div>
+                            <div class="row text-center small">
+                                <div class="col-6">
+                                    <a href="{{ route('register.terms') }}" class="text-decoration-none text-success d-block p-2 rounded hover-bg-light" style="transition: background-color 0.2s;">
+                                        <i class="bi bi-check-circle-fill"></i>
+                                        약관 동의
+                                    </a>
+                                </div>
+                                <div class="col-6">
+                                    <div class="text-primary p-2">
+                                        <i class="bi bi-arrow-right-circle"></i>
+                                        회원 정보 입력
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        @endif
+
                         <!-- Terms -->
                         @if(isset($terms['all']) && count($terms['all']) > 0)
                         <div class="mb-4">
                             <label class="form-label">약관 동의</label>
                             <div class="border rounded p-3">
                                 @foreach($terms['all'] as $term)
-                                <div class="form-check mb-2">
+                                <div class="form-check mb-3">
                                     <input type="checkbox" class="form-check-input"
                                            id="terms_{{ $term->id }}" name="terms[{{ $term->id }}]"
                                            {{ $term->is_required ? 'required' : '' }}>
                                     <label class="form-check-label" for="terms_{{ $term->id }}">
-                                        @if($term->is_required)
-                                            <span class="badge bg-danger me-1">필수</span>
-                                        @else
-                                            <span class="badge bg-secondary me-1">선택</span>
-                                        @endif
-                                        {{ $term->title }}
-                                        <a href="#" class="ms-1" data-bs-toggle="modal" data-bs-target="#termsModal{{ $term->id }}">[보기]</a>
+                                        <div class="d-flex align-items-start">
+                                            @if($term->is_required)
+                                                <span class="badge bg-danger me-2">필수</span>
+                                            @else
+                                                <span class="badge bg-secondary me-2">선택</span>
+                                            @endif
+                                            <div>
+                                                <div class="fw-bold">
+                                                    <a href="{{ route('terms.show', $term->getRouteKey()) }}"
+                                                       class="text-decoration-none text-dark" target="_blank">
+                                                        {{ $term->title }}
+                                                    </a>
+                                                    @if($term->version)
+                                                        <small class="text-muted ms-1">(v{{ $term->version }})</small>
+                                                    @endif
+                                                </div>
+                                                @if($term->description)
+                                                    <div class="text-muted small mt-1">{{ $term->description }}</div>
+                                                @endif
+                                            </div>
+                                        </div>
                                     </label>
                                     @if($term->is_required)
                                     <div class="invalid-feedback">필수 약관에 동의해주세요.</div>
@@ -215,31 +274,23 @@
                     </form>
                 </div>
             </div>
+
+            {{-- copyright --}}
+            <div class="mt-6 text-sm text-gray-400 text-center">
+                <p class="mt-1">© 2025 JinyCMS. All rights reserved.</p>
+            </div>
         </div>
     </div>
 </section>
 
-<!-- Terms Modals -->
-@if(isset($terms['all']) && count($terms['all']) > 0)
-    @foreach($terms['all'] as $term)
-    <div class="modal fade" id="termsModal{{ $term->id }}" tabindex="-1">
-        <div class="modal-dialog modal-lg">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">{{ $term->title }}</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body">
-                    {!! $term->content !!}
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">닫기</button>
-                </div>
-            </div>
-        </div>
-    </div>
-    @endforeach
-@endif
+
+@push('styles')
+<style>
+    .hover-bg-light:hover {
+        background-color: rgba(108, 117, 125, 0.1) !important;
+    }
+</style>
+@endpush
 
 @push('scripts')
 <script>

@@ -1,4 +1,4 @@
-@extends('jiny-auth::layouts.admin.sidebar')
+@extends($layout ?? 'jiny-auth::layouts.admin.sidebar')
 
 @section('title', '사용자 상세 정보')
 
@@ -25,6 +25,14 @@
                             </nav>
                         </div>
                         <div class="d-flex gap-2">
+                            <a href="{{ route('admin.auth.users.index') }}{{ isset($shardId) ? '?shard_id=' . $shardId : '' }}" class="btn btn-outline-secondary">
+                                <i class="fe fe-list me-2"></i>
+                                목록보기
+                            </a>
+                            <a href="{{ route('admin.auth.users.approval', $user->id) }}{{ isset($shardId) ? '?shard_id=' . $shardId : '' }}" class="btn btn-info">
+                                <i class="fe fe-user-check me-2"></i>
+                                승인 관리
+                            </a>
                             <a href="{{ route('admin.auth.users.edit', $user->id) }}{{ isset($shardId) ? '?shard_id=' . $shardId : '' }}" class="btn btn-primary">
                                 <i class="fe fe-edit me-2"></i>
                                 편집
@@ -115,6 +123,24 @@
                                 <span class="badge bg-{{ $user->status_badge_color }}">
                                     {{ ucfirst($user->status) }}
                                 </span>
+                                @php
+                                $approval = $user->approval ?? 'pending';
+                                $approvalBadgeClass = match($approval) {
+                                    'approved' => 'success',
+                                    'rejected' => 'danger',
+                                    'pending' => 'warning',
+                                    default => 'secondary'
+                                };
+                                $approvalText = match($approval) {
+                                    'approved' => '승인됨',
+                                    'rejected' => '거부됨',
+                                    'pending' => '승인대기',
+                                    default => '미지정'
+                                };
+                                @endphp
+                                <span class="badge bg-{{ $approvalBadgeClass }}">
+                                    {{ $approvalText }}
+                                </span>
                             </div>
                         </div>
                     </div>
@@ -127,7 +153,11 @@
                     </div>
                     <div class="card-body">
                         <div class="d-grid gap-2">
-                            <a href="mailto:{{ $user->email }}" class="btn btn-outline-primary">
+                            <a href="{{ route('admin.auth.users.approval', $user->id) }}{{ isset($shardId) ? '?shard_id=' . $shardId : '' }}" class="btn btn-info">
+                                <i class="fe fe-user-check me-2"></i>
+                                승인 관리
+                            </a>
+                            <a href="{{ route('admin.auth.users.mail', $user->id) }}{{ isset($shardId) ? '?shard_id=' . $shardId : '' }}" class="btn btn-outline-primary">
                                 <i class="fe fe-mail me-2"></i>
                                 이메일 보내기
                             </a>
@@ -172,93 +202,42 @@
                                     </li>
                                 </ul>
                             </div>
+
+                            {{-- 사용자 상태 변경 버튼 (AJAX) --}}
                             @php
-                                $currentStatus = $user->account_status ?? 'active';
+                                $currentStatus = $user->account_status ?? $user->status ?? 'active';
                             @endphp
-                            @if($currentStatus === 'active')
-                                <div class="d-flex align-items-center gap-2">
-                                    <form action="{{ route('admin.auth.users.toggle-status', $user->id) }}{{ isset($shardId) ? '?shard_id=' . $shardId : '' }}"
-                                          method="POST"
-                                          class="flex-grow-1"
-                                          onsubmit="return confirm('이 사용자의 계정을 비활성화하시겠습니까?');">
-                                        @csrf
-                                        @if(isset($shardId))
-                                            <input type="hidden" name="shard_id" value="{{ $shardId }}">
-                                        @endif
-                                        <input type="hidden" name="status" value="inactive">
-                                        <button type="submit" class="btn btn-outline-warning w-100">
-                                            <i class="fe fe-user-x me-2"></i>
-                                            계정 비활성화
-                                        </button>
-                                    </form>
+
+                            <div id="status-actions" class="mt-3">
+                                @if($currentStatus === 'active')
                                     <button type="button"
-                                            class="btn btn-sm text-muted p-0 border-0"
-                                            data-bs-toggle="popover"
-                                            data-bs-trigger="hover focus"
-                                            data-bs-placement="right"
-                                            data-bs-html="true"
-                                            data-bs-title="계정 비활성화"
-                                            data-bs-content="<strong>목적:</strong> 일시적인 계정 사용 중지<br><br><strong>사용 사례:</strong><br>• 사용자 휴면 계정 전환<br>• 임시 계정 활동 중단<br>• 일시적 접근 제한<br><br><strong>특징:</strong> 비교적 가벼운 조치로 쉽게 복구 가능"
-                                            style="cursor: help;">
-                                        <i class="fe fe-info" style="font-size: 1.5rem;"></i>
+                                            class="btn btn-warning w-100"
+                                            onclick="toggleUserStatus('{{ $user->id }}', 'suspended', '사용자를 정지하시겠습니까?')"
+                                            id="status-btn">
+                                        <i class="fe fe-pause-circle me-2"></i>
+                                        계정 정지
                                     </button>
-                                </div>
-                                <div class="d-flex align-items-center gap-2">
-                                    <form action="{{ route('admin.auth.users.toggle-status', $user->id) }}{{ isset($shardId) ? '?shard_id=' . $shardId : '' }}"
-                                          method="POST"
-                                          class="flex-grow-1"
-                                          onsubmit="return confirm('이 사용자의 계정을 정지하시겠습니까?');">
-                                        @csrf
-                                        @if(isset($shardId))
-                                            <input type="hidden" name="shard_id" value="{{ $shardId }}">
-                                        @endif
-                                        <input type="hidden" name="status" value="suspended">
-                                        <button type="submit" class="btn btn-outline-danger w-100">
-                                            <i class="fe fe-slash me-2"></i>
-                                            계정 정지
-                                        </button>
-                                    </form>
+                                @elseif($currentStatus === 'suspended')
                                     <button type="button"
-                                            class="btn btn-sm text-muted p-0 border-0"
-                                            data-bs-toggle="popover"
-                                            data-bs-trigger="hover focus"
-                                            data-bs-placement="right"
-                                            data-bs-html="true"
-                                            data-bs-title="계정 정지"
-                                            data-bs-content="<strong>목적:</strong> 강제적인 계정 차단 (제재)<br><br><strong>사용 사례:</strong><br>• 약관 위반 및 부적절한 행동<br>• 보안 문제 또는 의심스러운 활동<br>• 관리자 징계 조치<br><br><strong>특징:</strong> 강력한 제재로 정식 절차를 거쳐 해제"
-                                            style="cursor: help;">
-                                        <i class="fe fe-info" style="font-size: 1.5rem;"></i>
-                                    </button>
-                                </div>
-                            @elseif($currentStatus === 'suspended')
-                                <form action="{{ route('admin.auth.users.toggle-status', $user->id) }}{{ isset($shardId) ? '?shard_id=' . $shardId : '' }}"
-                                      method="POST"
-                                      onsubmit="return confirm('이 사용자의 계정을 활성화하시겠습니까?');">
-                                    @csrf
-                                    @if(isset($shardId))
-                                        <input type="hidden" name="shard_id" value="{{ $shardId }}">
-                                    @endif
-                                    <input type="hidden" name="status" value="active">
-                                    <button type="submit" class="btn btn-outline-success w-100">
-                                        <i class="fe fe-user-check me-2"></i>
+                                            class="btn btn-success w-100"
+                                            onclick="toggleUserStatus('{{ $user->id }}', 'active', '사용자를 활성화하시겠습니까?')"
+                                            id="status-btn">
+                                        <i class="fe fe-play-circle me-2"></i>
                                         계정 활성화
                                     </button>
-                                </form>
-                            @else
-                                <form action="{{ route('admin.auth.users.toggle-status', $user->id) }}{{ isset($shardId) ? '?shard_id=' . $shardId : '' }}"
-                                      method="POST"
-                                      onsubmit="return confirm('이 사용자의 계정을 활성화하시겠습니까?');">
-                                    @csrf
-                                    @if(isset($shardId))
-                                        <input type="hidden" name="shard_id" value="{{ $shardId }}">
-                                    @endif
-                                    <input type="hidden" name="status" value="active">
-                                    <button type="submit" class="btn btn-outline-success w-100">
-                                        <i class="fe fe-user-check me-2"></i>
+                                @elseif($currentStatus === 'inactive')
+                                    <button type="button"
+                                            class="btn btn-success w-100"
+                                            onclick="toggleUserStatus('{{ $user->id }}', 'active', '사용자를 활성화하시겠습니까?')"
+                                            id="status-btn">
+                                        <i class="fe fe-play-circle me-2"></i>
                                         계정 활성화
                                     </button>
-                                </form>
-                            @endif
+                                @endif
+
+                            </div>
+
+
                         </div>
                     </div>
                 </div>
@@ -402,6 +381,116 @@
             }, function(err) {
                 alert('복사에 실패했습니다: ' + err);
             });
+        }
+
+        // 사용자 상태 변경 (AJAX)
+        function toggleUserStatus(userId, newStatus, confirmMessage) {
+            if (!confirm(confirmMessage)) {
+                return;
+            }
+
+            const statusBtn = document.getElementById('status-btn');
+            const originalBtnHTML = statusBtn.innerHTML;
+
+            // 로딩 상태 표시
+            statusBtn.disabled = true;
+            statusBtn.innerHTML = '<i class="spinner-border spinner-border-sm me-2"></i>처리 중...';
+
+            // AJAX 요청
+            fetch(`{{ route('admin.auth.users.toggle-status', ['id' => '__ID__']) }}{{ isset($shardId) ? '?shard_id=' . $shardId : '' }}`.replace('__ID__', userId), {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                    'Accept': 'application/json'
+                },
+                body: JSON.stringify({
+                    status: newStatus,
+                    @if(isset($shardId))
+                    shard_id: '{{ $shardId }}'
+                    @endif
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // 성공 메시지 표시
+                    showAlert('success', data.message);
+
+                    // UI 업데이트
+                    updateStatusUI(data.user.account_status);
+
+                    console.log('상태 변경 성공:', data);
+                } else {
+                    throw new Error(data.message || '상태 변경에 실패했습니다.');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showAlert('danger', error.message || '네트워크 오류가 발생했습니다.');
+
+                // 원래 상태로 복원
+                statusBtn.disabled = false;
+                statusBtn.innerHTML = originalBtnHTML;
+            });
+        }
+
+
+
+        // 상태에 따른 UI 업데이트
+        function updateStatusUI(status) {
+            const statusBtn = document.getElementById('status-btn');
+
+            // 버튼 상태 업데이트
+            statusBtn.disabled = false;
+
+            switch(status) {
+                case 'active':
+                    statusBtn.className = 'btn btn-warning w-100';
+                    statusBtn.innerHTML = '<i class="fe fe-pause-circle me-2"></i>계정 정지';
+                    statusBtn.setAttribute('onclick', `toggleUserStatus('{{ $user->id }}', 'suspended', '사용자를 정지하시겠습니까?')`);
+                    break;
+
+                case 'suspended':
+                    statusBtn.className = 'btn btn-success w-100';
+                    statusBtn.innerHTML = '<i class="fe fe-play-circle me-2"></i>계정 활성화';
+                    statusBtn.setAttribute('onclick', `toggleUserStatus('{{ $user->id }}', 'active', '사용자를 활성화하시겠습니까?')`);
+                    break;
+
+                case 'inactive':
+                    statusBtn.className = 'btn btn-success w-100';
+                    statusBtn.innerHTML = '<i class="fe fe-play-circle me-2"></i>계정 활성화';
+                    statusBtn.setAttribute('onclick', `toggleUserStatus('{{ $user->id }}', 'active', '사용자를 활성화하시겠습니까?')`);
+                    break;
+            }
+        }
+
+        // 알림 메시지 표시
+        function showAlert(type, message) {
+            // 기존 알림 제거
+            const existingAlert = document.querySelector('.alert-temp');
+            if (existingAlert) {
+                existingAlert.remove();
+            }
+
+            // 새 알림 생성
+            const alertDiv = document.createElement('div');
+            alertDiv.className = `alert alert-${type} alert-dismissible fade show alert-temp`;
+            alertDiv.innerHTML = `
+                ${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            `;
+
+            // 페이지 상단에 삽입
+            const container = document.querySelector('.container-fluid');
+            container.insertBefore(alertDiv, container.firstChild);
+
+            // 3초 후 자동 제거
+            setTimeout(() => {
+                if (alertDiv && alertDiv.parentNode) {
+                    alertDiv.remove();
+                }
+            }, 3000);
         }
 
         // Popover initialization

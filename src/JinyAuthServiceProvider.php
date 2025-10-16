@@ -46,10 +46,18 @@ class JinyAuthServiceProvider extends ServiceProvider
         }
 
 
-        // 기본 설정 파일 병합
-        $this->mergeConfigFrom(
-            __DIR__.'/../config/setting.php', 'admin.auth'
-        );
+        // 기본 설정 파일 병합 - JSON 기반 설정 지원
+        try {
+            $settingConfig = include __DIR__.'/../config/setting.php';
+            if (is_array($settingConfig)) {
+                $existingConfig = config('admin.auth', []);
+                // JSON 설정이 기존 설정을 덮어쓰도록 순서 변경
+                config(['admin.auth' => array_merge($existingConfig, $settingConfig)]);
+            }
+        } catch (\Exception $e) {
+            // 설정 로드 실패 시 로그 기록
+            \Log::warning('Auth 설정 로드 실패: ' . $e->getMessage());
+        }
 
         // 설정파일 복사
         $this->publishes([

@@ -20,13 +20,17 @@ return new class extends Migration
             $table->timestamps();
 
             $table->bigInteger('user_id')->nullable();
+            $table->string('user_uuid', 36)->nullable()->index()->comment('User UUID for sharding');
+            $table->integer('shard_id')->nullable()->index()->comment('Shard number');
             $table->string('email')->nullable();
             $table->string('name')->nullable();
 
-
+            $table->text('reason')->nullable()->comment('탈퇴 사유');
             $table->text('description')->nullable();
 
+            $table->string('status')->default('pending')->comment('pending|approved|rejected');
             $table->string('confirm')->nullable();
+            $table->timestamp('approved_at')->nullable();
             $table->bigInteger('manager_id')->nullable();
         });
     }

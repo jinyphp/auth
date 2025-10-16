@@ -2,7 +2,7 @@
 
 namespace Jiny\Auth\Http\Controllers\Admin\OAuthProviders;
 
-use App\Http\Controllers\Controller;
+use Illuminate\Routing\Controller;
 
 /**
  * 관리자 - OAuth 프로바이더 상세 컨트롤러

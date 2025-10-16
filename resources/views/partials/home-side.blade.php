@@ -164,18 +164,12 @@
             </li>
             <!-- Nav item -->
             <li class="nav-item">
-              <a class="nav-link" href="../pages/social-profile.html">
+              <a class="nav-link" href="{{ route('home.account.social') }}">
                 <i class="fe fe-refresh-cw nav-icon"></i>
-                Social Profiles
+                    소셜 프로파일
               </a>
             </li>
-            <!-- Nav item -->
-            <li class="nav-item">
-              <a class="nav-link" href="../pages/notifications.html">
-                <i class="fe fe-bell nav-icon"></i>
-                Notifications
-              </a>
-            </li>
+
             <!-- Nav item -->
             <li class="nav-item">
               <a class="nav-link" href="../pages/profile-privacy.html">
@@ -185,9 +179,9 @@
             </li>
             <!-- Nav item -->
             <li class="nav-item">
-              <a class="nav-link" href="../pages/delete-profile.html">
+              <a class="nav-link" href="{{ route('account.deletion.show') }}">
                 <i class="fe fe-trash nav-icon"></i>
-                Delete Profile
+                회원 탈퇴
               </a>
             </li>
             <!-- Nav item -->

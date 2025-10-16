@@ -24,11 +24,18 @@ Route::prefix('admin')->middleware(['web'])->group(function () {
         Route::post('/', \Jiny\Auth\Http\Controllers\Admin\AuthUsers\StoreController::class)->name('store');
         Route::get('/shard/{shardId}', \Jiny\Auth\Http\Controllers\Admin\AuthUsers\ShardController::class)->name('shard');
         Route::get('/{id}', \Jiny\Auth\Http\Controllers\Admin\AuthUsers\ShowController::class)->name('show');
+        Route::get('/{id}/approval', \Jiny\Auth\Http\Controllers\Admin\AuthUsers\UserApprovalController::class)->name('approval');
+        Route::post('/{id}/approval/update', [\Jiny\Auth\Http\Controllers\Admin\AuthUsers\UserApprovalController::class, 'updateApprovalStatus'])->name('approval.update');
         Route::post('/{id}/toggle-status', \Jiny\Auth\Http\Controllers\Admin\AuthUsers\ToggleStatusController::class)->name('toggle-status');
+        Route::post('/{id}/approve', [\Jiny\Auth\Http\Controllers\Admin\AuthUsers\ApprovalController::class, 'approve'])->name('approve');
+        Route::post('/{id}/reject', [\Jiny\Auth\Http\Controllers\Admin\AuthUsers\ApprovalController::class, 'reject'])->name('reject');
+        Route::post('/{id}/pending', [\Jiny\Auth\Http\Controllers\Admin\AuthUsers\ApprovalController::class, 'pending'])->name('pending');
         Route::post('/{id}/reset-password', \Jiny\Auth\Http\Controllers\Admin\AuthUsers\ResetPasswordController::class)->name('reset-password');
         Route::get('/{id}/edit', \Jiny\Auth\Http\Controllers\Admin\AuthUsers\EditController::class)->name('edit');
         Route::put('/{id}', \Jiny\Auth\Http\Controllers\Admin\AuthUsers\UpdateController::class)->name('update');
         Route::delete('/{id}', \Jiny\Auth\Http\Controllers\Admin\AuthUsers\DeleteController::class)->name('destroy');
+        Route::get('/{id}/mail', [\Jiny\Auth\Http\Controllers\Admin\AuthUsers\UserMailController::class, 'index'])->name('mail');
+        Route::post('/{id}/mail/send', [\Jiny\Auth\Http\Controllers\Admin\AuthUsers\UserMailController::class, 'send'])->name('mail.send');
     });
 
     // 샤딩 관리 (Shards)
@@ -80,6 +87,48 @@ Route::prefix('admin')->middleware(['web'])->group(function () {
         Route::delete('/{id}', \Jiny\Auth\Http\Controllers\Admin\Terms\DeleteController::class)->name('destroy');
     });
 
+
+    // 메일 설정 관리 (Mail)
+    Route::prefix('auth/mail/setting')->name('admin.auth.mail.setting.')->group(function () {
+        Route::get('/', \Jiny\Auth\Http\Controllers\Admin\Mail\MailSetting\AuthMailSetting::class)->name('index');
+        Route::post('/update', [\Jiny\Auth\Http\Controllers\Admin\Mail\MailSetting\AuthMailSetting::class, 'update'])->name('update');
+        Route::post('/test', [\Jiny\Auth\Http\Controllers\Admin\Mail\MailSetting\AuthMailSetting::class, 'test'])->name('test');
+    });
+
+    // 메일 로그 관리 (Mail Logs)
+    Route::prefix('auth/mail/logs')->name('admin.auth.mail.logs.')->group(function () {
+        Route::get('/', \Jiny\Auth\Http\Controllers\Admin\Mail\MailLogs\IndexController::class)->name('index');
+        Route::get('/{id}/content', \Jiny\Auth\Http\Controllers\Admin\Mail\MailLogs\ContentController::class)->name('content');
+        Route::get('/{id}/error', \Jiny\Auth\Http\Controllers\Admin\Mail\MailLogs\ErrorController::class)->name('error');
+        Route::post('/{id}/resend', \Jiny\Auth\Http\Controllers\Admin\Mail\MailLogs\ResendController::class)->name('resend');
+    });
+
+    // 메일 템플릿 관리 (Mail Templates)
+    Route::prefix('auth/mail/templates')->name('admin.auth.mail.templates.')->group(function () {
+        Route::get('/', \Jiny\Auth\Http\Controllers\Admin\Mail\Template\IndexController::class)->name('index');
+        Route::get('/create', \Jiny\Auth\Http\Controllers\Admin\Mail\Template\CreateController::class)->name('create');
+        Route::post('/', \Jiny\Auth\Http\Controllers\Admin\Mail\Template\StoreController::class)->name('store');
+        Route::get('/{id}', \Jiny\Auth\Http\Controllers\Admin\Mail\Template\ShowController::class)->name('show');
+        Route::get('/{id}/edit', \Jiny\Auth\Http\Controllers\Admin\Mail\Template\EditController::class)->name('edit');
+        Route::put('/{id}', \Jiny\Auth\Http\Controllers\Admin\Mail\Template\UpdateController::class)->name('update');
+        Route::delete('/{id}', \Jiny\Auth\Http\Controllers\Admin\Mail\Template\DeleteController::class)->name('delete');
+    });
+
+    // 전체 메일 발송 (Bulk Mail)
+    Route::prefix('cms/mail')->name('admin.cms.mail.')->group(function () {
+        Route::get('/create', \Jiny\Auth\Http\Controllers\Admin\Mail\BulkMail\CreateController::class)->name('create');
+        Route::post('/send', \Jiny\Auth\Http\Controllers\Admin\Mail\BulkMail\SendController::class)->name('send');
+    });
+
+    // Auth 시스템 설정 관리 (Auth Settings)
+    Route::prefix('auth/setting')->name('admin.auth.setting.')->group(function () {
+        Route::get('/', \Jiny\Auth\Http\Controllers\Admin\AuthSetting\AuthSetting::class)->name('index');
+        Route::post('/update', [\Jiny\Auth\Http\Controllers\Admin\AuthSetting\AuthSetting::class, 'update'])->name('update')->withoutMiddleware(['csrf']);
+        Route::post('/reset', [\Jiny\Auth\Http\Controllers\Admin\AuthSetting\AuthSetting::class, 'reset'])->name('reset')->withoutMiddleware(['csrf']);
+        Route::post('/restore', [\Jiny\Auth\Http\Controllers\Admin\AuthSetting\AuthSetting::class, 'restore'])->name('restore')->withoutMiddleware(['csrf']);
+        Route::get('/backups', [\Jiny\Auth\Http\Controllers\Admin\AuthSetting\AuthSetting::class, 'backups'])->name('backups');
+    });
+
     // 사용자 등급 관리 (UserGrades)
     Route::prefix('auth/user/grades')->name('admin.auth.user.grades.')->group(function () {
         Route::get('/', \Jiny\Auth\Http\Controllers\Admin\UserGrades\IndexController::class)->name('index');
@@ -125,18 +174,6 @@ Route::prefix('admin')->middleware(['web'])->group(function () {
         Route::delete('/{id}', \Jiny\Auth\Http\Controllers\Admin\OAuthProviders\DeleteController::class)->name('destroy');
     });
 
-    // 이머니 관리 (Emoney)
-    Route::prefix('auth/emoney')->name('admin.auth.emoney.')->group(function () {
-        Route::get('/', \Jiny\Auth\Http\Controllers\Admin\Emoney\IndexController::class)->name('index');
-        Route::get('/create', \Jiny\Auth\Http\Controllers\Admin\Emoney\CreateController::class)->name('create');
-        Route::post('/', \Jiny\Auth\Http\Controllers\Admin\Emoney\StoreController::class)->name('store');
-        Route::get('/deposits', \Jiny\Auth\Http\Controllers\Admin\Emoney\DepositsController::class)->name('deposits');
-        Route::get('/withdrawals', \Jiny\Auth\Http\Controllers\Admin\Emoney\WithdrawalsController::class)->name('withdrawals');
-        Route::get('/{id}', \Jiny\Auth\Http\Controllers\Admin\Emoney\ShowController::class)->name('show');
-        Route::get('/{id}/edit', \Jiny\Auth\Http\Controllers\Admin\Emoney\EditController::class)->name('edit');
-        Route::put('/{id}', \Jiny\Auth\Http\Controllers\Admin\Emoney\UpdateController::class)->name('update');
-        Route::delete('/{id}', \Jiny\Auth\Http\Controllers\Admin\Emoney\DeleteController::class)->name('destroy');
-    });
 
     // 사용자 메시지 관리 (UserMessage)
     Route::prefix('auth/user/messages')->name('admin.auth.user.messages.')->group(function () {
@@ -250,4 +287,22 @@ Route::prefix('admin')->middleware(['web'])->group(function () {
         Route::post('/{avatarId}/set-default', \Jiny\Auth\Http\Controllers\Admin\UserAvatar\SetDefaultController::class)->name('set-default');
         Route::delete('/{avatarId}', \Jiny\Auth\Http\Controllers\Admin\UserAvatar\DeleteController::class)->name('delete');
     });
+
+    // 회원 탈퇴 요청 관리 (UserUnregist)
+    Route::prefix('auth/user-unregist')->name('admin.user-unregist.')->group(function () {
+        Route::get('/', \Jiny\Auth\Http\Controllers\Admin\UserUnregist\IndexController::class)->name('index');
+        Route::post('/{id}/approve', \Jiny\Auth\Http\Controllers\Admin\UserUnregist\ApproveController::class)->name('approve');
+        Route::post('/{id}/reject', \Jiny\Auth\Http\Controllers\Admin\UserUnregist\RejectController::class)->name('reject');
+        Route::delete('/{id}/delete', \Jiny\Auth\Http\Controllers\Admin\UserUnregist\DeleteController::class)->name('delete');
+    });
+
+    // 사용자 승인 로그 관리 (UserApproval/Logs)
+    Route::prefix('auth/logs/approval')->middleware(['admin'])->name('admin.auth.logs.approval.')->group(function () {
+        Route::get('/', \Jiny\Auth\Http\Controllers\Admin\UserApproval\Logs\UserApprovalLogsController::class . '@index')->name('index');
+        Route::get('/{id}', \Jiny\Auth\Http\Controllers\Admin\UserApproval\Logs\UserApprovalLogsController::class . '@show')->name('show');
+    });
+
+
+
 });
+

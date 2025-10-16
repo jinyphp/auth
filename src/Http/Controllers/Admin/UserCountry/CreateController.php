@@ -2,7 +2,7 @@
 
 namespace Jiny\Auth\Http\Controllers\Admin\UserCountry;
 
-use App\Http\Controllers\Controller;
+use Illuminate\Routing\Controller;
 
 class CreateController extends Controller
 {

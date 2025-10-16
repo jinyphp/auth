@@ -2,7 +2,7 @@
 
 namespace Jiny\Auth\Http\Controllers\Admin\UserTypes;
 
-use App\Http\Controllers\Controller;
+use Illuminate\Routing\Controller;
 
 /**
  * 관리자 - 사용자 유형 생성 폼 컨트롤러

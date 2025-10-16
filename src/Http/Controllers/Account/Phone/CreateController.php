@@ -2,7 +2,7 @@
 
 namespace Jiny\Auth\Http\Controllers\Home\Phone;
 
-use App\Http\Controllers\Controller;
+use Illuminate\Routing\Controller;
 use Illuminate\Http\Request;
 
 class CreateController extends Controller

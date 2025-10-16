@@ -36,6 +36,12 @@ Route::middleware(['web', 'guest.jwt'])->group(function () {
     Route::post('/login', \Jiny\Auth\Http\Controllers\Auth\Login\SubmitController::class)
         ->name('login.submit');
 
+    // 승인 대기
+    Route::get('/login/approval', \Jiny\Auth\Http\Controllers\Auth\Approval\PendingController::class)
+        ->name('login.approval');
+    Route::post('/login/approval/refresh', [\Jiny\Auth\Http\Controllers\Auth\Approval\PendingController::class, 'refresh'])
+        ->name('login.approval.refresh');
+
     // 회원가입 (앱 레벨에서 오버라이드됨)
     // Route::get('/register', \Jiny\Auth\Http\Controllers\Auth\Register\ShowController::class)
     //     ->name('register');
@@ -107,27 +113,44 @@ Route::middleware('web')->group(function () {
             ->name('show');
     });
 
-    Route::get('/privacy', function () {
-        return view('jiny-auth::privacy.index');
-    })->name('privacy');
+    // Route::get('/privacy', function () {
+    //     return view('jiny-auth::privacy.index');
+    // })->name('privacy');
+
+    // 계정 상태 안내 페이지
+    Route::get('/account/deleted', function () {
+        return view('jiny-auth::account.deleted');
+    })->name('account.deleted');
+
+    Route::get('/account/blocked', function () {
+        return view('jiny-auth::account.blocked');
+    })->name('account.blocked');
+
+    Route::get('/login/unregist/notice', function () {
+        return view('jiny-auth::auth.login.unregist-notice');
+    })->name('login.unregist.notice');
 });
 
 // 회원가입 약관 동의 (우선 처리)
 Route::middleware(['web', 'guest.jwt'])->group(function () {
     // 약관 동의 페이지
-    Route::get('/register/terms', \App\Http\Controllers\Auth\Register\TermsController::class)
+    Route::get('/register/terms', \Jiny\Auth\Http\Controllers\Auth\Terms\TermsController::class)
         ->name('register.terms');
 
     // 약관 동의 처리
-    Route::post('/register/terms', \App\Http\Controllers\Auth\Register\TermsAcceptController::class)
+    Route::post('/register/terms', \Jiny\Auth\Http\Controllers\Auth\Terms\TermsAcceptController::class)
         ->name('register.terms.accept');
 
+    // 약관 상세 페이지
+    Route::get('/terms/{term}', \Jiny\Auth\Http\Controllers\Auth\Terms\TermsDetailController::class)
+        ->name('terms.show');
+
     // 회원가입 폼 (약관 체크 기능 추가)
-    Route::get('/register', \App\Http\Controllers\Auth\Register\ShowController::class)
+    Route::get('/register', \Jiny\Auth\Http\Controllers\Auth\Register\ShowController::class)
         ->name('register');
 
     // 회원가입 처리 (약관 처리 확장)
-    Route::post('/register', \App\Http\Controllers\Auth\Register\StoreController::class)
+    Route::post('/register', \Jiny\Auth\Http\Controllers\Auth\Register\StoreController::class)
         ->name('register.store');
 });
 

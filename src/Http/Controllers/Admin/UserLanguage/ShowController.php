@@ -2,7 +2,7 @@
 
 namespace Jiny\Auth\Http\Controllers\Admin\UserLanguage;
 
-use App\Http\Controllers\Controller;
+use Illuminate\Routing\Controller;
 
 class ShowController extends Controller
 {

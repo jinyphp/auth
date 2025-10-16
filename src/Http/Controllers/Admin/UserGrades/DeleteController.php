@@ -2,7 +2,7 @@
 
 namespace Jiny\Auth\Http\Controllers\Admin\UserGrades;
 
-use App\Http\Controllers\Controller;
+use Illuminate\Routing\Controller;
 
 /**
  * 관리자 - 사용자 등급 삭제 처리 컨트롤러

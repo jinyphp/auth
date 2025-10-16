@@ -84,7 +84,7 @@
                             <li><a class="dropdown-item" href="{{ route('about') }}">About</a></li>
                             <li><a class="dropdown-item" href="{{ route('pricing') }}">Pricing</a></li>
                             <li><a class="dropdown-item" href="{{ route('blog') }}">Blog</a></li>
-                            <li><a class="dropdown-item" href="{{ route('contact') }}">Contact</a></li>
+                            <li><a class="dropdown-item" href="{{ route('contact.index') }}">Contact</a></li>
                         </ul>
                     </li>
                     <li class="nav-item dropdown">

@@ -13,14 +13,20 @@ class UserSocial extends Model
 
     protected $fillable = [
         'user_id',
-        'provider',
-        'provider_id',
-        'provider_token',
-        'provider_refresh_token',
-        'provider_expires_at',
-        'avatar',
-        'nickname',
+        'user_uuid',
+        'shard_id',
+        'enable',
+        'name',
         'email',
+        'type',
+        'twitter',
+        'github',
+        'youtube',
+        'linkedin',
+        'instagram',
+        'link',
+        'description',
+        'manager_id',
     ];
 
     protected $casts = [

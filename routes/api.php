@@ -71,3 +71,10 @@ Route::prefix('api/auth/oauth/v1')->name('api.oauth.v1.')->group(function () {
         Route::get('/linked', [OAuthController::class, 'getLinkedProviders'])->name('linked');
     });
 });
+
+// 인증된 사용자용 API 라우트
+Route::middleware(['web', JwtAuthenticate::class])->prefix('api')->group(function () {
+    // 사용자 검색 (메시징용)
+    Route::get('/users/search', \Jiny\Auth\Http\Controllers\Api\UserSearchController::class)
+        ->name('api.users.search');
+});

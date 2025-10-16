@@ -2,7 +2,7 @@
 
 namespace Jiny\Auth\Http\Controllers\Admin\UserLogs;
 
-use App\Http\Controllers\Controller;
+use Illuminate\Routing\Controller;
 
 /**
  * 관리자 - 사용자 로그 생성 폼 컨트롤러

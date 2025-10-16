@@ -2,7 +2,7 @@
 
 namespace Jiny\Auth\Http\Controllers\Api;
 
-use App\Http\Controllers\Controller;
+use Illuminate\Routing\Controller;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -21,6 +21,7 @@ class AuthController extends Controller
     protected $jwtService;
     protected $termsService;
     protected $activityLogService;
+    protected $config;
 
     public function __construct(
         ValidationService $validationService,
@@ -32,6 +33,33 @@ class AuthController extends Controller
         $this->jwtService = $jwtService;
         $this->termsService = $termsService;
         $this->activityLogService = $activityLogService;
+        $this->loadConfig();
+    }
+
+    /**
+     * 설정 로드
+     *
+     * JSON 설정 파일에서 인증 관련 설정을 읽기
+     */
+    protected function loadConfig()
+    {
+        $configPath = base_path('vendor/jiny/auth/config/setting.json');
+
+        if (file_exists($configPath)) {
+            try {
+                $jsonContent = file_get_contents($configPath);
+                $settings = json_decode($jsonContent, true);
+
+                if (json_last_error() === JSON_ERROR_NONE) {
+                    $this->config = $settings;
+                    return;
+                }
+            } catch (\Exception $e) {
+                // JSON 파싱 실패 시 기본값 사용
+            }
+        }
+
+        $this->config = [];
     }
 
     /**
@@ -40,7 +68,7 @@ class AuthController extends Controller
     public function register(Request $request)
     {
         // 1. 시스템 활성화 확인
-        if (!config('admin.auth.register.enable', true)) {
+        if (!($this->config['register']['enable'] ?? true)) {
             return response()->json([
                 'success' => false,
                 'message' => '현재 회원가입이 중단되었습니다.',
@@ -114,7 +142,7 @@ class AuthController extends Controller
                 $this->termsService->recordAgreement($user->id, $request->terms, $request);
 
                 // 이메일 인증 토큰 생성 (선택적)
-                if (config('admin.auth.register.require_email_verification')) {
+                if ($this->config['register']['require_email_verification'] ?? true) {
                     $this->createEmailVerification($user);
                 }
 
@@ -160,7 +188,7 @@ class AuthController extends Controller
     public function login(Request $request)
     {
         // 1. 시스템 활성화 확인
-        if (!config('admin.auth.login.enable', true)) {
+        if (!($this->config['login']['enable'] ?? true)) {
             return response()->json([
                 'success' => false,
                 'message' => '현재 로그인이 중단되었습니다.',
@@ -235,7 +263,7 @@ class AuthController extends Controller
         }
 
         // 8. 이메일 인증 확인
-        if (config('admin.auth.register.require_email_verification') && !$user->hasVerifiedEmail()) {
+        if (($this->config['register']['require_email_verification'] ?? true) && !$user->hasVerifiedEmail()) {
             return response()->json([
                 'success' => false,
                 'message' => '이메일 인증이 필요합니다.',
@@ -423,13 +451,25 @@ class AuthController extends Controller
      */
     protected function createUser(array $data)
     {
+        $status = 'active';
+
+        // 승인 필요 여부 확인
+        if ($this->config['approval']['require_approval'] ?? false) {
+            // 자동 승인이 활성화되어 있으면 바로 승인, 아니면 대기 상태
+            if ($this->config['approval']['approval_auto'] ?? false) {
+                $status = 'active'; // 자동 승인
+            } else {
+                $status = 'pending'; // 승인 대기
+            }
+        }
+
         return User::create([
             'name' => $data['name'],
             'email' => $data['email'],
             'password' => Hash::make($data['password']),
             'utype' => 'USR',
-            'status' => config('admin.auth.register.require_approval') ? 'pending' : 'active',
-            'email_verified_at' => config('admin.auth.register.require_email_verification') ? null : now(),
+            'status' => $status,
+            'email_verified_at' => ($this->config['register']['require_email_verification'] ?? true) ? null : now(),
         ]);
     }
 
@@ -477,7 +517,7 @@ class AuthController extends Controller
 
     protected function isDormantAccount($user)
     {
-        $dormantDays = config('admin.auth.dormant_days', 365);
+        $dormantDays = $this->config['security']['dormant_days'] ?? 365;
         return $user->last_login_at && $user->last_login_at->lt(now()->subDays($dormantDays));
     }
 

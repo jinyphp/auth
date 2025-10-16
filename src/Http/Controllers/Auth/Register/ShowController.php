@@ -2,13 +2,13 @@
 
 namespace Jiny\Auth\Http\Controllers\Auth\Register;
 
-use App\Http\Controllers\Controller;
+use Illuminate\Routing\Controller;
 use Illuminate\Http\Request;
 use Jiny\Auth\Services\TermsService;
 use Jiny\Auth\Services\ValidationService;
 
 /**
- * 회원가입 폼 표시 컨트롤러
+ * 회원가입 폼 표시 컨트롤러 (약관 동의 체크 기능 포함)
  *
  * 진입 경로:
  * Route::get('/register') → ShowController::__invoke()
@@ -23,6 +23,7 @@ class ShowController extends Controller
     protected $termsService;
     protected $validationService;
     protected $config;
+    protected $configPath;
 
     /**
      * 생성자
@@ -36,67 +37,37 @@ class ShowController extends Controller
     ) {
         $this->termsService = $termsService;
         $this->validationService = $validationService;
-        $this->loadConfig();
+        $this->configPath = dirname(__DIR__, 5) . '/config/setting.json';
+        $this->config = $this->loadSettings();
     }
 
     /**
-     * 설정 로드
-     *
-     * config/admin.php에서 인증 관련 설정을 $this->config 배열로 로드
+     * JSON 설정 파일에서 설정 읽기
      */
-    protected function loadConfig()
+    private function loadSettings()
     {
-        $this->config = [
-            // 시스템 활성화
-            'auth_login_enable' => config('admin.auth.login.enable', true),
-            'auth_register_enable' => config('admin.auth.register.enable', true),
+        if (file_exists($this->configPath)) {
+            try {
+                $jsonContent = file_get_contents($this->configPath);
+                $settings = json_decode($jsonContent, true);
 
-            // 가입 모드
-            'register_mode' => config('admin.auth.register.mode', 'simple'),
+                if (json_last_error() === JSON_ERROR_NONE) {
+                    return $settings;
+                }
 
-            // 뷰 설정
-            'register_view' => config('admin.auth.register.view', 'jiny-auth::auth.register.index'),
-            'register_terms_view' => config('admin.auth.register.terms_view', 'jiny-auth::auth.register.terms'),
+                \Log::error('JSON 파싱 오류: ' . json_last_error_msg());
+            } catch (\Exception $e) {
+                \Log::error('설정 파일 읽기 오류: ' . $e->getMessage());
+            }
+        }
 
-            // 비밀번호 규칙
-            'password_min_length' => config('admin.auth.password_rules.min_length', 8),
-            'password_require_uppercase' => config('admin.auth.password_rules.require_uppercase', true),
-            'password_require_lowercase' => config('admin.auth.password_rules.require_lowercase', true),
-            'password_require_numbers' => config('admin.auth.password_rules.require_numbers', true),
-            'password_require_symbols' => config('admin.auth.password_rules.require_symbols', true),
-
-            // 차단 도메인
-            'blocked_email_domains' => config('admin.auth.blocked_email_domains', [
-                'tempmail.com',
-                '10minutemail.com',
-                'guerrillamail.com',
-            ]),
-
-            // 소셜 로그인
-            'social_enable' => config('admin.auth.social.enable', false),
-            'social_providers' => config('admin.auth.social.providers', []),
-
-            // 폼 필드 설정
-            'require_email_verification' => config('admin.auth.register.require_email_verification', true),
-            'require_approval' => config('admin.auth.register.require_approval', false),
-            'auto_login' => config('admin.auth.register.auto_login', false),
-            'show_phone_field' => config('admin.auth.register.fields.phone', true),
-            'show_birth_date_field' => config('admin.auth.register.fields.birth_date', false),
-            'show_gender_field' => config('admin.auth.register.fields.gender', false),
-            'show_address_field' => config('admin.auth.register.fields.address', false),
-
-            // reCAPTCHA
-            'recaptcha_enabled' => config('admin.auth.security.recaptcha.enable', false),
-            'recaptcha_site_key' => config('admin.auth.security.recaptcha.site_key'),
-            'recaptcha_version' => config('admin.auth.security.recaptcha.version', 'v3'),
-
-            // 샤딩 설정
-            'sharding_enabled' => config('admin.auth.sharding.enable', false),
-        ];
+        // JSON 파일이 없거나 파싱 실패 시 빈 배열 반환
+        // 기본값 초기화 기능이 제거되어 설정 파일이 완전해야 함
+        return [];
     }
 
     /**
-     * 회원가입 폼 표시 (메인 진입점)
+     * 회원가입 폼 표시 (메인 진입점) - 약관 동의 체크 기능 추가
      *
      * 호출 흐름:
      * __invoke()
@@ -111,6 +82,17 @@ class ShowController extends Controller
      */
     public function __invoke(Request $request)
     {
+        // 에러 상태 확인
+        $hasErrors = $request->session()->has('errors') ||
+                     $request->hasAny(['error', 'errors']) ||
+                     old('email'); // withInput()으로 돌아온 경우
+
+        // 약관 기능 활성화 시 약관 페이지 우선 표시
+        $termsRedirect = $this->checkTermsRequirement($request, $hasErrors);
+        if ($termsRedirect !== null) {
+            return $termsRedirect;
+        }
+
         // 1단계: 시스템 활성화 확인
         $systemCheck = $this->checkSystemEnabled();
         if ($systemCheck !== true) {
@@ -120,14 +102,83 @@ class ShowController extends Controller
         // 2단계: 가입 모드 확인
         $mode = $this->checkRegistrationMode();
 
-        // 3단계: 약관 로드
-        $terms = $this->loadTerms();
+        // 3단계: 약관 로드 - 약관 동의가 완료되었거나 에러가 있으면 빈 배열로 설정
+        if ($hasErrors || $this->hasAgreedToTerms()) {
+            $terms = [
+                'mandatory' => collect([]),
+                'optional' => collect([]),
+                'grouped' => [],
+                'all' => collect([]),
+            ];
+        } else {
+            $terms = $this->loadTerms();
+        }
 
         // 4단계: 폼 데이터 준비
         $formData = $this->prepareFormData($terms);
 
+        // 타임라인 표시 여부 추가 (에러가 있거나 약관 동의가 완료된 경우)
+        $formData['show_timeline'] = $hasErrors || $this->hasAgreedToTerms();
+
         // 5단계: 뷰 렌더링
         return $this->renderView($mode, $formData);
+    }
+
+    /**
+     * 약관 요구사항 확인 및 리다이렉트 처리
+     */
+    protected function checkTermsRequirement(Request $request, bool $hasErrors = false)
+    {
+        // 약관 기능이 비활성화되어 있으면 null 반환 (계속 진행)
+        if (!$this->config['terms']['enable']) {
+            return null;
+        }
+
+        // 에러가 있으면 약관 체크 건너뛰기 (에러 메시지 표시를 위해)
+        if ($hasErrors) {
+            return null;
+        }
+
+        // 이미 약관에 동의했으면 null 반환 (계속 진행)
+        if ($this->hasAgreedToTerms()) {
+            return null;
+        }
+
+        // 활성화된 약관이 있는지 확인
+        try {
+            $mandatoryTerms = $this->termsService->getMandatoryTerms();
+            $optionalTerms = $this->termsService->getOptionalTerms();
+
+            // 활성화된 약관이 있으면 약관 동의 페이지로 리다이렉션
+            if ($mandatoryTerms->isNotEmpty() || $optionalTerms->isNotEmpty()) {
+                return redirect()->route('register.terms');
+            }
+        } catch (\Exception $e) {
+            // 약관 서비스 오류 시 로그만 남기고 계속 진행
+            \Log::warning('약관 확인 중 오류 발생', [
+                'error' => $e->getMessage(),
+                'request_url' => $request->url()
+            ]);
+        }
+
+        return null;
+    }
+
+    /**
+     * 약관 동의 여부 확인
+     */
+    protected function hasAgreedToTerms()
+    {
+        // 약관 기능이 비활성화되어 있으면 자동으로 동의한 것으로 처리
+        if (!$this->config['terms']['enable']) {
+            return true;
+        }
+
+        // 세션 또는 쿠키에서 동의 여부 확인
+        $sessionAgreed = session()->has('terms_agreed') && session()->get('terms_agreed') === true;
+        $cookieAgreed = request()->cookie('terms_agreed') === '1';
+
+        return $sessionAgreed || $cookieAgreed;
     }
 
     /**
@@ -136,22 +187,21 @@ class ShowController extends Controller
      * 진입: __invoke() → checkSystemEnabled()
      *
      * 확인 사항:
-     * - $this->config['auth_login_enable'] - 인증 시스템 전체 활성화
-     * - $this->config['auth_register_enable'] - 회원가입 활성화
+     * - $this->config['login']['enable'] - 인증 시스템 전체 활성화
+     * - $this->config['register']['enable'] - 회원가입 활성화
      *
-     * @return bool|\Illuminate\Http\RedirectResponse
+     * @return bool|\Illuminate\View\View|\Illuminate\Http\RedirectResponse
      */
     protected function checkSystemEnabled()
     {
         // 1-1. 인증 시스템 전체 비활성화 확인
-        if (!$this->config['auth_login_enable']) {
+        if (!$this->config['login']['enable']) {
             return $this->showMaintenancePage('인증 시스템이 일시적으로 중단되었습니다.');
         }
 
         // 1-2. 회원가입 비활성화 확인
-        if (!$this->config['auth_register_enable']) {
-            return redirect()->route('login')
-                ->with('error', '현재 회원가입이 중단되었습니다.');
+        if (!$this->config['register']['enable']) {
+            return $this->showRegistrationDisabledPage();
         }
 
         return true;
@@ -170,7 +220,7 @@ class ShowController extends Controller
      */
     protected function checkRegistrationMode()
     {
-        return $this->config['register_mode'];
+        return $this->config['register']['mode'];
     }
 
     /**
@@ -298,11 +348,11 @@ class ShowController extends Controller
     protected function getPasswordRules()
     {
         return [
-            'min_length' => $this->config['password_min_length'],
-            'require_uppercase' => $this->config['password_require_uppercase'],
-            'require_lowercase' => $this->config['password_require_lowercase'],
-            'require_numbers' => $this->config['password_require_numbers'],
-            'require_symbols' => $this->config['password_require_symbols'],
+            'min_length' => $this->config['password_rules']['min_length'],
+            'require_uppercase' => $this->config['password_rules']['require_uppercase'],
+            'require_lowercase' => $this->config['password_rules']['require_lowercase'],
+            'require_numbers' => $this->config['password_rules']['require_numbers'],
+            'require_symbols' => $this->config['password_rules']['require_symbols'],
         ];
     }
 
@@ -327,11 +377,11 @@ class ShowController extends Controller
      */
     protected function getSocialProviders()
     {
-        if (!$this->config['social_enable']) {
+        if (!$this->config['social']['enable']) {
             return [];
         }
 
-        return collect($this->config['social_providers'])
+        return collect($this->config['social']['providers'])
             ->filter(function ($config) {
                 return isset($config['enabled']) && $config['enabled'] === true;
             })
@@ -348,16 +398,19 @@ class ShowController extends Controller
     protected function getFormConfig()
     {
         return [
-            'require_email_verification' => $this->config['require_email_verification'],
-            'require_approval' => $this->config['require_approval'],
-            'auto_login' => $this->config['auto_login'],
-            'show_phone_field' => $this->config['show_phone_field'],
-            'show_birth_date_field' => $this->config['show_birth_date_field'],
-            'show_gender_field' => $this->config['show_gender_field'],
-            'show_address_field' => $this->config['show_address_field'],
-            'recaptcha_enabled' => $this->config['recaptcha_enabled'],
-            'recaptcha_site_key' => $this->config['recaptcha_site_key'],
-            'recaptcha_version' => $this->config['recaptcha_version'],
+            'require_email_verification' => $this->config['register']['require_email_verification'],
+            'require_approval' => $this->config['approval']['require_approval'],
+            'auto_login' => $this->config['register']['auto_login'],
+            'show_phone_field' => $this->config['register']['fields']['phone'],
+            'show_birth_date_field' => $this->config['register']['fields']['birth_date'],
+            'show_gender_field' => $this->config['register']['fields']['gender'],
+            'show_address_field' => $this->config['register']['fields']['address'],
+            'recaptcha_enabled' => $this->config['security']['recaptcha']['enable'],
+            'recaptcha_site_key' => $this->config['security']['recaptcha']['site_key'],
+            'recaptcha_version' => $this->config['security']['recaptcha']['version'],
+            'terms_enable' => $this->config['terms']['enable'],
+            'terms_require_agreement' => $this->config['terms']['require_agreement'],
+            'terms_show_version' => $this->config['terms']['show_version'],
         ];
     }
 
@@ -418,8 +471,8 @@ class ShowController extends Controller
     protected function renderView($mode, $formData)
     {
         $viewName = $mode === 'step'
-            ? $this->config['register_terms_view']
-            : $this->config['register_view'];
+            ? $this->config['terms']['list_view']
+            : $this->config['register']['view'];
 
         return view($viewName, $formData);
     }
@@ -435,5 +488,19 @@ class ShowController extends Controller
         return view('jiny-auth::maintenance', [
             'message' => $message,
         ]);
+    }
+
+    /**
+     * 회원가입 비활성화 페이지 표시
+     *
+     * @return \Illuminate\View\View
+     */
+    protected function showRegistrationDisabledPage()
+    {
+        return response()->view('jiny-auth::auth.register.disabled', [
+            'message' => '현재 회원가입이 중단되었습니다.',
+            'title' => '회원가입 일시 중단',
+            'subtitle' => '현재 새로운 회원가입을 받지 않고 있습니다'
+        ], 503);
     }
 }

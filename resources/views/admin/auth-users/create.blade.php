@@ -1,4 +1,4 @@
-@extends('jiny-auth::layouts.admin.sidebar')
+@extends($layout ?? 'jiny-auth::layouts.admin.sidebar')
 
 @section('title', '새 사용자 추가')
 

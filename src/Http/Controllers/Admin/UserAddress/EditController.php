@@ -2,7 +2,7 @@
 
 namespace Jiny\Auth\Http\Controllers\Admin\UserAddress;
 
-use App\Http\Controllers\Controller;
+use Illuminate\Routing\Controller;
 
 class EditController extends Controller
 {

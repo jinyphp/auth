@@ -15,7 +15,7 @@ class ActivityLogService
     public function logSuccessfulLogin($user, $ipAddress)
     {
         try {
-            DB::table('user_activity_logs')->insert([
+            DB::table('auth_activity_logs')->insert([
                 'user_id' => $user->id,
                 'activity_type' => 'login',
                 'ip_address' => $ipAddress,
@@ -35,7 +35,7 @@ class ActivityLogService
     public function logFailedLogin($email, $reason, $ipAddress)
     {
         try {
-            DB::table('user_activity_logs')->insert([
+            DB::table('auth_activity_logs')->insert([
                 'email' => $email,
                 'activity_type' => 'failed_login',
                 'reason' => $reason,
@@ -56,7 +56,7 @@ class ActivityLogService
     public function logUserRegistration($user, $ipAddress)
     {
         try {
-            DB::table('user_activity_logs')->insert([
+            DB::table('auth_activity_logs')->insert([
                 'user_id' => $user->id ?? null,
                 'email' => $user->email,
                 'activity_type' => 'registration',
@@ -77,7 +77,7 @@ class ActivityLogService
     public function logRegistrationAttempt($email, $ipAddress)
     {
         try {
-            DB::table('user_activity_logs')->insert([
+            DB::table('auth_activity_logs')->insert([
                 'email' => $email,
                 'activity_type' => 'registration_attempt',
                 'ip_address' => $ipAddress,
@@ -97,7 +97,7 @@ class ActivityLogService
     public function logRegistrationError($requestData, $errorMessage, $ipAddress)
     {
         try {
-            DB::table('user_activity_logs')->insert([
+            DB::table('auth_activity_logs')->insert([
                 'email' => $requestData['email'] ?? null,
                 'activity_type' => 'registration_error',
                 'reason' => $errorMessage,

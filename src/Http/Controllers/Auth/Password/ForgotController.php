@@ -2,7 +2,7 @@
 
 namespace Jiny\Auth\Http\Controllers\Auth\Password;
 
-use App\Http\Controllers\Controller;
+use Illuminate\Routing\Controller;
 use Illuminate\Http\Request;
 
 class ForgotController extends Controller

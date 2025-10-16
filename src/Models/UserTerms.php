@@ -9,45 +9,45 @@ class UserTerms extends Model
     protected $table = 'user_terms';
 
     protected $fillable = [
-        'type',
+        'enable',
+        'required',
         'title',
+        'slug',
+        'blade',
         'content',
+        'pos',
+        'description',
+        'manager',
+        'user_id',
+        'users',
         'version',
-        'group',
-        'order',
-        'is_mandatory',
-        'is_active',
-        'effective_date',
-        'expired_date',
-        'created_by',
-        'updated_by',
+        'valid_from',
+        'valid_to',
     ];
 
     protected $casts = [
-        'is_mandatory' => 'boolean',
-        'is_active' => 'boolean',
-        'effective_date' => 'datetime',
-        'expired_date' => 'datetime',
+        'enable' => 'string',
+        'required' => 'string',
+        'valid_from' => 'datetime',
+        'valid_to' => 'datetime',
     ];
 
     /**
-     * 약관 동의 로그와의 관계
-     */
-    public function agreements()
-    {
-        return $this->hasMany(UserTermsLog::class, 'term_id');
-    }
-
-    /**
-     * 활성 약관 스코프
+     * 활성화된 약관 스코프
      */
     public function scopeActive($query)
     {
-        return $query->where('is_active', true)
-            ->where('effective_date', '<=', now())
+        return $query->where(function($q) {
+                $q->where('enable', '1')
+                    ->orWhere('enable', 1);
+            })
             ->where(function($q) {
-                $q->whereNull('expired_date')
-                    ->orWhere('expired_date', '>', now());
+                $q->whereNull('valid_from')
+                    ->orWhere('valid_from', '<=', now());
+            })
+            ->where(function($q) {
+                $q->whereNull('valid_to')
+                    ->orWhere('valid_to', '>', now());
             });
     }
 
@@ -56,7 +56,10 @@ class UserTerms extends Model
      */
     public function scopeMandatory($query)
     {
-        return $query->where('is_mandatory', true);
+        return $query->where(function($q) {
+            $q->where('required', '1')
+                ->orWhere('required', 1);
+        });
     }
 
     /**
@@ -64,23 +67,11 @@ class UserTerms extends Model
      */
     public function scopeOptional($query)
     {
-        return $query->where('is_mandatory', false);
-    }
-
-    /**
-     * 특정 그룹 스코프
-     */
-    public function scopeInGroup($query, $group)
-    {
-        return $query->where('group', $group);
-    }
-
-    /**
-     * 약관 유형별 스코프
-     */
-    public function scopeOfType($query, $type)
-    {
-        return $query->where('type', $type);
+        return $query->where(function($q) {
+            $q->where('required', '!=', '1')
+                ->where('required', '!=', 1)
+                ->orWhereNull('required');
+        });
     }
 
     /**
@@ -88,25 +79,25 @@ class UserTerms extends Model
      */
     public function scopeOrdered($query)
     {
-        return $query->orderBy('order', 'asc')
-            ->orderBy('is_mandatory', 'desc')
+        return $query->orderBy('pos', 'asc')
+            ->orderBy('required', 'desc')
             ->orderBy('created_at', 'asc');
     }
 
     /**
-     * 약관이 현재 유효한지 확인
+     * 약관이 활성화되었는지 확인
      */
-    public function isEffective()
+    public function isActive()
     {
-        if (!$this->is_active) {
+        if ($this->enable !== '1' && $this->enable !== 1) {
             return false;
         }
 
-        if ($this->effective_date && $this->effective_date->gt(now())) {
+        if ($this->valid_from && $this->valid_from->gt(now())) {
             return false;
         }
 
-        if ($this->expired_date && $this->expired_date->lt(now())) {
+        if ($this->valid_to && $this->valid_to->lt(now())) {
             return false;
         }
 
@@ -114,64 +105,54 @@ class UserTerms extends Model
     }
 
     /**
-     * 약관 버전 비교
+     * 필수 약관인지 확인
      */
-    public function isNewerThan($version)
+    public function isMandatory()
     {
-        return version_compare($this->version, $version, '>');
+        return $this->required === '1' || $this->required === 1;
     }
 
     /**
-     * 사용자가 이 약관에 동의했는지 확인
+     * URL에 사용할 식별자 반환 (slug 우선, 없으면 id)
      */
-    public function hasAgreedBy($userId)
+    public function getRouteKey()
     {
-        return $this->agreements()
-            ->where('user_id', $userId)
-            ->where('agreed', true)
-            ->exists();
+        return $this->slug ?: $this->id;
     }
 
     /**
-     * 약관 동의율 계산
+     * 약관 동의 로그와의 관계
      */
-    public function getAgreementRate()
+    public function agreementLogs()
     {
-        $totalUsers = \DB::table('users')->count();
+        return $this->hasMany(UserTermsLog::class, 'term_id');
+    }
 
-        if ($totalUsers === 0) {
-            return 0;
+    /**
+     * 동의한 사용자 수 계산 (가상 속성)
+     */
+    public function getUsersAttribute()
+    {
+        // users 필드가 있으면 그 값을 사용, 없으면 로그에서 계산
+        if (isset($this->attributes['users'])) {
+            return $this->attributes['users'];
         }
 
-        $agreedUsers = $this->agreements()
-            ->where('agreed', true)
+        // 동의 로그에서 중복 제거하여 고유 사용자 수 계산
+        return $this->agreementLogs()
+            ->where('checked', '1')
             ->distinct('user_id')
             ->count('user_id');
-
-        return round(($agreedUsers / $totalUsers) * 100, 2);
     }
 
     /**
-     * 약관 요약 (처음 N자)
+     * 동의 사용자 수를 실시간으로 조회
      */
-    public function getSummary($length = 100)
+    public function getAgreementCountAttribute()
     {
-        return \Str::limit(strip_tags($this->content), $length);
-    }
-
-    /**
-     * HTML 형식의 약관 내용
-     */
-    public function getHtmlContent()
-    {
-        return nl2br(e($this->content));
-    }
-
-    /**
-     * Markdown 형식의 약관 내용
-     */
-    public function getMarkdownContent()
-    {
-        return \Str::markdown($this->content);
+        return $this->agreementLogs()
+            ->where('checked', '1')
+            ->distinct('user_id')
+            ->count('user_id');
     }
 }

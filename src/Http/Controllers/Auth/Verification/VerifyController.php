@@ -2,7 +2,7 @@
 
 namespace Jiny\Auth\Http\Controllers\Auth\Verification;
 
-use App\Http\Controllers\Controller;
+use Illuminate\Routing\Controller;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;

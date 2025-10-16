@@ -2,7 +2,7 @@
 
 namespace Jiny\Auth\Http\Controllers\Admin\Terms;
 
-use App\Http\Controllers\Controller;
+use Illuminate\Routing\Controller;
 use Illuminate\Http\Request;
 use Jiny\Auth\Models\UserTerms;
 
@@ -73,6 +73,22 @@ class IndexController extends Controller
 
         // 페이지네이션
         $terms = $query->paginate($this->config['per_page'])->withQueryString();
+
+        // 각 약관에 대한 동의 사용자 수 계산 (N+1 쿼리 방지)
+        $termIds = $terms->pluck('id')->toArray();
+        $agreementCounts = \DB::table('user_terms_logs')
+            ->select('term_id', \DB::raw('COUNT(DISTINCT user_id) as count'))
+            ->whereIn('term_id', $termIds)
+            ->where('checked', '1')
+            ->groupBy('term_id')
+            ->pluck('count', 'term_id')
+            ->toArray();
+
+        // 각 약관에 동의 수 추가
+        $terms->getCollection()->transform(function ($term) use ($agreementCounts) {
+            $term->users = $agreementCounts[$term->id] ?? 0;
+            return $term;
+        });
 
         return view($this->config['view'], compact('terms'));
     }

@@ -2,7 +2,7 @@
 
 namespace Jiny\Auth\Http\Controllers\Auth\Login;
 
-use App\Http\Controllers\Controller;
+use Illuminate\Routing\Controller;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -24,6 +24,7 @@ class SubmitController extends Controller
     protected $jwtService;
     protected $shardingService;
     protected $config;
+    protected $configPath;
 
     public function __construct(
         ActivityLogService $activityLogService,
@@ -35,31 +36,32 @@ class SubmitController extends Controller
         $this->lockoutService = $lockoutService;
         $this->jwtService = $jwtService;
         $this->shardingService = $shardingService;
-        $this->loadConfig();
+        $this->configPath = dirname(__DIR__, 5) . '/config/setting.json';
+        $this->config = $this->loadSettings();
     }
 
     /**
-     * config 값을 로드
+     * JSON 설정 파일에서 설정 읽기
      */
-    protected function loadConfig()
+    private function loadSettings()
     {
-        $this->config = [
-            // 전역 설정
-            'auth_enabled' => config('admin.auth.enable', true),
-            'auth_method' => config('admin.auth.method', 'jwt'), // session|jwt
+        if (file_exists($this->configPath)) {
+            try {
+                $jsonContent = file_get_contents($this->configPath);
+                $settings = json_decode($jsonContent, true);
 
-            // 로그인 설정
-            'login_enabled' => config('admin.auth.login.enable', true),
-            'max_attempts' => config('admin.auth.login.max_attempts', 5),
-            'lockout_duration' => config('admin.auth.login.lockout_duration', 15),
-            'redirect_after_login' => config('admin.auth.login.redirect_after_login', '/home'),
+                if (json_last_error() === JSON_ERROR_NONE) {
+                    return $settings;
+                }
 
-            // 계정 잠금 설정
-            'lockout_enabled' => config('admin.auth.lockout.enable', true),
+                \Log::error('JSON 파싱 오류: ' . json_last_error_msg());
+            } catch (\Exception $e) {
+                \Log::error('설정 파일 읽기 오류: ' . $e->getMessage());
+            }
+        }
 
-            // 샤딩 설정
-            'sharding_enabled' => config('admin.auth.sharding.enable', false),
-        ];
+        // JSON 파일이 없거나 파싱 실패 시 빈 배열 반환
+        return [];
     }
 
     /**
@@ -68,7 +70,7 @@ class SubmitController extends Controller
     public function __invoke(Request $request)
     {
         // 1. 시스템 활성화 확인
-        if (!$this->config['auth_enabled'] || !$this->config['login_enabled']) {
+        if (!($this->config['enable'] ?? true) || !($this->config['login']['enable'] ?? true)) {
             return $this->errorResponse([
                 'code' => 'SYSTEM_DISABLED',
                 'message' => '로그인 서비스가 중단되었습니다.',
@@ -90,7 +92,7 @@ class SubmitController extends Controller
         }
 
         // 3. 계정 잠금 확인
-        if ($this->config['lockout_enabled']) {
+        if ($this->config['lockout']['enable'] ?? true) {
             $lockoutStatus = $this->lockoutService->checkLockout($request->email);
 
             if ($lockoutStatus['locked']) {
@@ -122,7 +124,7 @@ class SubmitController extends Controller
     protected function authenticateUser(Request $request)
     {
         // 샤딩 활성화 시 ShardingService 사용
-        if ($this->config['sharding_enabled']) {
+        if ($this->config['sharding']['enable'] ?? false) {
             $userData = $this->shardingService->getUserByEmail($request->email);
 
             if (!$userData) {
@@ -158,6 +160,12 @@ class SubmitController extends Controller
      */
     protected function checkAccountStatus($user)
     {
+        // 탈퇴 신청 확인
+        $unregistCheck = $this->checkUnregistStatus($user);
+        if ($unregistCheck !== true) {
+            return $unregistCheck;
+        }
+
         // 삭제된 계정
         if (isset($user->deleted_at) && $user->deleted_at) {
             return [
@@ -183,6 +191,51 @@ class SubmitController extends Controller
             ];
         }
 
+        // 승인 대기 계정 (require_approval이 활성화된 경우)
+        if (($this->config['approval']['require_approval'] ?? false) && isset($user->status) && $user->status === 'pending') {
+            return [
+                'code' => 'ACCOUNT_PENDING_APPROVAL',
+                'message' => '계정 승인 대기 중입니다. 관리자의 승인을 기다려주세요.',
+                'redirect_route' => 'login.approval',
+                'user_data' => $user,
+            ];
+        }
+
+        return true;
+    }
+
+    /**
+     * 탈퇴 신청 상태 확인
+     */
+    protected function checkUnregistStatus($user)
+    {
+        try {
+            $query = DB::table('users_unregist')
+                ->where('status', 'approved');
+
+            // 샤딩 활성화 시 uuid로 조회, 비활성화 시 user_id로 조회
+            if (($this->config['sharding']['enable'] ?? false) && isset($user->uuid)) {
+                $query->where('user_uuid', $user->uuid);
+            } elseif (isset($user->id)) {
+                $query->where('user_id', $user->id);
+            } else {
+                return true;
+            }
+
+            $unregist = $query->first();
+
+            if ($unregist) {
+                return [
+                    'code' => 'ACCOUNT_UNREGIST_APPROVED',
+                    'message' => '회원 탈퇴가 승인된 계정입니다.',
+                    'redirect_route' => 'login.unregist.notice',
+                    'unregist_data' => $unregist,
+                ];
+            }
+        } catch (\Exception $e) {
+            // 테이블이 없거나 에러 발생 시 무시
+        }
+
         return true;
     }
 
@@ -196,7 +249,7 @@ class SubmitController extends Controller
 
         // 2. JWT 또는 세션 로그인
         $tokens = null;
-        if ($this->config['auth_method'] === 'jwt') {
+        if (($this->config['method'] ?? 'jwt') === 'jwt') {
             // JWT 토큰 생성
             $tokens = $this->jwtService->generateTokenPair($user);
         } else {
@@ -205,7 +258,7 @@ class SubmitController extends Controller
         }
 
         // 3. 마지막 로그인 시간 업데이트
-        if ($this->config['sharding_enabled']) {
+        if ($this->config['sharding']['enable'] ?? false) {
             $this->shardingService->updateUser($user->uuid, [
                 'last_login_at' => now(),
                 'updated_at' => now(),
@@ -218,7 +271,7 @@ class SubmitController extends Controller
         $this->logSuccessfulLogin($user, $request);
 
         // 5. 응답 생성
-        if ($this->config['auth_method'] === 'jwt') {
+        if (($this->config['method'] ?? 'jwt') === 'jwt') {
             // JWT 모드
             if ($request->expectsJson()) {
                 // API 요청: JSON으로 토큰 반환
@@ -238,10 +291,10 @@ class SubmitController extends Controller
                 \Log::info('Login Success - Setting JWT cookies', [
                     'user_email' => $user->email,
                     'access_token_preview' => substr($tokens['access_token'], 0, 50) . '...',
-                    'redirect_to' => $this->config['redirect_after_login'],
+                    'redirect_to' => $this->config['login']['redirect_after_login'] ?? '/home',
                 ]);
 
-                return redirect()->intended($this->config['redirect_after_login'])
+                return redirect()->intended($this->config['login']['redirect_after_login'] ?? '/home')
                     ->with('success', '로그인되었습니다.')
                     ->cookie('access_token', $tokens['access_token'], 60, '/', null, false, false)
                     ->cookie('refresh_token', $tokens['refresh_token'], 43200, '/', null, false, false); // 30일
@@ -249,7 +302,7 @@ class SubmitController extends Controller
         }
 
         // Session 모드
-        return redirect()->intended($this->config['redirect_after_login'])
+        return redirect()->intended($this->config['login']['redirect_after_login'] ?? '/home')
             ->with('success', '로그인되었습니다.');
     }
 
@@ -262,11 +315,11 @@ class SubmitController extends Controller
         $this->recordFailedAttempt($request, 'invalid_credentials');
 
         // 계정 잠금 처리
-        if ($this->config['lockout_enabled']) {
+        if ($this->config['lockout']['enable'] ?? true) {
             $user = null;
             $userUuid = null;
 
-            if ($this->config['sharding_enabled']) {
+            if ($this->config['sharding']['enable'] ?? false) {
                 $userData = $this->shardingService->getUserByEmail($request->email);
                 if ($userData) {
                     $userUuid = $userData->uuid ?? null;
@@ -340,7 +393,7 @@ class SubmitController extends Controller
                 ->where('successful', false)
                 ->delete();
 
-            if ($this->config['lockout_enabled']) {
+            if ($this->config['lockout']['enable'] ?? true) {
                 $this->lockoutService->unlockByEmail(
                     $request->email,
                     null,
@@ -411,8 +464,39 @@ class SubmitController extends Controller
         }
 
         if (isset($error['redirect_route'])) {
-            return redirect()->route($error['redirect_route'])
+            $redirect = redirect()->route($error['redirect_route'])
                 ->with('error', $error['message']);
+
+            // 탈퇴 정보가 있으면 세션에 추가
+            if (isset($error['unregist_data'])) {
+                $unregistData = $error['unregist_data'];
+                $redirect->with('approved_at', $unregistData->approved_at ?? null);
+                $redirect->with('reason', $unregistData->reason ?? null);
+            }
+
+            // 승인 대기 사용자 정보가 있으면 세션에 추가
+            if (isset($error['user_data'])) {
+                $userData = $error['user_data'];
+                $pendingUserData = [
+                    'id' => $userData->id ?? null,
+                    'uuid' => $userData->uuid ?? null,
+                    'name' => $userData->name ?? null,
+                    'email' => $userData->email ?? null,
+                    'created_at' => $userData->created_at ?? null,
+                    'status' => $userData->status ?? null,
+                ];
+
+                // 세션에 pending_user 데이터 저장
+                session(['pending_user' => $pendingUserData]);
+
+                // 복구를 위한 URL 파라미터 추가
+                $redirect = redirect()->route($error['redirect_route'], [
+                    'email' => $userData->email ?? null,
+                    'uuid' => $userData->uuid ?? null
+                ])->with('success', '승인 대기 페이지로 이동합니다.');
+            }
+
+            return $redirect;
         }
 
         throw ValidationException::withMessages([

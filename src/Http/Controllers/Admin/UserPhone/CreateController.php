@@ -1,6 +1,6 @@
 <?php
 namespace Jiny\Auth\Http\Controllers\Admin\UserPhone;
-use App\Http\Controllers\Controller;
+use Illuminate\Routing\Controller;
 
 class CreateController extends Controller
 {

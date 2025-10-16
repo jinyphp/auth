@@ -2,7 +2,7 @@
 
 namespace Jiny\Auth\Http\Controllers\Admin\Terms;
 
-use App\Http\Controllers\Controller;
+use Illuminate\Routing\Controller;
 
 /**
  * 관리자 - 이용약관 수정 폼 컨트롤러

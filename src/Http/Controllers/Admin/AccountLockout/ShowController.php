@@ -2,7 +2,7 @@
 
 namespace Jiny\Auth\Http\Controllers\Admin\AccountLockout;
 
-use App\Http\Controllers\Controller;
+use Illuminate\Routing\Controller;
 use Jiny\Auth\Services\AccountLockoutService;
 use Jiny\Auth\Services\ShardingService;
 

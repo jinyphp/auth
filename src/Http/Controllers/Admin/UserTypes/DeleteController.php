@@ -2,7 +2,7 @@
 
 namespace Jiny\Auth\Http\Controllers\Admin\UserTypes;
 
-use App\Http\Controllers\Controller;
+use Illuminate\Routing\Controller;
 use Jiny\Auth\Models\UserType;
 
 /**
