@@ -108,11 +108,6 @@ Route::middleware(['web', 'jwt.auth'])->group(function () {
         Route::get('/logs', \Jiny\Auth\Http\Controllers\Home\Account\Logs\IndexController::class)
             ->name('logs');
 
-        // 소셜 프로필 관리
-        Route::get('/social', \Jiny\Auth\Http\Controllers\Home\Account\Social\IndexController::class)
-            ->name('social');
-        Route::post('/social', \Jiny\Auth\Http\Controllers\Home\Account\Social\UpdateController::class)
-            ->name('social.update');
     });
 
 

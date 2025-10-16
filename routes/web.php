@@ -56,13 +56,6 @@ Route::middleware(['web', 'guest.jwt'])->group(function () {
     Route::post('/password/email', \Jiny\Auth\Http\Controllers\Auth\Password\SendResetLinkController::class)
         ->name('password.email');
 
-    // 소셜 로그인
-    Route::get('/auth/{provider}', \Jiny\Auth\Http\Controllers\Auth\Social\LoginController::class)
-        ->name('social.login')
-        ->where('provider', 'google|facebook|github|kakao|naver');
-    Route::get('/auth/{provider}/callback', \Jiny\Auth\Http\Controllers\Auth\Social\CallbackController::class)
-        ->name('social.callback')
-        ->where('provider', 'google|facebook|github|kakao|naver');
 });
 
 /*

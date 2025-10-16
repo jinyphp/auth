@@ -163,16 +163,6 @@ Route::prefix('admin')->middleware(['web'])->group(function () {
         Route::delete('/{id}', \Jiny\Auth\Http\Controllers\Admin\UserBlacklist\DeleteController::class)->name('destroy');
     });
 
-    // OAuth 프로바이더 관리 (OAuthProviders)
-    Route::prefix('auth/oauth-providers')->name('admin.auth.oauth.providers.')->group(function () {
-        Route::get('/', \Jiny\Auth\Http\Controllers\Admin\OAuthProviders\IndexController::class)->name('index');
-        Route::get('/create', \Jiny\Auth\Http\Controllers\Admin\OAuthProviders\CreateController::class)->name('create');
-        Route::post('/', \Jiny\Auth\Http\Controllers\Admin\OAuthProviders\StoreController::class)->name('store');
-        Route::get('/{id}', \Jiny\Auth\Http\Controllers\Admin\OAuthProviders\ShowController::class)->name('show');
-        Route::get('/{id}/edit', \Jiny\Auth\Http\Controllers\Admin\OAuthProviders\EditController::class)->name('edit');
-        Route::put('/{id}', \Jiny\Auth\Http\Controllers\Admin\OAuthProviders\UpdateController::class)->name('update');
-        Route::delete('/{id}', \Jiny\Auth\Http\Controllers\Admin\OAuthProviders\DeleteController::class)->name('destroy');
-    });
 
 
     // 사용자 메시지 관리 (UserMessage)
@@ -186,16 +176,6 @@ Route::prefix('admin')->middleware(['web'])->group(function () {
         Route::delete('/{id}', \Jiny\Auth\Http\Controllers\Admin\UserMessage\DeleteController::class)->name('destroy');
     });
 
-    // 소셜 계정 관리 (UserSocial)
-    Route::prefix('auth/user/social')->name('admin.auth.user.social.')->group(function () {
-        Route::get('/', \Jiny\Auth\Http\Controllers\Admin\UserSocial\IndexController::class)->name('index');
-        Route::get('/create', \Jiny\Auth\Http\Controllers\Admin\UserSocial\CreateController::class)->name('create');
-        Route::post('/', \Jiny\Auth\Http\Controllers\Admin\UserSocial\StoreController::class)->name('store');
-        Route::get('/{id}', \Jiny\Auth\Http\Controllers\Admin\UserSocial\ShowController::class)->name('show');
-        Route::get('/{id}/edit', \Jiny\Auth\Http\Controllers\Admin\UserSocial\EditController::class)->name('edit');
-        Route::put('/{id}', \Jiny\Auth\Http\Controllers\Admin\UserSocial\UpdateController::class)->name('update');
-        Route::delete('/{id}', \Jiny\Auth\Http\Controllers\Admin\UserSocial\DeleteController::class)->name('destroy');
-    });
 
     // 사용자 리뷰 관리 (UserReview)
     Route::prefix('auth/user/reviews')->name('admin.auth.user.reviews.')->group(function () {
