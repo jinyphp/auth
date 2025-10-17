@@ -34,8 +34,6 @@ Route::prefix('admin')->middleware(['web'])->group(function () {
         Route::get('/{id}/edit', \Jiny\Auth\Http\Controllers\Admin\AuthUsers\EditController::class)->name('edit');
         Route::put('/{id}', \Jiny\Auth\Http\Controllers\Admin\AuthUsers\UpdateController::class)->name('update');
         Route::delete('/{id}', \Jiny\Auth\Http\Controllers\Admin\AuthUsers\DeleteController::class)->name('destroy');
-        Route::get('/{id}/mail', [\Jiny\Auth\Http\Controllers\Admin\AuthUsers\UserMailController::class, 'index'])->name('mail');
-        Route::post('/{id}/mail/send', [\Jiny\Auth\Http\Controllers\Admin\AuthUsers\UserMailController::class, 'send'])->name('mail.send');
     });
 
     // 샤딩 관리 (Shards)
@@ -88,37 +86,6 @@ Route::prefix('admin')->middleware(['web'])->group(function () {
     });
 
 
-    // 메일 설정 관리 (Mail)
-    Route::prefix('auth/mail/setting')->name('admin.auth.mail.setting.')->group(function () {
-        Route::get('/', \Jiny\Auth\Http\Controllers\Admin\Mail\MailSetting\AuthMailSetting::class)->name('index');
-        Route::post('/update', [\Jiny\Auth\Http\Controllers\Admin\Mail\MailSetting\AuthMailSetting::class, 'update'])->name('update');
-        Route::post('/test', [\Jiny\Auth\Http\Controllers\Admin\Mail\MailSetting\AuthMailSetting::class, 'test'])->name('test');
-    });
-
-    // 메일 로그 관리 (Mail Logs)
-    Route::prefix('auth/mail/logs')->name('admin.auth.mail.logs.')->group(function () {
-        Route::get('/', \Jiny\Auth\Http\Controllers\Admin\Mail\MailLogs\IndexController::class)->name('index');
-        Route::get('/{id}/content', \Jiny\Auth\Http\Controllers\Admin\Mail\MailLogs\ContentController::class)->name('content');
-        Route::get('/{id}/error', \Jiny\Auth\Http\Controllers\Admin\Mail\MailLogs\ErrorController::class)->name('error');
-        Route::post('/{id}/resend', \Jiny\Auth\Http\Controllers\Admin\Mail\MailLogs\ResendController::class)->name('resend');
-    });
-
-    // 메일 템플릿 관리 (Mail Templates)
-    Route::prefix('auth/mail/templates')->name('admin.auth.mail.templates.')->group(function () {
-        Route::get('/', \Jiny\Auth\Http\Controllers\Admin\Mail\Template\IndexController::class)->name('index');
-        Route::get('/create', \Jiny\Auth\Http\Controllers\Admin\Mail\Template\CreateController::class)->name('create');
-        Route::post('/', \Jiny\Auth\Http\Controllers\Admin\Mail\Template\StoreController::class)->name('store');
-        Route::get('/{id}', \Jiny\Auth\Http\Controllers\Admin\Mail\Template\ShowController::class)->name('show');
-        Route::get('/{id}/edit', \Jiny\Auth\Http\Controllers\Admin\Mail\Template\EditController::class)->name('edit');
-        Route::put('/{id}', \Jiny\Auth\Http\Controllers\Admin\Mail\Template\UpdateController::class)->name('update');
-        Route::delete('/{id}', \Jiny\Auth\Http\Controllers\Admin\Mail\Template\DeleteController::class)->name('delete');
-    });
-
-    // 전체 메일 발송 (Bulk Mail)
-    Route::prefix('cms/mail')->name('admin.cms.mail.')->group(function () {
-        Route::get('/create', \Jiny\Auth\Http\Controllers\Admin\Mail\BulkMail\CreateController::class)->name('create');
-        Route::post('/send', \Jiny\Auth\Http\Controllers\Admin\Mail\BulkMail\SendController::class)->name('send');
-    });
 
     // Auth 시스템 설정 관리 (Auth Settings)
     Route::prefix('auth/setting')->name('admin.auth.setting.')->group(function () {
