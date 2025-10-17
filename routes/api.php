@@ -2,7 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 use Jiny\Auth\Http\Controllers\Api\AuthController;
-use Jiny\Auth\Http\Controllers\Api\OAuthController;
+use Jiny\Auth\Social\Http\Controllers\OAuthController;
 use Jiny\Auth\Http\Middleware\JwtAuthenticate;
 
 /*

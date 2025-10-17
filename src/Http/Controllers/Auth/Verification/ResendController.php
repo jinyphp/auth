@@ -6,7 +6,7 @@ use Illuminate\Routing\Controller;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Mail;
-use Jiny\Auth\Mail\EmailVerificationMail;
+use Jiny\Mail\Mail\VerificationMail;
 use Jiny\Auth\Services\ShardingService;
 
 /**
@@ -52,7 +52,7 @@ class ResendController extends Controller
 
         // 인증 메일 발송
         try {
-            Mail::to($user->email)->send(new EmailVerificationMail($user));
+            Mail::to($user->email)->send(new VerificationMail($user));
 
             return back()->with('success', '인증 이메일이 재발송되었습니다. 이메일을 확인해주세요.');
         } catch (\Exception $e) {

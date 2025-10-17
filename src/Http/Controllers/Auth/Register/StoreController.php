@@ -13,7 +13,7 @@ use Jiny\Auth\Services\ValidationService;
 use Jiny\Auth\Services\TermsService;
 use Jiny\Auth\Services\ActivityLogService;
 use Jiny\Auth\Services\JwtService;
-use Jiny\Auth\Services\PointService;
+use Jiny\Auth\Emoney\Services\PointService;
 use Jiny\Auth\Services\ShardingService;
 use Jiny\Auth\Models\UserProfile;
 use Jiny\Auth\Models\ShardedUser;
@@ -1201,7 +1201,7 @@ class StoreController extends Controller
     {
         try {
             \Mail::to($user->email)->send(
-                new \Jiny\Auth\Mail\WelcomeMail($user)
+                new \Jiny\Mail\Mail\WelcomeMail($user)
             );
         } catch (\Exception $e) {
             \Log::warning('Welcome mail send failed: ' . $e->getMessage());

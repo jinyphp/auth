@@ -249,7 +249,5 @@ Route::prefix('admin')->middleware(['web'])->group(function () {
         Route::get('/{id}', \Jiny\Auth\Http\Controllers\Admin\UserApproval\Logs\UserApprovalLogsController::class . '@show')->name('show');
     });
 
-
-
 });
 
