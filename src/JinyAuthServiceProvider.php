@@ -28,6 +28,9 @@ class JinyAuthServiceProvider extends ServiceProvider
 
         $this->loadViewsFrom(__DIR__.'/../resources/views', $this->package);
 
+        // Blade 컴포넌트 등록
+        $this->registerBladeComponents();
+
         // 데이터베이스
         $this->loadMigrationsFrom(__DIR__.'/../database/migrations');
 
@@ -84,6 +87,18 @@ class JinyAuthServiceProvider extends ServiceProvider
         $router->aliasMiddleware('guest.jwt', \Jiny\Auth\Http\Middleware\RedirectIfAuthenticated::class);
 
         // 추가 인증 관련 미들웨어가 필요하면 여기에 등록
+    }
+
+    /**
+     * Blade 컴포넌트 등록
+     */
+    protected function registerBladeComponents()
+    {
+        Blade::component('jiny-auth::components.login', 'login');
+        Blade::component('jiny-auth::components.register', 'register');
+        Blade::component('jiny-auth::components.login-text', 'login-text');
+        Blade::component('jiny-auth::components.register-text', 'register-text');
+        Blade::component('jiny-auth::components.user-dropdown', 'user-dropdown');
     }
 
     /**

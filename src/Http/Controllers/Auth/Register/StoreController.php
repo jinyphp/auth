@@ -13,7 +13,7 @@ use Jiny\Auth\Services\ValidationService;
 use Jiny\Auth\Services\TermsService;
 use Jiny\Auth\Services\ActivityLogService;
 use Jiny\Auth\Services\JwtService;
-use Jiny\Auth\Emoney\Services\PointService;
+use Jiny\Emoney\Services\PointService;
 use Jiny\Auth\Services\ShardingService;
 use Jiny\Auth\Models\UserProfile;
 use Jiny\Auth\Models\ShardedUser;

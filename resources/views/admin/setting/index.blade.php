@@ -118,7 +118,7 @@
 
                             <!-- 포인트 설정 -->
                             <div class="tab-pane fade" id="point" role="tabpanel">
-                                @include('jiny-auth::admin.setting.tabs.point', ['settings' => $settings])
+                                @include('jiny-emoney::admin.setting.tabs.point', ['settings' => $settings])
                             </div>
 
                             <!-- 고급 설정 -->
