@@ -1,4 +1,4 @@
-@extends('jiny-auth::layouts.home')
+@extends($layout ?? 'jiny-auth::layouts.home')
 
 @section('title', '아바타 관리')
 

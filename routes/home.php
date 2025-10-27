@@ -84,25 +84,7 @@ Route::middleware(['web', 'jwt.auth'])->group(function () {
         Route::delete('/avatar/{avatarId}', \Jiny\Auth\Http\Controllers\Home\Account\Avatar\DeleteController::class)
             ->name('avatar.delete');
 
-        // 전화번호 관리
-        Route::get('/phones', \Jiny\Auth\Http\Controllers\Home\Account\Phones\IndexController::class)
-            ->name('phones');
-        Route::post('/phones', \Jiny\Auth\Http\Controllers\Home\Account\Phones\StoreController::class)
-            ->name('phones.store');
-        Route::post('/phones/{phoneId}/set-primary', \Jiny\Auth\Http\Controllers\Home\Account\Phones\SetPrimaryController::class)
-            ->name('phones.set-primary');
-        Route::delete('/phones/{phoneId}', \Jiny\Auth\Http\Controllers\Home\Account\Phones\DeleteController::class)
-            ->name('phones.delete');
 
-        // 주소 관리
-        Route::get('/address', \Jiny\Auth\Http\Controllers\Home\Account\Address\IndexController::class)
-            ->name('address');
-        Route::post('/address', \Jiny\Auth\Http\Controllers\Home\Account\Address\StoreController::class)
-            ->name('address.store');
-        Route::post('/address/{addressId}/set-default', \Jiny\Auth\Http\Controllers\Home\Account\Address\SetDefaultController::class)
-            ->name('address.set-default');
-        Route::delete('/address/{addressId}', \Jiny\Auth\Http\Controllers\Home\Account\Address\DeleteController::class)
-            ->name('address.delete');
 
         // 활동 로그
         Route::get('/logs', \Jiny\Auth\Http\Controllers\Home\Account\Logs\IndexController::class)

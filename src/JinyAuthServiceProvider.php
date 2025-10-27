@@ -82,6 +82,7 @@ class JinyAuthServiceProvider extends ServiceProvider
 
         // JWT 인증 미들웨어
         $router->aliasMiddleware('jwt.auth', \Jiny\Auth\Http\Middleware\JwtAuthMiddleware::class);
+        $router->aliasMiddleware('jwt', \Jiny\Auth\Http\Middleware\JwtAuthMiddleware::class);
 
         // JWT 기반 guest 체크 미들웨어
         $router->aliasMiddleware('guest.jwt', \Jiny\Auth\Http\Middleware\RedirectIfAuthenticated::class);

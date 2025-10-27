@@ -1,4 +1,4 @@
-@extends('jiny-auth::layouts.home')
+@extends($layout ?? 'jiny-auth::layouts.home')
 
 @section('title', '프로필 수정')
 
@@ -150,7 +150,7 @@
                                            class="form-control"
                                            value="{{ $primaryPhone->country_code }} {{ $primaryPhone->phone_number }}"
                                            readonly>
-                                    <a href="{{ route('home.account.phones') }}" class="btn btn-outline-secondary">
+                                    <a href="{{ route('home.profile.phone') }}" class="btn btn-outline-secondary">
                                         <i class="bi bi-pencil"></i> 관리
                                     </a>
                                 </div>
@@ -167,7 +167,7 @@
                                 <div class="alert alert-info mb-0">
                                     <i class="bi bi-info-circle me-2"></i>
                                     등록된 전화번호가 없습니다.
-                                    <a href="{{ route('home.account.phones') }}" class="alert-link">전화번호 추가하기</a>
+                                    <a href="{{ route('home.profile.phone') }}" class="alert-link">전화번호 추가하기</a>
                                 </div>
                             @endif
                         </div>
@@ -190,7 +190,7 @@
                                                     {{ $defaultAddress->city }}, {{ $defaultAddress->postal_code }} {{ $defaultAddress->country }}
                                                 </p>
                                             </div>
-                                            <a href="{{ route('home.account.address') }}" class="btn btn-sm btn-outline-secondary">
+                                            <a href="{{ route('home.profile.address') }}" class="btn btn-sm btn-outline-secondary">
                                                 <i class="bi bi-pencil"></i> 관리
                                             </a>
                                         </div>
@@ -200,7 +200,7 @@
                                 <div class="alert alert-info mb-0">
                                     <i class="bi bi-info-circle me-2"></i>
                                     등록된 주소가 없습니다.
-                                    <a href="{{ route('home.account.address') }}" class="alert-link">주소 추가하기</a>
+                                    <a href="{{ route('home.profile.address') }}" class="alert-link">주소 추가하기</a>
                                 </div>
                             @endif
                         </div>
@@ -308,10 +308,10 @@
                         <a href="{{ route('home.account.avatar') }}" class="btn btn-outline-primary btn-sm">
                             <i class="bi bi-person-circle me-2"></i>아바타 변경
                         </a>
-                        <a href="{{ route('home.account.phones') }}" class="btn btn-outline-primary btn-sm">
+                        <a href="{{ route('home.profile.phone') }}" class="btn btn-outline-primary btn-sm">
                             <i class="bi bi-telephone me-2"></i>전화번호 관리
                         </a>
-                        <a href="{{ route('home.account.address') }}" class="btn btn-outline-primary btn-sm">
+                        <a href="{{ route('home.profile.address') }}" class="btn btn-outline-primary btn-sm">
                             <i class="bi bi-geo-alt me-2"></i>주소 관리
                         </a>
                         <a href="{{ route('home.account.logs') }}" class="btn btn-outline-primary btn-sm">

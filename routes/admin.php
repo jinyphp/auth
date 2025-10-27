@@ -177,16 +177,7 @@ Route::prefix('admin')->middleware(['web'])->group(function () {
         Route::delete('/{id}', \Jiny\Auth\Http\Controllers\Admin\UserCountry\DeleteController::class)->name('destroy');
     });
 
-    // 전화번호 관리 (UserPhone)
-    Route::prefix('auth/user/phones')->name('admin.auth.user.phones.')->group(function () {
-        Route::get('/', \Jiny\Auth\Http\Controllers\Admin\UserPhone\IndexController::class)->name('index');
-        Route::get('/create', \Jiny\Auth\Http\Controllers\Admin\UserPhone\CreateController::class)->name('create');
-        Route::post('/', \Jiny\Auth\Http\Controllers\Admin\UserPhone\StoreController::class)->name('store');
-        Route::get('/{id}', \Jiny\Auth\Http\Controllers\Admin\UserPhone\ShowController::class)->name('show');
-        Route::get('/{id}/edit', \Jiny\Auth\Http\Controllers\Admin\UserPhone\EditController::class)->name('edit');
-        Route::put('/{id}', \Jiny\Auth\Http\Controllers\Admin\UserPhone\UpdateController::class)->name('update');
-        Route::delete('/{id}', \Jiny\Auth\Http\Controllers\Admin\UserPhone\DeleteController::class)->name('destroy');
-    });
+
 
     // 예약 키워드 관리 (UserReserved)
     Route::prefix('auth/user/reserved')->name('admin.auth.user.reserved.')->group(function () {
@@ -210,16 +201,7 @@ Route::prefix('admin')->middleware(['web'])->group(function () {
         Route::delete('/{id}', \Jiny\Auth\Http\Controllers\Admin\UserLanguage\DeleteController::class)->name('destroy');
     });
 
-    // 주소 관리 (UserAddress)
-    Route::prefix('auth/user/addresses')->name('admin.auth.user.addresses.')->group(function () {
-        Route::get('/', \Jiny\Auth\Http\Controllers\Admin\UserAddress\IndexController::class)->name('index');
-        Route::get('/create', \Jiny\Auth\Http\Controllers\Admin\UserAddress\CreateController::class)->name('create');
-        Route::post('/', \Jiny\Auth\Http\Controllers\Admin\UserAddress\StoreController::class)->name('store');
-        Route::get('/{id}', \Jiny\Auth\Http\Controllers\Admin\UserAddress\ShowController::class)->name('show');
-        Route::get('/{id}/edit', \Jiny\Auth\Http\Controllers\Admin\UserAddress\EditController::class)->name('edit');
-        Route::put('/{id}', \Jiny\Auth\Http\Controllers\Admin\UserAddress\UpdateController::class)->name('update');
-        Route::delete('/{id}', \Jiny\Auth\Http\Controllers\Admin\UserAddress\DeleteController::class)->name('destroy');
-    });
+
 
     // 아바타 샤딩 관리 (Avatar)
     Route::prefix('auth/avata')->name('admin.avatar.')->group(function () {

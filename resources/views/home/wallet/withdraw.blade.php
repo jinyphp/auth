@@ -1,4 +1,4 @@
-@extends('jiny-auth::layouts.dashboard')
+@extends($layout ?? 'jiny-auth::layouts.home')
 
 @section('title', '이머니 출금')
 

@@ -1,4 +1,4 @@
-@extends('jiny-auth::layouts.home')
+@extends($layout ?? 'jiny-auth::layouts.home')
 
 @section('title', '회원 탈퇴')
 
@@ -146,10 +146,10 @@
                                 <!-- 탈퇴 사유 -->
                                 <div class="mb-4">
                                     <label for="reason" class="form-label">탈퇴 사유 (선택사항)</label>
-                                    <textarea 
-                                        class="form-control" 
-                                        id="reason" 
-                                        name="reason" 
+                                    <textarea
+                                        class="form-control"
+                                        id="reason"
+                                        name="reason"
                                         rows="4"
                                         placeholder="탈퇴하시는 이유를 알려주시면 서비스 개선에 큰 도움이 됩니다."
                                     >{{ old('reason') }}</textarea>
@@ -159,11 +159,11 @@
                                 <!-- 비밀번호 확인 -->
                                 <div class="mb-4">
                                     <label for="password" class="form-label">비밀번호 확인 <span class="text-danger">*</span></label>
-                                    <input 
-                                        type="password" 
-                                        class="form-control" 
-                                        id="password" 
-                                        name="password" 
+                                    <input
+                                        type="password"
+                                        class="form-control"
+                                        id="password"
+                                        name="password"
                                         required
                                         placeholder="현재 비밀번호를 입력하세요"
                                     >
@@ -173,10 +173,10 @@
                                 <!-- 확인 체크박스 -->
                                 <div class="mb-4">
                                     <div class="form-check">
-                                        <input 
-                                            class="form-check-input" 
-                                            type="checkbox" 
-                                            id="confirm" 
+                                        <input
+                                            class="form-check-input"
+                                            type="checkbox"
+                                            id="confirm"
                                             name="confirm"
                                             required
                                         >
@@ -186,8 +186,8 @@
                                     </div>
                                 </div>
 
-                                <button 
-                                    type="submit" 
+                                <button
+                                    type="submit"
                                     class="btn btn-danger"
                                     onclick="return confirm('정말로 계정을 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.')"
                                 >
