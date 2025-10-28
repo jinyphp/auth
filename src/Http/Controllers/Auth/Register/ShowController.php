@@ -117,8 +117,9 @@ class ShowController extends Controller
         // 4단계: 폼 데이터 준비
         $formData = $this->prepareFormData($terms);
 
-        // 타임라인 표시 여부 추가 (에러가 있거나 약관 동의가 완료된 경우)
-        $formData['show_timeline'] = $hasErrors || $this->hasAgreedToTerms();
+        // 타임라인 표시 여부 추가 (에러가 있거나 약관 동의가 완료된 경우, 그리고 실제 약관이 존재하는 경우에만)
+        $hasActualTerms = !empty($terms['all']) && count($terms['all']) > 0;
+        $formData['show_timeline'] = $hasActualTerms && ($hasErrors || $this->hasAgreedToTerms());
 
         // 5단계: 뷰 렌더링
         return $this->renderView($mode, $formData);
@@ -153,6 +154,11 @@ class ShowController extends Controller
             if ($mandatoryTerms->isNotEmpty() || $optionalTerms->isNotEmpty()) {
                 return redirect()->route('register.terms');
             }
+
+            // 약관이 활성화되어 있지만 실제 약관이 없는 경우, 자동으로 동의한 것으로 처리
+            if ($mandatoryTerms->isEmpty() && $optionalTerms->isEmpty()) {
+                \Log::info('약관이 활성화되어 있지만 등록된 약관이 없습니다. 자동으로 약관 동의 처리합니다.');
+            }
         } catch (\Exception $e) {
             // 약관 서비스 오류 시 로그만 남기고 계속 진행
             \Log::warning('약관 확인 중 오류 발생', [
@@ -171,6 +177,19 @@ class ShowController extends Controller
     {
         // 약관 기능이 비활성화되어 있으면 자동으로 동의한 것으로 처리
         if (!$this->config['terms']['enable']) {
+            return true;
+        }
+
+        // 활성화된 약관이 없으면 자동으로 동의한 것으로 처리
+        try {
+            $mandatoryTerms = $this->termsService->getMandatoryTerms();
+            $optionalTerms = $this->termsService->getOptionalTerms();
+
+            if ($mandatoryTerms->isEmpty() && $optionalTerms->isEmpty()) {
+                return true;
+            }
+        } catch (\Exception $e) {
+            // 약관 서비스 오류 시 자동으로 동의한 것으로 처리
             return true;
         }
 

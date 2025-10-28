@@ -341,6 +341,24 @@ class StoreController extends Controller
             return ['status' => 'success'];
         }
 
+        // 먼저 실제 약관이 존재하는지 확인
+        try {
+            $mandatoryTerms = $this->termsService->getMandatoryTerms();
+            $optionalTerms = $this->termsService->getOptionalTerms();
+
+            // 약관이 없으면 검증 생략
+            if ($mandatoryTerms->isEmpty() && $optionalTerms->isEmpty()) {
+                \Log::info('등록된 약관이 없어 약관 동의 검증을 생략합니다.');
+                return ['status' => 'success'];
+            }
+        } catch (\Exception $e) {
+            // 약관 서비스 오류 시 진행 (검증 실패를 가입 실패로 처리하지 않음)
+            \Log::warning('약관 목록 조회 중 오류 발생', [
+                'error' => $e->getMessage()
+            ]);
+            return ['status' => 'success'];
+        }
+
         // 세션 또는 쿠키에서 약관 동의 확인
         $sessionAgreed = session()->has('terms_agreed') && session()->get('terms_agreed');
         $cookieAgreed = $request->cookie('terms_agreed') === '1';
@@ -372,9 +390,8 @@ class StoreController extends Controller
             ];
         }
 
-        // 필수 약관 동의 확인
+        // 필수 약관 동의 확인 (이미 위에서 약관을 조회했으므로 재사용)
         try {
-            $mandatoryTerms = $this->termsService->getMandatoryTerms();
             $mandatoryTermIds = $mandatoryTerms->pluck('id')->toArray();
 
             foreach ($mandatoryTermIds as $termId) {

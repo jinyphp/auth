@@ -144,9 +144,22 @@ class JinyAuthServiceProvider extends ServiceProvider
 
     public function register()
     {
+        // Shard 서비스 바인딩
+        $this->app->singleton('jiny.auth.sharding', function ($app) {
+            return new \Jiny\Auth\Services\ShardingService();
+        });
 
+        // JwtAuth 서비스 바인딩
+        $this->app->singleton('jiny.auth.jwt', function ($app) {
+            return new \Jiny\Auth\Services\JwtAuthService();
+        });
 
-
+        // 파사드 별칭 등록
+        $this->app->booting(function () {
+            $loader = \Illuminate\Foundation\AliasLoader::getInstance();
+            $loader->alias('Shard', \Jiny\Auth\Facades\Shard::class);
+            $loader->alias('JwtAuth', \Jiny\Auth\Facades\JwtAuth::class);
+        });
     }
 
 }
