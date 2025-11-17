@@ -1,0 +1,90 @@
+{
+    "enable": true,
+    "secret": "",
+    "algorithm": "HS256",
+    "access_token": {
+        "default_expiry": 3600,
+        "remember_expiry": 86400,
+        "max_expiry": 604800
+    },
+    "refresh_token": {
+        "default_expiry": 2592000,
+        "remember_expiry": 7776000,
+        "max_expiry": 15552000
+    },
+    "remember": {
+        "enable": true,
+        "cookie_name": "remember_token",
+        "cookie_lifetime": 43200,
+        "extend_access_token": true,
+        "extend_refresh_token": true
+    },
+    "security": {
+        "blacklist_grace_period": 300,
+        "refresh_ttl": 20160,
+        "required_claims": [
+            "iss",
+            "iat",
+            "exp",
+            "nbf",
+            "sub",
+            "jti"
+        ]
+    },
+    "headers": {
+        "typ": "JWT",
+        "alg": "HS256"
+    },
+    "payload": {
+        "iss": "",
+        "aud": "",
+        "sub": "user",
+        "exp": null,
+        "nbf": null,
+        "iat": null,
+        "jti": null
+    },
+    "options": {
+        "verify_signature": true,
+        "verify_issuer": false,
+        "verify_audience": false,
+        "verify_expiration": true,
+        "verify_not_before": true,
+        "require_exp": true,
+        "require_iat": true,
+        "require_nbf": false,
+        "require_jti": false
+    },
+    "cookies": {
+        "access_token": {
+            "name": "access_token",
+            "lifetime": 60,
+            "path": "/",
+            "domain": null,
+            "secure": false,
+            "httponly": false,
+            "samesite": null
+        },
+        "refresh_token": {
+            "name": "refresh_token",
+            "lifetime": 43200,
+            "path": "/",
+            "domain": null,
+            "secure": false,
+            "httponly": true,
+            "samesite": null
+        }
+    },
+    "auto_refresh": {
+        "enable": true,
+        "threshold": 300,
+        "grace_period": 60
+    },
+    "logging": {
+        "enable": true,
+        "log_successful_auth": true,
+        "log_failed_auth": true,
+        "log_token_refresh": true,
+        "log_token_revoke": true
+    }
+}

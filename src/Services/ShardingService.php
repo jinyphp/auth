@@ -585,4 +585,26 @@ class ShardingService
 
         return $tables;
     }
+
+    /**
+     * 사용자 정보 조회 (ChatRoom 모델 호환성)
+     *
+     * @param string $uuid
+     * @return object|null
+     */
+    public function user($uuid)
+    {
+        return $this->getUserByUuid($uuid);
+    }
+
+    /**
+     * 샤드 ID 조회 (ChatRoom 모델 호환성)
+     *
+     * @param string $uuid
+     * @return int
+     */
+    public function getShardId($uuid)
+    {
+        return $this->getShardNumber($uuid);
+    }
 }

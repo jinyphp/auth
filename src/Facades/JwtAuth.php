@@ -26,6 +26,7 @@ use Illuminate\Support\Facades\Facade;
  * @method static bool revokeToken(string $tokenId) 토큰 폐기
  * @method static bool revokeAllUserTokens(string|int $userId) 사용자의 모든 토큰 폐기
  * @method static string|null extractTokenFromBearer(string $bearerToken) Bearer 토큰에서 토큰 추출
+ * @method static object|null userFromTokenOnly(\Illuminate\Http\Request|null $request = null) JWT 토큰만을 기반으로 한 사용자 인증 (샤딩 정보 포함)
  *
  * @see \Jiny\Auth\Services\JwtAuthService
  */

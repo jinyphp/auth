@@ -2,22 +2,32 @@
 
 namespace Jiny\Auth\Http\Controllers\Home\Dashboard;
 
-use Illuminate\Routing\Controller;
+use Jiny\Auth\Http\Controllers\HomeController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
 /**
- * 개인 홈 대시보드 컨트롤러
+ * 개인 홈 대시보드 컨트롤러 (JWT 인증)
  */
-class HomeDashboardController extends Controller
+class HomeDashboardController extends HomeController
 {
     public function __invoke(Request $request)
     {
-        $user = auth()->user() ?? $request->auth_user;
-
+        // Step1. JWT 인증 처리
+        $user = $this->auth($request);
         if (!$user) {
-            return redirect()->route('login');
+            \Log::warning('HomeDashboard: User not authenticated');
+            return redirect()->route('login')
+                ->with('error', 'JWT 인증이 필요합니다. 로그인해 주세요.')
+                ->with('info', '홈 서비스는 로그인 후 이용하실 수 있습니다.');
         }
+
+        \Log::info('HomeDashboard: User authenticated', [
+            'user_id' => $user->id,
+            'user_uuid' => $user->uuid,
+            'user_email' => $user->email,
+            'user_name' => $user->name
+        ]);
 
         $userUuid = $user->uuid ?? '';
 

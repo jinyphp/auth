@@ -25,6 +25,8 @@ class SubmitController extends Controller
     protected $shardingService;
     protected $config;
     protected $configPath;
+    protected $jwtConfig;
+    protected $jwtConfigPath;
 
     public function __construct(
         ActivityLogService $activityLogService,
@@ -37,7 +39,9 @@ class SubmitController extends Controller
         $this->jwtService = $jwtService;
         $this->shardingService = $shardingService;
         $this->configPath = dirname(__DIR__, 5) . '/config/setting.json';
+        $this->jwtConfigPath = dirname(__DIR__, 5) . '/config/jwt.json';
         $this->config = $this->loadSettings();
+        $this->jwtConfig = $this->loadJwtSettings();
     }
 
     /**
@@ -62,6 +66,54 @@ class SubmitController extends Controller
 
         // JSON 파일이 없거나 파싱 실패 시 빈 배열 반환
         return [];
+    }
+
+    /**
+     * JWT 설정 파일에서 설정 읽기
+     */
+    private function loadJwtSettings()
+    {
+        $defaultJwtConfig = [
+            'enable' => true,
+            'access_token' => [
+                'default_expiry' => 3600,
+                'remember_expiry' => 86400,
+            ],
+            'refresh_token' => [
+                'default_expiry' => 2592000,
+                'remember_expiry' => 7776000,
+            ],
+            'remember' => [
+                'enable' => true,
+                'extend_access_token' => true,
+                'extend_refresh_token' => true,
+            ],
+            'cookies' => [
+                'access_token' => [
+                    'lifetime' => 60,
+                ],
+                'refresh_token' => [
+                    'lifetime' => 43200,
+                ],
+            ],
+        ];
+
+        if (file_exists($this->jwtConfigPath)) {
+            try {
+                $jsonContent = file_get_contents($this->jwtConfigPath);
+                $jwtSettings = json_decode($jsonContent, true);
+
+                if (json_last_error() === JSON_ERROR_NONE) {
+                    return array_merge($defaultJwtConfig, $jwtSettings);
+                }
+
+                \Log::error('JWT JSON 파싱 오류: ' . json_last_error_msg());
+            } catch (\Exception $e) {
+                \Log::error('JWT 설정 파일 읽기 오류: ' . $e->getMessage());
+            }
+        }
+
+        return $defaultJwtConfig;
     }
 
     /**
@@ -250,8 +302,9 @@ class SubmitController extends Controller
         // 2. JWT 또는 세션 로그인
         $tokens = null;
         if (($this->config['method'] ?? 'jwt') === 'jwt') {
-            // JWT 토큰 생성
-            $tokens = $this->jwtService->generateTokenPair($user);
+            // JWT 토큰 생성 (remember 옵션 고려)
+            $remember = $request->filled('remember') && ($this->jwtConfig['remember']['enable'] ?? true);
+            $tokens = $this->jwtService->generateTokenPair($user, $remember, $this->jwtConfig);
         } else {
             // 세션 로그인
             Auth::login($user, $request->filled('remember'));
@@ -292,12 +345,42 @@ class SubmitController extends Controller
                     'user_email' => $user->email,
                     'access_token_preview' => substr($tokens['access_token'], 0, 50) . '...',
                     'redirect_to' => $this->config['login']['redirect_after_login'] ?? '/home',
+                    'remember' => $remember ?? false,
                 ]);
+
+                // JWT 설정에서 쿠키 설정 가져오기
+                $accessCookieConfig = $this->jwtConfig['cookies']['access_token'] ?? [];
+                $refreshCookieConfig = $this->jwtConfig['cookies']['refresh_token'] ?? [];
+
+                // 쿠키 수명 설정 (remember 고려)
+                $accessCookieLifetime = $remember && ($this->jwtConfig['remember']['extend_access_token'] ?? true)
+                    ? ($accessCookieConfig['lifetime'] ?? 60) * 24  // remember 시 24배 연장
+                    : ($accessCookieConfig['lifetime'] ?? 60);
+
+                $refreshCookieLifetime = $remember && ($this->jwtConfig['remember']['extend_refresh_token'] ?? true)
+                    ? ($refreshCookieConfig['lifetime'] ?? 43200) * 3  // remember 시 3배 연장
+                    : ($refreshCookieConfig['lifetime'] ?? 43200);
 
                 return redirect()->intended($this->config['login']['redirect_after_login'] ?? '/home')
                     ->with('success', '로그인되었습니다.')
-                    ->cookie('access_token', $tokens['access_token'], 60, '/', null, false, false)
-                    ->cookie('refresh_token', $tokens['refresh_token'], 43200, '/', null, false, false); // 30일
+                    ->cookie(
+                        $accessCookieConfig['name'] ?? 'access_token',
+                        $tokens['access_token'],
+                        $accessCookieLifetime,
+                        $accessCookieConfig['path'] ?? '/',
+                        $accessCookieConfig['domain'] ?? null,
+                        $accessCookieConfig['secure'] ?? false,
+                        $accessCookieConfig['httponly'] ?? false
+                    )
+                    ->cookie(
+                        $refreshCookieConfig['name'] ?? 'refresh_token',
+                        $tokens['refresh_token'],
+                        $refreshCookieLifetime,
+                        $refreshCookieConfig['path'] ?? '/',
+                        $refreshCookieConfig['domain'] ?? null,
+                        $refreshCookieConfig['secure'] ?? false,
+                        $refreshCookieConfig['httponly'] ?? true
+                    );
             }
         }
 

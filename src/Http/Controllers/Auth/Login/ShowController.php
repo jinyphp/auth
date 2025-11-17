@@ -54,6 +54,8 @@ class ShowController extends Controller
      */
     public function __invoke(Request $request)
     {
+
+
         // 1. 시스템 활성화 확인
         if (!$this->config['auth_enabled']) {
             return $this->showDisabledPage('인증 시스템이 비활성화되었습니다.');

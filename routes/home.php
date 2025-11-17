@@ -16,11 +16,11 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-Route::middleware(['web', 'jwt.auth'])->group(function () {
+Route::middleware(['web'])->group(function () {
 
     /*
     |--------------------------------------------------------------------------
-    | Dashboard
+    | Dashboard (JWT 인증을 컨트롤러에서 직접 처리)
     |--------------------------------------------------------------------------
     */
     Route::get('/home', \Jiny\Auth\Http\Controllers\Home\Dashboard\HomeDashboardController::class)

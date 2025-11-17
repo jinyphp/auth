@@ -31,7 +31,11 @@ class JwtAuthMiddleware
             \Log::info('JWT Auth Failed: No token found', [
                 'url' => $request->url(),
                 'cookies' => array_keys($request->cookies->all()),
+                'cookie_values' => $request->cookies->all(),
                 'has_access_token_cookie' => $request->hasCookie('access_token'),
+                'cookie_access_token_value' => $request->cookie('access_token'),
+                'authorization_header' => $request->header('Authorization'),
+                'bearer_token' => $this->jwtService->extractTokenFromBearer($request->header('Authorization')),
             ]);
             return $this->unauthorized($request, '토큰이 제공되지 않았습니다.');
         }

@@ -45,6 +45,7 @@ class JinyAuthServiceProvider extends ServiceProvider
                 \Jiny\Auth\Console\Commands\UserInfoCommand::class,
                 \Jiny\Auth\Console\Commands\SessionClearCommand::class,
                 \Jiny\Auth\Console\Commands\UserCreateCommand::class,
+                \Jiny\Auth\Console\Commands\SeedShardingTablesCommand::class, // 샤딩 테이블 시드 명령어
             ]);
         }
 
@@ -125,19 +126,23 @@ class JinyAuthServiceProvider extends ServiceProvider
                     $except = $exceptProperty->getValue($encryptCookies);
 
                     // JWT 토큰 쿠키 추가
-                    $jwtCookies = ['access_token', 'refresh_token'];
+                    $jwtCookies = ['access_token', 'refresh_token', 'jwt_token'];
                     $except = array_unique(array_merge((array)$except, $jwtCookies));
 
                     // 업데이트된 목록 설정
                     $exceptProperty->setValue($encryptCookies, $except);
+
+                    // 로깅 추가
+                    \Log::info('JinyAuth: Cookie encryption exceptions configured', [
+                        'except_list' => $except
+                    ]);
                 }
             } catch (\Exception $e) {
                 // 에러 발생 시에도 앱 실행 계속
-                if (config('app.debug')) {
-                    \Log::warning('JinyAuth: Failed to configure cookie encryption exceptions', [
-                        'error' => $e->getMessage()
-                    ]);
-                }
+                \Log::warning('JinyAuth: Failed to configure cookie encryption exceptions', [
+                    'error' => $e->getMessage(),
+                    'trace' => $e->getTraceAsString()
+                ]);
             }
         });
     }

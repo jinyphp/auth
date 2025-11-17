@@ -1,4 +1,26 @@
 <!-- Sidebar -->
+<style>
+.navbar-heading {
+    color: #8492a6 !important;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    padding: 0.75rem 1rem 0.25rem 1rem;
+    opacity: 0.8;
+}
+
+.navbar-vertical.navbar .navbar-heading {
+    color: #8492a6 !important;
+}
+
+/* 다크 테마에서 더 밝게 */
+.navbar-vertical.navbar-dark .navbar-heading,
+.navbar-vertical .navbar-heading {
+    color: #a6b0cf !important;
+}
+</style>
+
 <nav class="navbar-vertical navbar">
     <div class="vh-100" data-simplebar>
         <!-- Brand logo -->
@@ -85,6 +107,11 @@
                         <li class="nav-item">
                             <a class="nav-link" href="{{ route('admin.auth.user.blacklist.index') }}">
                                 블랙리스트
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ route('admin.auth.jwt.index') }}">
+                                Jwt 로그인
                             </a>
                         </li>
                     </ul>

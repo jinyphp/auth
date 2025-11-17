@@ -45,10 +45,11 @@ class JwtService
     /**
      * Access Token 생성
      */
-    public function generateAccessToken($user)
+    public function generateAccessToken($user, $remember = false, $jwtConfig = null)
     {
         $now = new DateTimeImmutable();
         $tokenId = \Str::random(32);
+        $expiry = $this->getAccessTokenExpiry($remember, $jwtConfig);
 
         $token = $this->config->builder()
             ->issuedBy(config('app.url'))
@@ -56,12 +57,13 @@ class JwtService
             ->identifiedBy($tokenId)
             ->issuedAt($now)
             ->canOnlyBeUsedAfter($now)
-            ->expiresAt($now->modify("+{$this->accessTokenExpiry} seconds"))
+            ->expiresAt($now->modify("+{$expiry} seconds"))
             ->relatedTo((string) ($user->id ?? $user->uuid))
             ->withClaim('email', $user->email)
             ->withClaim('name', $user->name)
             ->withClaim('uuid', $user->uuid ?? null)
             ->withClaim('type', 'access')
+            ->withClaim('remember', $remember)
             ->getToken($this->config->signer(), $this->config->signingKey());
 
         // DB에 토큰 정보 저장 (선택적)
@@ -74,8 +76,9 @@ class JwtService
                 'token_hash' => hash('sha256', $tokenId),
                 'ip_address' => request()->ip(),
                 'user_agent' => request()->userAgent(),
+                'remember' => $remember,
                 'issued_at' => $now->format('Y-m-d H:i:s'),
-                'expires_at' => $now->modify("+{$this->accessTokenExpiry} seconds")->format('Y-m-d H:i:s'),
+                'expires_at' => $now->modify("+{$expiry} seconds")->format('Y-m-d H:i:s'),
                 'created_at' => now(),
                 'updated_at' => now(),
             ]);
@@ -89,10 +92,11 @@ class JwtService
     /**
      * Refresh Token 생성
      */
-    public function generateRefreshToken($user)
+    public function generateRefreshToken($user, $remember = false, $jwtConfig = null)
     {
         $now = new DateTimeImmutable();
         $tokenId = \Str::random(32);
+        $expiry = $this->getRefreshTokenExpiry($remember, $jwtConfig);
 
         $token = $this->config->builder()
             ->issuedBy(config('app.url'))
@@ -100,9 +104,10 @@ class JwtService
             ->identifiedBy($tokenId)
             ->issuedAt($now)
             ->canOnlyBeUsedAfter($now)
-            ->expiresAt($now->modify("+{$this->refreshTokenExpiry} seconds"))
+            ->expiresAt($now->modify("+{$expiry} seconds"))
             ->relatedTo((string) ($user->id ?? $user->uuid))
             ->withClaim('type', 'refresh')
+            ->withClaim('remember', $remember)
             ->getToken($this->config->signer(), $this->config->signingKey());
 
         // DB에 토큰 정보 저장 (선택적)
@@ -115,8 +120,9 @@ class JwtService
                 'token_hash' => hash('sha256', $tokenId),
                 'ip_address' => request()->ip(),
                 'user_agent' => request()->userAgent(),
+                'remember' => $remember,
                 'issued_at' => $now->format('Y-m-d H:i:s'),
-                'expires_at' => $now->modify("+{$this->refreshTokenExpiry} seconds")->format('Y-m-d H:i:s'),
+                'expires_at' => $now->modify("+{$expiry} seconds")->format('Y-m-d H:i:s'),
                 'created_at' => now(),
                 'updated_at' => now(),
             ]);
@@ -130,13 +136,14 @@ class JwtService
     /**
      * 토큰 쌍 생성 (Access + Refresh)
      */
-    public function generateTokenPair($user)
+    public function generateTokenPair($user, $remember = false, $jwtConfig = null)
     {
         return [
-            'access_token' => $this->generateAccessToken($user),
-            'refresh_token' => $this->generateRefreshToken($user),
+            'access_token' => $this->generateAccessToken($user, $remember, $jwtConfig),
+            'refresh_token' => $this->generateRefreshToken($user, $remember, $jwtConfig),
             'token_type' => 'Bearer',
-            'expires_in' => $this->accessTokenExpiry,
+            'expires_in' => $this->getAccessTokenExpiry($remember, $jwtConfig),
+            'remember' => $remember,
         ];
     }
 
@@ -301,5 +308,43 @@ class JwtService
         } catch (\Exception $e) {
             return false;
         }
+    }
+
+    /**
+     * Access Token 유효시간 계산
+     */
+    protected function getAccessTokenExpiry($remember = false, $jwtConfig = null)
+    {
+        if ($jwtConfig && isset($jwtConfig['access_token'])) {
+            if ($remember && ($jwtConfig['remember']['enable'] ?? true) && ($jwtConfig['remember']['extend_access_token'] ?? true)) {
+                return $jwtConfig['access_token']['remember_expiry'] ?? 86400; // 24시간
+            }
+            return $jwtConfig['access_token']['default_expiry'] ?? 3600; // 1시간
+        }
+
+        // fallback to default config
+        if ($remember) {
+            return config('admin.auth.jwt.access_token_remember_expiry', 86400);
+        }
+        return $this->accessTokenExpiry;
+    }
+
+    /**
+     * Refresh Token 유효시간 계산
+     */
+    protected function getRefreshTokenExpiry($remember = false, $jwtConfig = null)
+    {
+        if ($jwtConfig && isset($jwtConfig['refresh_token'])) {
+            if ($remember && ($jwtConfig['remember']['enable'] ?? true) && ($jwtConfig['remember']['extend_refresh_token'] ?? true)) {
+                return $jwtConfig['refresh_token']['remember_expiry'] ?? 7776000; // 90일
+            }
+            return $jwtConfig['refresh_token']['default_expiry'] ?? 2592000; // 30일
+        }
+
+        // fallback to default config
+        if ($remember) {
+            return config('admin.auth.jwt.refresh_token_remember_expiry', 7776000);
+        }
+        return $this->refreshTokenExpiry;
     }
 }

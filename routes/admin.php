@@ -231,5 +231,12 @@ Route::prefix('admin')->middleware(['web'])->group(function () {
         Route::get('/{id}', \Jiny\Auth\Http\Controllers\Admin\UserApproval\Logs\UserApprovalLogsController::class . '@show')->name('show');
     });
 
+    // JWT 설정 관리
+    Route::prefix('auth/jwt')->name('admin.auth.jwt.')->group(function () {
+        Route::get('/', \Jiny\Auth\Http\Controllers\Admin\Jwt\IndexController::class)->name('index');
+        Route::post('/update', \Jiny\Auth\Http\Controllers\Admin\Jwt\UpdateController::class)->name('update');
+        Route::post('/reset', \Jiny\Auth\Http\Controllers\Admin\Jwt\ResetController::class)->name('reset');
+    });
+
 });
 

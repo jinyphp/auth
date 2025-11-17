@@ -27,6 +27,9 @@
                 @includeIf("jiny-auth::partials.home.learn")
 
                 <!-- Navbar header -->
+                @includeIf("jiny-chat::partials.home.chat")
+
+                <!-- Navbar header -->
                 @includeIf("jiny-auth::partials.home.emoney")
 
                 <!-- Navbar header -->

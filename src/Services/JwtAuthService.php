@@ -535,4 +535,148 @@ class JwtAuthService
             return false;
         }
     }
+
+    /**
+     * JWT 토큰만을 기반으로 한 사용자 인증 (샤딩 정보 포함)
+     * 단계별 검증과 상세한 오류 정보를 제공
+     *
+     * @param Request|null $request
+     * @return object 인증 결과 객체 (success, user, error, step, details 포함)
+     */
+    public function userFromTokenOnly(?Request $request = null): object
+    {
+        $result = (object) [
+            'success' => false,
+            'user' => null,
+            'error' => null,
+            'step' => null,
+            'details' => []
+        ];
+
+        try {
+            // Step 1: Request 객체 검증
+            $result->step = 1;
+            $result->details['step_1'] = 'Request 객체 검증';
+
+            if (!$request || !($request instanceof \Illuminate\Http\Request)) {
+                $result->error = 'Request 객체가 전달되지 않았거나 유효하지 않습니다.';
+                return $result;
+            }
+
+            // Step 2: JWT 토큰 존재 여부 검사
+            $result->step = 2;
+            $result->details['step_2'] = 'JWT 토큰 추출';
+
+            $authHeader = $request->header('Authorization');
+            $cookieToken = $request->cookie('jwt_token');
+            $queryToken = $request->query('token');
+            $accessTokenCookie = $request->cookie('access_token');
+
+            $result->details['token_sources'] = [
+                'auth_header' => $authHeader ? 'PRESENT' : 'ABSENT',
+                'jwt_cookie' => $cookieToken ? 'PRESENT' : 'ABSENT',
+                'query_token' => $queryToken ? 'PRESENT' : 'ABSENT',
+                'access_token_cookie' => $accessTokenCookie ? 'PRESENT' : 'ABSENT',
+            ];
+
+            $token = $this->extractTokenFromRequest($request);
+
+            if (!$token) {
+                $result->error = 'JWT 토큰을 찾을 수 없습니다. Authorization 헤더, jwt_token 쿠키, 또는 token 쿼리 파라미터를 확인해주세요.';
+                return $result;
+            }
+
+            $result->details['token_found'] = '토큰 추출 성공 (길이: ' . strlen($token) . ')';
+
+            // Step 3: 토큰을 이용하여 사용자 정보 추출
+            $result->step = 3;
+            $result->details['step_3'] = '토큰 검증 및 사용자 정보 추출';
+
+            $jwtToken = $this->validateToken($token);
+            $userUuid = $jwtToken->claims()->get('sub');
+            $userName = $jwtToken->claims()->get('name');
+            $userEmail = $jwtToken->claims()->get('email');
+
+            if (!$userUuid) {
+                $result->error = '토큰에서 사용자 UUID(sub)를 찾을 수 없습니다.';
+                return $result;
+            }
+
+            $result->details['token_claims'] = [
+                'uuid' => $userUuid,
+                'name' => $userName,
+                'email' => $userEmail,
+                'exp' => $jwtToken->claims()->get('exp')->format('Y-m-d H:i:s'),
+            ];
+
+            // Step 4: 샤딩된 회원 정보 검사
+            $result->step = 4;
+            $result->details['step_4'] = '샤딩된 회원 정보 조회';
+
+            $user = null;
+            $shardNumber = $this->getShardNumber($userUuid);
+            $shardTableName = $this->getShardTableName($userUuid);
+
+            $result->details['shard_info'] = [
+                'shard_enabled' => $this->shardingService->isEnabled(),
+                'shard_number' => $shardNumber,
+                'shard_table_name' => $shardTableName,
+            ];
+
+            // 샤딩된 테이블에서 사용자 정보 조회
+            if ($this->shardingService->isEnabled()) {
+                $user = $this->shardingService->getUserByUuid($userUuid);
+                $result->details['shard_user_found'] = $user ? 'YES' : 'NO';
+            }
+
+            // 일반 User 테이블에서 조회 (fallback)
+            if (!$user) {
+                $user = User::where('uuid', $userUuid)->first();
+                if (!$user) {
+                    $user = User::find($userUuid);
+                }
+                $result->details['fallback_user_found'] = $user ? 'YES' : 'NO';
+            }
+
+            if (!$user) {
+                $result->error = '토큰의 UUID(' . $userUuid . ')에 해당하는 사용자를 찾을 수 없습니다.';
+                return $result;
+            }
+
+            // 사용자 객체에 토큰 및 샤딩 정보 추가
+            $user = is_object($user) ? $user : (object) $user;
+            $user->jwt_token = $token;
+            $user->shard_number = $shardNumber;
+            $user->shard_table_name = $shardTableName;
+
+            // 성공
+            $result->success = true;
+            $result->user = $user;
+            $result->details['final_user_info'] = [
+                'id' => $user->id ?? null,
+                'uuid' => $user->uuid ?? null,
+                'name' => $user->name ?? null,
+                'email' => $user->email ?? null,
+                'shard_number' => $user->shard_number,
+                'shard_table_name' => $user->shard_table_name,
+            ];
+
+            return $result;
+
+        } catch (\Exception $e) {
+            $result->error = '토큰 검증 실패: ' . $e->getMessage();
+            $result->details['exception'] = [
+                'message' => $e->getMessage(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+            ];
+
+            Log::debug('JWT token validation failed in userFromTokenOnly', [
+                'error' => $e->getMessage(),
+                'step' => $result->step,
+            ]);
+
+            return $result;
+        }
+    }
 }

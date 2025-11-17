@@ -101,4 +101,41 @@ trait JWTAuthTrait
 
         return $user;
     }
+
+    /**
+     * 인증된 사용자 및 UUID 검증 - 샤딩 환경 대응
+     *
+     * @param Request $request
+     * @return array ['user' => User|null, 'uuid' => string|null, 'redirect' => RedirectResponse|null]
+     */
+    protected function authenticateUserWithUuid(Request $request)
+    {
+        // JWT 토큰을 포함한 다중 인증 방식으로 사용자 확인
+        $user = $this->getAuthenticatedUser($request);
+
+        if (!$user) {
+            return [
+                'user' => null,
+                'uuid' => null,
+                'redirect' => redirect()->route('login')
+            ];
+        }
+
+        // 샤딩 환경을 위한 사용자 UUID 추출
+        $userUuid = $user->uuid ?? '';
+
+        if (!$userUuid) {
+            return [
+                'user' => $user,
+                'uuid' => null,
+                'redirect' => redirect()->route('login')->with('error', '사용자 정보를 확인할 수 없습니다.')
+            ];
+        }
+
+        return [
+            'user' => $user,
+            'uuid' => $userUuid,
+            'redirect' => null
+        ];
+    }
 }
