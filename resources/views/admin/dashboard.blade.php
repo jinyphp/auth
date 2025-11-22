@@ -17,6 +17,34 @@
             transform: translateY(-5px);
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
         }
+
+        /* 테이블 카드 패딩 제거 */
+        .table-card .card-body {
+            padding: 0;
+        }
+
+        .table-card .table-responsive {
+            margin: 0;
+        }
+
+        /* 아바타 원형 고정 */
+        .avatar {
+            width: 32px;
+            height: 32px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .avatar-title {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            font-weight: 600;
+        }
     </style>
 @endpush
 
@@ -213,7 +241,7 @@
         <div class="row g-4">
             {{-- 최근 가입 회원 --}}
             <div class="col-xl-8 col-12">
-                <div class="card h-100">
+                <div class="card h-100 table-card">
                     <div class="card-header d-flex align-items-center justify-content-between">
                         <h4 class="mb-0">최근 가입 회원</h4>
                         <a href="{{ route('admin.auth.users.index') }}" class="btn btn-outline-secondary btn-sm">
