@@ -236,237 +236,235 @@
                         </div>
                     </div>
                 </div>
-                <div class="row g-4">
-                    {{-- 최근 가입 회원 --}}
-                    <div class="col-xl-8 col-12">
-                        <div class="card h-100 table-card">
-                            <div class="card-header d-flex align-items-center justify-content-between">
-                                <h4 class="mb-0">최근 가입 회원</h4>
-                                <a href="{{ route('admin.auth.users.index') }}" class="btn btn-outline-secondary btn-sm">
-                                    전체 보기
-                                </a>
-                            </div>
-                            <div class="card-body">
-                                <div class="table-responsive">
-                                    <table class="table table-hover mb-0">
-                                        <thead class="table-light">
-                                            <tr>
-                                                <th>ID</th>
-                                                <th>이름</th>
-                                                <th>이메일</th>
-                                                <th>가입일</th>
-                                                <th>상태</th>
-                                                <th>액션</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            @forelse($recent_users as $user)
-                                                <tr>
-                                                    <td>{{ $user->id }}</td>
-                                                    <td>
-                                                        <div class="d-flex align-items-center">
-                                                            <div class="avatar avatar-sm">
-                                                                <span class="avatar-title bg-primary rounded-circle">
-                                                                    {{ mb_strtoupper(mb_substr($user->name ?? $user->email, 0, 1)) }}
-                                                                </span>
-                                                            </div>
-                                                            <div class="ms-2">
-                                                                <h6 class="mb-0">{{ $user->name ?? '이름 없음' }}</h6>
-                                                            </div>
-                                                        </div>
-                                                    </td>
-                                                    <td>{{ $user->email }}</td>
-                                                    <td>{{ $user->created_at->format('Y-m-d') }}</td>
-                                                    <td>
-                                                        @if ($user->email_verified_at)
-                                                            <span class="badge bg-success-soft text-success">활성</span>
-                                                        @else
-                                                            <span class="badge bg-warning-soft text-warning">미인증</span>
-                                                        @endif
-                                                    </td>
-                                                    <td>
-                                                        <a href="{{ route('admin.auth.users.show', $user->id) }}"
-                                                            class="btn btn-sm btn-light">
-                                                            <i class="fe fe-eye"></i>
-                                                        </a>
-                                                    </td>
-                                                </tr>
-                                            @empty
-                                                <tr>
-                                                    <td colspan="6" class="text-center py-4 text-muted">
-                                                        등록된 회원이 없습니다.
-                                                    </td>
-                                                </tr>
-                                            @endforelse
-                                        </tbody>
-                                    </table>
-                                </div>
-                            </div>
-                        </div>
+            @endif
+
+            {{-- 최근 가입 회원 --}}
+            <div class="col-xl-8 col-12">
+                <div class="card h-100 table-card">
+                    <div class="card-header d-flex align-items-center justify-content-between">
+                        <h4 class="mb-0">최근 가입 회원</h4>
+                        <a href="{{ route('admin.auth.users.index') }}" class="btn btn-outline-secondary btn-sm">
+                            전체 보기
+                        </a>
                     </div>
-
-                    {{-- 빠른 액세스 메뉴 --}}
-                    <div class="col-xl-4 col-12">
-                        <div class="card h-100">
-                            <div class="card-header">
-                                <h4 class="mb-0">빠른 액세스</h4>
-                            </div>
-                            <div class="card-body">
-                                <div class="list-group list-group-flush">
-                                    <a href="{{ route('admin.auth.users.index') }}"
-                                        class="list-group-item list-group-item-action d-flex align-items-center">
-                                        <div class="icon-shape icon-sm bg-primary-soft text-primary rounded-circle me-3">
-                                            <i class="fe fe-users"></i>
-                                        </div>
-                                        <div class="flex-grow-1">
-                                            <h6 class="mb-0">사용자 관리</h6>
-                                            <small class="text-muted">전체 회원 목록 및 관리</small>
-                                        </div>
-                                        <i class="fe fe-chevron-right"></i>
-                                    </a>
-
-                                    <a href="{{ route('admin.lockouts.index') }}"
-                                        class="list-group-item list-group-item-action d-flex align-items-center">
-                                        <div class="icon-shape icon-sm bg-warning-soft text-warning rounded-circle me-3">
-                                            <i class="fe fe-shield"></i>
-                                        </div>
-                                        <div class="flex-grow-1">
-                                            <h6 class="mb-0">계정 잠금</h6>
-                                            <small class="text-muted">잠긴 계정 관리</small>
-                                        </div>
-                                        <i class="fe fe-chevron-right"></i>
-                                    </a>
-
-                                    <a href="{{ route('admin.deletions.index') }}"
-                                        class="list-group-item list-group-item-action d-flex align-items-center">
-                                        <div class="icon-shape icon-sm bg-danger-soft text-danger rounded-circle me-3">
-                                            <i class="fe fe-user-x"></i>
-                                        </div>
-                                        <div class="flex-grow-1">
-                                            <h6 class="mb-0">탈퇴 신청</h6>
-                                            <small class="text-muted">회원 탈퇴 요청 관리</small>
-                                        </div>
-                                        <i class="fe fe-chevron-right"></i>
-                                    </a>
-
-                                    <a href="{{ route('admin.auth.user.types.index') }}"
-                                        class="list-group-item list-group-item-action d-flex align-items-center">
-                                        <div class="icon-shape icon-sm bg-info-soft text-info rounded-circle me-3">
-                                            <i class="fe fe-tag"></i>
-                                        </div>
-                                        <div class="flex-grow-1">
-                                            <h6 class="mb-0">사용자 타입</h6>
-                                            <small class="text-muted">회원 유형 관리</small>
-                                        </div>
-                                        <i class="fe fe-chevron-right"></i>
-                                    </a>
-
-                                    <a href="{{ route('admin.auth.user.grades.index') }}"
-                                        class="list-group-item list-group-item-action d-flex align-items-center">
-                                        <div class="icon-shape icon-sm bg-success-soft text-success rounded-circle me-3">
-                                            <i class="fe fe-award"></i>
-                                        </div>
-                                        <div class="flex-grow-1">
-                                            <h6 class="mb-0">사용자 등급</h6>
-                                            <small class="text-muted">회원 등급 관리</small>
-                                        </div>
-                                        <i class="fe fe-chevron-right"></i>
-                                    </a>
-
-                                    <a href="{{ route('admin.auth.terms.index') }}"
-                                        class="list-group-item list-group-item-action d-flex align-items-center">
-                                        <div
-                                            class="icon-shape icon-sm bg-secondary-soft text-secondary rounded-circle me-3">
-                                            <i class="fe fe-file-text"></i>
-                                        </div>
-                                        <div class="flex-grow-1">
-                                            <h6 class="mb-0">이용약관</h6>
-                                            <small class="text-muted">약관 및 정책 관리</small>
-                                        </div>
-                                        <i class="fe fe-chevron-right"></i>
-                                    </a>
-                                </div>
-                            </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-hover mb-0">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>이름</th>
+                                        <th>이메일</th>
+                                        <th>가입일</th>
+                                        <th>상태</th>
+                                        <th>액션</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @forelse($recent_users as $user)
+                                        <tr>
+                                            <td>{{ $user->id }}</td>
+                                            <td>
+                                                <div class="d-flex align-items-center">
+                                                    <div class="avatar avatar-sm">
+                                                        <span class="avatar-title bg-primary rounded-circle">
+                                                            {{ mb_strtoupper(mb_substr($user->name ?? $user->email, 0, 1)) }}
+                                                        </span>
+                                                    </div>
+                                                    <div class="ms-2">
+                                                        <h6 class="mb-0">{{ $user->name ?? '이름 없음' }}</h6>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td>{{ $user->email }}</td>
+                                            <td>{{ $user->created_at->format('Y-m-d') }}</td>
+                                            <td>
+                                                @if ($user->email_verified_at)
+                                                    <span class="badge bg-success-soft text-success">활성</span>
+                                                @else
+                                                    <span class="badge bg-warning-soft text-warning">미인증</span>
+                                                @endif
+                                            </td>
+                                            <td>
+                                                <a href="{{ route('admin.auth.users.show', $user->id) }}"
+                                                    class="btn btn-sm btn-light">
+                                                    <i class="fe fe-eye"></i>
+                                                </a>
+                                            </td>
+                                        </tr>
+                                    @empty
+                                        <tr>
+                                            <td colspan="6" class="text-center py-4 text-muted">
+                                                등록된 회원이 없습니다.
+                                            </td>
+                                        </tr>
+                                    @endforelse
+                                </tbody>
+                            </table>
                         </div>
                     </div>
                 </div>
-        </div>
-    </div>
-@endsection
+            </div>
 
-@push('scripts')
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            // 월별 가입 추이 차트
-            const monthlySignupsCtx = document.getElementById('monthlySignupsChart');
-            if (monthlySignupsCtx) {
-                new Chart(monthlySignupsCtx, {
-                    type: 'line',
-                    data: {
-                        labels: @json($monthly_signups['labels']),
-                        datasets: [{
-                            label: '신규 가입',
-                            data: @json($monthly_signups['data']),
-                            borderColor: 'rgb(75, 192, 192)',
-                            backgroundColor: 'rgba(75, 192, 192, 0.1)',
-                            tension: 0.4,
-                            fill: true
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        plugins: {
-                            legend: {
-                                display: false
-                            }
+            {{-- 빠른 액세스 메뉴 --}}
+            <div class="col-xl-4 col-12">
+                <div class="card h-100">
+                    <div class="card-header">
+                        <h4 class="mb-0">빠른 액세스</h4>
+                    </div>
+                    <div class="card-body">
+                        <div class="list-group list-group-flush">
+                            <a href="{{ route('admin.auth.users.index') }}"
+                                class="list-group-item list-group-item-action d-flex align-items-center">
+                                <div class="icon-shape icon-sm bg-primary-soft text-primary rounded-circle me-3">
+                                    <i class="fe fe-users"></i>
+                                </div>
+                                <div class="flex-grow-1">
+                                    <h6 class="mb-0">사용자 관리</h6>
+                                    <small class="text-muted">전체 회원 목록 및 관리</small>
+                                </div>
+                                <i class="fe fe-chevron-right"></i>
+                            </a>
+
+                            <a href="{{ route('admin.lockouts.index') }}"
+                                class="list-group-item list-group-item-action d-flex align-items-center">
+                                <div class="icon-shape icon-sm bg-warning-soft text-warning rounded-circle me-3">
+                                    <i class="fe fe-shield"></i>
+                                </div>
+                                <div class="flex-grow-1">
+                                    <h6 class="mb-0">계정 잠금</h6>
+                                    <small class="text-muted">잠긴 계정 관리</small>
+                                </div>
+                                <i class="fe fe-chevron-right"></i>
+                            </a>
+
+                            <a href="{{ route('admin.deletions.index') }}"
+                                class="list-group-item list-group-item-action d-flex align-items-center">
+                                <div class="icon-shape icon-sm bg-danger-soft text-danger rounded-circle me-3">
+                                    <i class="fe fe-user-x"></i>
+                                </div>
+                                <div class="flex-grow-1">
+                                    <h6 class="mb-0">탈퇴 신청</h6>
+                                    <small class="text-muted">회원 탈퇴 요청 관리</small>
+                                </div>
+                                <i class="fe fe-chevron-right"></i>
+                            </a>
+
+                            <a href="{{ route('admin.auth.user.types.index') }}"
+                                class="list-group-item list-group-item-action d-flex align-items-center">
+                                <div class="icon-shape icon-sm bg-info-soft text-info rounded-circle me-3">
+                                    <i class="fe fe-tag"></i>
+                                </div>
+                                <div class="flex-grow-1">
+                                    <h6 class="mb-0">사용자 타입</h6>
+                                    <small class="text-muted">회원 유형 관리</small>
+                                </div>
+                                <i class="fe fe-chevron-right"></i>
+                            </a>
+
+                            <a href="{{ route('admin.auth.user.grades.index') }}"
+                                class="list-group-item list-group-item-action d-flex align-items-center">
+                                <div class="icon-shape icon-sm bg-success-soft text-success rounded-circle me-3">
+                                    <i class="fe fe-award"></i>
+                                </div>
+                                <div class="flex-grow-1">
+                                    <h6 class="mb-0">사용자 등급</h6>
+                                    <small class="text-muted">회원 등급 관리</small>
+                                </div>
+                                <i class="fe fe-chevron-right"></i>
+                            </a>
+
+                            <a href="{{ route('admin.auth.terms.index') }}"
+                                class="list-group-item list-group-item-action d-flex align-items-center">
+                                <div class="icon-shape icon-sm bg-secondary-soft text-secondary rounded-circle me-3">
+                                    <i class="fe fe-file-text"></i>
+                                </div>
+                                <div class="flex-grow-1">
+                                    <h6 class="mb-0">이용약관</h6>
+                                    <small class="text-muted">약관 및 정책 관리</small>
+                                </div>
+                                <i class="fe fe-chevron-right"></i>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    @endsection
+
+    @push('scripts')
+        <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+        <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                // 월별 가입 추이 차트
+                const monthlySignupsCtx = document.getElementById('monthlySignupsChart');
+                if (monthlySignupsCtx) {
+                    new Chart(monthlySignupsCtx, {
+                        type: 'line',
+                        data: {
+                            labels: @json($monthly_signups['labels']),
+                            datasets: [{
+                                label: '신규 가입',
+                                data: @json($monthly_signups['data']),
+                                borderColor: 'rgb(75, 192, 192)',
+                                backgroundColor: 'rgba(75, 192, 192, 0.1)',
+                                tension: 0.4,
+                                fill: true
+                            }]
                         },
-                        scales: {
-                            y: {
-                                beginAtZero: true,
-                                ticks: {
-                                    precision: 0
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: {
+                                legend: {
+                                    display: false
+                                }
+                            },
+                            scales: {
+                                y: {
+                                    beginAtZero: true,
+                                    ticks: {
+                                        precision: 0
+                                    }
                                 }
                             }
                         }
-                    }
-                });
-            }
+                    });
+                }
 
-            // 회원 유형 분포 차트
-            const userTypeCtx = document.getElementById('userTypeChart');
-            if (userTypeCtx) {
-                const userTypeData = @json($user_type_stats);
-                const labels = userTypeData.map(item => item.utype || '미지정');
-                const data = userTypeData.map(item => item.count);
+                // 회원 유형 분포 차트
+                const userTypeCtx = document.getElementById('userTypeChart');
+                if (userTypeCtx) {
+                    const userTypeData = @json($user_type_stats);
+                    const labels = userTypeData.map(item => item.utype || '미지정');
+                    const data = userTypeData.map(item => item.count);
 
-                new Chart(userTypeCtx, {
-                    type: 'doughnut',
-                    data: {
-                        labels: labels,
-                        datasets: [{
-                            data: data,
-                            backgroundColor: [
-                                'rgba(255, 99, 132, 0.8)',
-                                'rgba(54, 162, 235, 0.8)',
-                                'rgba(255, 206, 86, 0.8)',
-                                'rgba(75, 192, 192, 0.8)',
-                                'rgba(153, 102, 255, 0.8)',
-                            ]
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        plugins: {
-                            legend: {
-                                position: 'bottom'
+                    new Chart(userTypeCtx, {
+                        type: 'doughnut',
+                        data: {
+                            labels: labels,
+                            datasets: [{
+                                data: data,
+                                backgroundColor: [
+                                    'rgba(255, 99, 132, 0.8)',
+                                    'rgba(54, 162, 235, 0.8)',
+                                    'rgba(255, 206, 86, 0.8)',
+                                    'rgba(75, 192, 192, 0.8)',
+                                    'rgba(153, 102, 255, 0.8)',
+                                ]
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: {
+                                legend: {
+                                    position: 'bottom'
+                                }
                             }
                         }
-                    }
-                });
-            }
-        });
-    </script>
-@endpush
+                    });
+                }
+            });
+        </script>
+    @endpush
