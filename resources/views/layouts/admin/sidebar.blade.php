@@ -21,19 +21,20 @@
     @stack('styles')
 
     <!-- Theme CSS -->
-    <link rel="stylesheet" href="{{ asset('assets/css/theme.min.css') }}">
+    @vite('resources/css/bootstrap/app.css')
 
     <title>@yield('title', 'Dashboard') | Jiny Auth11</title>
 </head>
 
 <body>
     <!-- Wrapper -->
-    <main id="db-wrapper">
+    <!-- Wrapper -->
+    <div id="db-wrapper">
         <!-- Sidebar -->
         @include('jiny-auth::partials.admin.sidebar')
 
         <!-- Page Content -->
-        <section id="page-content">
+        <main id="page-content">
             <!-- Header -->
             @hasSection('header')
                 @yield('header')
@@ -43,8 +44,8 @@
 
             <!-- Content -->
             @yield('content')
-        </section>
-    </main>
+        </main>
+    </div>
 
     <!-- Scripts -->
     <!-- Libs JS -->
@@ -53,6 +54,7 @@
     <script src="{{ asset('assets/libs/simplebar/dist/simplebar.min.js') }}"></script>
 
     <!-- Theme JS -->
+    <script src="{{ asset('assets/js/theme.min.js') }}"></script>
 
     @stack('scripts')
     @stack('page-scripts')
