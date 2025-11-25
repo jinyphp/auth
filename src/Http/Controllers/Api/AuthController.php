@@ -9,7 +9,7 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\DB;
 use Jiny\Auth\Services\ValidationService;
-use Jiny\Auth\Services\JwtService;
+use Jiny\Auth\Services\JwtAuthService;
 use Jiny\Auth\Services\TermsService;
 use Jiny\Auth\Services\ActivityLogService;
 use Jiny\Auth\Models\UserProfile;
@@ -25,7 +25,7 @@ class AuthController extends Controller
 
     public function __construct(
         ValidationService $validationService,
-        JwtService $jwtService,
+        JwtAuthService $jwtService,
         TermsService $termsService,
         ActivityLogService $activityLogService
     ) {

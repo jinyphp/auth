@@ -2,9 +2,9 @@
 
 namespace Jiny\Auth\Http\Controllers\Home\Dashboard;
 
-use Jiny\Auth\Http\Controllers\HomeController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Jiny\Auth\Http\Controllers\HomeController;
 
 /**
  * 개인 홈 대시보드 컨트롤러 (JWT 인증)
@@ -13,10 +13,15 @@ class HomeDashboardController extends HomeController
 {
     public function __invoke(Request $request)
     {
+        // dump('home dash');
+
         // Step1. JWT 인증 처리
         $user = $this->auth($request);
-        if (!$user) {
+        if (! $user) {
             \Log::warning('HomeDashboard: User not authenticated');
+
+            // dd('jwt 인증 실패');
+
             return redirect()->route('login')
                 ->with('error', 'JWT 인증이 필요합니다. 로그인해 주세요.')
                 ->with('info', '홈 서비스는 로그인 후 이용하실 수 있습니다.');
@@ -26,7 +31,7 @@ class HomeDashboardController extends HomeController
             'user_id' => $user->id,
             'user_uuid' => $user->uuid,
             'user_email' => $user->email,
-            'user_name' => $user->name
+            'user_name' => $user->name,
         ]);
 
         $userUuid = $user->uuid ?? '';
@@ -99,10 +104,40 @@ class HomeDashboardController extends HomeController
             'created_at' => $user->created_at,
         ];
 
+        // JWT 인증 정보
+        $jwtInfo = [
+            'has_access_token' => isset($_COOKIE['access_token']),
+            'has_refresh_token' => isset($_COOKIE['refresh_token']),
+            'auth_method' => 'JWT',
+        ];
+
+        // 소셜 로그인 제공자 확인
+        $socialProvider = null;
+        if ($userUuid) {
+            try {
+                $socialAccount = DB::table('user_oauth_accounts')
+                    ->where('user_uuid', $userUuid)
+                    ->orderBy('created_at', 'desc')
+                    ->first();
+                
+                if ($socialAccount) {
+                    $socialProvider = $socialAccount->provider; // google, kakao, naver 등
+                }
+            } catch (\Exception $e) {
+                // 테이블이 없는 경우 무시
+            }
+        }
+
+        // 로그인 타입 결정
+        $loginType = $socialProvider ? 'social' : 'email';
+
         return view('jiny-auth::home.dashboard.index', [
             'user' => $user,
             'recentLogins' => $recentLogins,
             'connectionInfo' => $connectionInfo,
+            'jwtInfo' => $jwtInfo,
+            'socialProvider' => $socialProvider,
+            'loginType' => $loginType,
             'emoney' => $emoney,
             'emoneyLogs' => $emoneyLogs,
             'point' => $point,

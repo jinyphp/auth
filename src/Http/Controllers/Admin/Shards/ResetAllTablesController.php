@@ -5,20 +5,13 @@ namespace Jiny\Auth\Http\Controllers\Admin\Shards;
 use Illuminate\Routing\Controller;
 use Illuminate\Http\Request;
 use Jiny\Auth\Models\ShardTable;
-use Jiny\Auth\Services\ShardTableService;
+use Jiny\Auth\Services\ShardingService;
 
 /**
  * 모든 샤드 테이블의 샤드 일괄 삭제 컨트롤러
  */
 class ResetAllTablesController extends Controller
 {
-    protected $shardTableService;
-
-    public function __construct(ShardTableService $shardTableService)
-    {
-        $this->shardTableService = $shardTableService;
-    }
-
     /**
      * 모든 샤드 테이블의 샤드 삭제
      */
@@ -29,8 +22,11 @@ class ResetAllTablesController extends Controller
         $totalDeleted = 0;
         $results = [];
 
+        $service = app(ShardingService::class);
+
         foreach ($shardTables as $shardTable) {
-            $tableResults = $this->shardTableService->deleteAllShards($shardTable);
+            // 각 테이블명 기준으로 모든 샤드 테이블 삭제
+            $tableResults = $service->dropAllShardTables($shardTable->table_name);
             $deleted = count(array_filter($tableResults, fn($r) => $r === 'deleted'));
             $totalDeleted += $deleted;
 

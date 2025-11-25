@@ -161,6 +161,10 @@
                                 <i class="fe fe-mail me-2"></i>
                                 이메일 보내기
                             </a>
+                            <a href="{{ route('admin.auth.users.verification', $user->id) }}{{ isset($shardId) ? '?shard_id=' . $shardId : '' }}" class="btn btn-outline-info">
+                                <i class="fe fe-shield me-2"></i>
+                                이메일 인증 관리
+                            </a>
                             <div class="dropdown">
                                 <button class="btn btn-outline-secondary dropdown-toggle w-100" type="button" data-bs-toggle="dropdown" aria-expanded="false">
                                     <i class="fe fe-lock me-2"></i>
@@ -239,6 +243,73 @@
 
 
                         </div>
+                    </div>
+                </div>
+
+                <!-- 승인/해제 Card: 관리자 승인 상태를 분리된 카드로 구성 -->
+                <div class="card mb-4">
+                    <div class="card-header d-flex align-items-center justify-content-between">
+                        <h4 class="mb-0">승인/해제</h4>
+                        @php
+                            $approval = $user->approval ?? 'pending';
+                            $approvalBadgeClass = match($approval) {
+                                'approved' => 'success',
+                                'rejected' => 'danger',
+                                'pending' => 'warning',
+                                default => 'secondary'
+                            };
+                            $approvalText = match($approval) {
+                                'approved' => '승인됨',
+                                'rejected' => '거부됨',
+                                'pending' => '승인대기',
+                                default => '미지정'
+                            };
+                        @endphp
+                        <span class="badge bg-{{ $approvalBadgeClass }}">{{ $approvalText }}</span>
+                    </div>
+                    <div class="card-body">
+                        {{-- 승인 --}}
+                        <form class="mb-2"
+                              action="{{ route('admin.auth.users.approve', $user->id) }}{{ isset($shardId) ? '?shard_id=' . $shardId : '' }}"
+                              method="POST"
+                              onsubmit="return confirm('해당 사용자를 승인하시겠습니까?');">
+                            @csrf
+                            @if(isset($shardId))
+                                <input type="hidden" name="shard_id" value="{{ $shardId }}">
+                            @endif
+                            <button type="submit" class="btn btn-success w-100">
+                                <i class="fe fe-check me-2"></i>
+                                승인
+                            </button>
+                        </form>
+                        {{-- 거부 --}}
+                        <form class="mb-2"
+                              action="{{ route('admin.auth.users.reject', $user->id) }}{{ isset($shardId) ? '?shard_id=' . $shardId : '' }}"
+                              method="POST"
+                              onsubmit="return confirm('해당 사용자를 거부 처리하시겠습니까?');">
+                            @csrf
+                            @if(isset($shardId))
+                                <input type="hidden" name="shard_id" value="{{ $shardId }}">
+                            @endif
+                            <button type="submit" class="btn btn-danger w-100">
+                                <i class="fe fe-x me-2"></i>
+                                거부
+                            </button>
+                        </form>
+                        {{-- 승인 대기(보류) --}}
+                        <form
+                              action="{{ route('admin.auth.users.pending', $user->id) }}{{ isset($shardId) ? '?shard_id=' . $shardId : '' }}"
+                              method="POST"
+                              onsubmit="return confirm('해당 사용자를 승인 대기 상태로 변경하시겠습니까?');">
+                            @csrf
+                            @if(isset($shardId))
+                                <input type="hidden" name="shard_id" value="{{ $shardId }}">
+                            @endif
+                            <button type="submit" class="btn btn-outline-secondary w-100">
+                                <i class="fe fe-clock me-2"></i>
+                                승인 대기 처리
+                            </button>
+                        </form>
                     </div>
                 </div>
             </div>

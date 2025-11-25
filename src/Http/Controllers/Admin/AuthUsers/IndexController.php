@@ -6,7 +6,7 @@ use Illuminate\Routing\Controller;
 use Illuminate\Http\Request;
 use Jiny\Auth\Models\AuthUser;
 use Jiny\Auth\Models\ShardTable;
-use Jiny\Auth\Services\UserShardingService;
+use Jiny\Auth\Services\ShardingService;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Pagination\LengthAwarePaginator;
 
@@ -76,7 +76,9 @@ class IndexController extends Controller
         $shardTable = ShardTable::where('table_name', 'users')->first();
 
         // 샤딩 통계
-        $shardingService = new UserShardingService();
+        // 컨테이너에서 싱글톤으로 등록된 ShardingService 인스턴스를 주입하여
+        // 설정(shard.json) 및 상태를 일관되게 공유합니다.
+        $shardingService = app(ShardingService::class);
         $shardStatistics = $shardingService->getShardStatistics();
         $selectedShard = $request->get('shard_id');
 

@@ -5,20 +5,13 @@ namespace Jiny\Auth\Http\Controllers\Admin\Shards;
 use Illuminate\Routing\Controller;
 use Illuminate\Http\Request;
 use Jiny\Auth\Models\ShardTable;
-use Jiny\Auth\Services\ShardTableService;
+use Jiny\Auth\Services\ShardingService;
 
 /**
  * 개별 샤드 삭제 컨트롤러
  */
 class DeleteController extends Controller
 {
-    protected $shardTableService;
-
-    public function __construct(ShardTableService $shardTableService)
-    {
-        $this->shardTableService = $shardTableService;
-    }
-
     /**
      * 단일 샤드 삭제
      */
@@ -32,7 +25,9 @@ class DeleteController extends Controller
         }
 
         $shardTable = ShardTable::findOrFail($tableId);
-        $deleted = $this->shardTableService->deleteShard($shardTable, $shardId);
+        // 통합된 ShardingService를 통해 개별 샤드 테이블 삭제
+        $service = app(ShardingService::class);
+        $deleted = $service->dropShardTable($shardId, $shardTable->table_name);
 
         if ($deleted) {
             $tableName = $shardTable->getShardTableName($shardId);

@@ -5,20 +5,13 @@ namespace Jiny\Auth\Http\Controllers\Admin\Shards;
 use Illuminate\Routing\Controller;
 use Illuminate\Http\Request;
 use Jiny\Auth\Models\ShardTable;
-use Jiny\Auth\Services\ShardTableService;
+use Jiny\Auth\Services\ShardingService;
 
 /**
  * 모든 샤드 테이블의 샤드 일괄 생성 컨트롤러
  */
 class CreateAllTablesController extends Controller
 {
-    protected $shardTableService;
-
-    public function __construct(ShardTableService $shardTableService)
-    {
-        $this->shardTableService = $shardTableService;
-    }
-
     /**
      * 모든 샤드 테이블의 샤드 생성
      */
@@ -36,8 +29,11 @@ class CreateAllTablesController extends Controller
         $totalCreated = 0;
         $results = [];
 
+        $service = app(ShardingService::class);
+
         foreach ($shardTables as $shardTable) {
-            $tableResults = $this->shardTableService->createAllShards($shardTable);
+            // 각 테이블명 기준으로 모든 샤드 테이블을 생성합니다.
+            $tableResults = $service->createAllShardTables($shardTable->table_name);
             $created = count(array_filter($tableResults, fn($r) => $r === 'created'));
             $totalCreated += $created;
 

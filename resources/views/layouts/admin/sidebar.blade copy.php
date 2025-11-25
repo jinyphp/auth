@@ -21,44 +21,39 @@
     @stack('styles')
 
     <!-- Theme CSS -->
-    <link rel="stylesheet" href="{{ asset('assets/css/theme.min.css') }}">
+    {{-- <link rel="stylesheet" href="{{ asset('assets/css/theme.min.css') }}"> --}}
+    {{-- Theme CSS (Vite compiled) --}}
+    @vite('resources/scss/bootstrap/theme.scss')
 
     <title>@yield('title', 'Dashboard') | Jiny Auth11</title>
 </head>
 
 <body>
     <!-- Wrapper -->
-    <main id="db-wrapper">
+    <!-- Wrapper -->
+    <div id="db-wrapper">
         <!-- Sidebar -->
-        @include($layoutSidebar ?? 'jiny-auth::partials.admin.sidebar')
+        @include('jiny-auth::partials.admin.sidebar')
 
         <!-- Page Content -->
-        <section id="page-content">
+        <main id="page-content">
             <!-- Header -->
             @hasSection('header')
                 @yield('header')
             @else
-                @include($layoutHeader ?? 'jiny-auth::partials.admin.header')
+                @include('jiny-auth::partials.admin.header')
             @endif
 
             <!-- Content -->
             @yield('content')
-        </section>
-    </main>
+        </main>
+    </div>
 
-    <!-- Scripts -->
-    <!-- Libs JS -->
-    <script src="{{ asset('assets/libs/@popperjs/core/dist/umd/popper.min.js') }}"></script>
-    <script src="{{ asset('assets/libs/bootstrap/dist/js/bootstrap.bundle.min.js') }}"></script>
-    <script src="{{ asset('assets/libs/simplebar/dist/simplebar.min.js') }}"></script>
-
-    <!-- Theme JS -->
+    {{-- Scripts (Vite compiled) --}}
+    @vite('resources/js/app.js')
 
     @stack('scripts')
     @stack('page-scripts')
-
-    {{-- 페이지별 스크립트 --}}
-    @yield('script')
 </body>
 
 </html>

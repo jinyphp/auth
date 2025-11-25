@@ -5,7 +5,6 @@ namespace Jiny\Auth\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
 use Jiny\Auth\Facades\Shard;
-use Jiny\Auth\Facades\JwtAuth as JwtAuthFacade;
 
 /**
  * JWT 인증 사용자 모델
@@ -17,6 +16,7 @@ class JwtAuth extends Model
 {
     // 실제 테이블은 없으므로 비활성화
     protected $table = null;
+
     public $timestamps = false;
 
     protected $fillable = [
@@ -48,7 +48,7 @@ class JwtAuth extends Model
     /**
      * ID로 사용자 조회 (user_id 기반)
      *
-     * @param mixed $id
+     * @param  mixed  $id
      * @return self|null
      */
     public static function find($id)
@@ -72,8 +72,9 @@ class JwtAuth extends Model
         } catch (\Exception $e) {
             \Log::warning('JwtAuth::find error', [
                 'id' => $id,
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ]);
+
             return null;
         }
     }
@@ -81,7 +82,7 @@ class JwtAuth extends Model
     /**
      * UUID로 사용자 조회
      *
-     * @param string $uuid
+     * @param  string  $uuid
      * @return self|null
      */
     public static function findByUuid($uuid)
@@ -97,8 +98,9 @@ class JwtAuth extends Model
         } catch (\Exception $e) {
             \Log::warning('JwtAuth::findByUuid error', [
                 'uuid' => $uuid,
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ]);
+
             return null;
         }
     }
@@ -106,7 +108,7 @@ class JwtAuth extends Model
     /**
      * 이메일로 사용자 조회
      *
-     * @param string $email
+     * @param  string  $email
      * @return self|null
      */
     public static function findByEmail($email)
@@ -122,8 +124,9 @@ class JwtAuth extends Model
         } catch (\Exception $e) {
             \Log::warning('JwtAuth::findByEmail error', [
                 'email' => $email,
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ]);
+
             return null;
         }
     }
@@ -131,7 +134,7 @@ class JwtAuth extends Model
     /**
      * 사용자명으로 사용자 조회
      *
-     * @param string $username
+     * @param  string  $username
      * @return self|null
      */
     public static function findByUsername($username)
@@ -147,8 +150,9 @@ class JwtAuth extends Model
         } catch (\Exception $e) {
             \Log::warning('JwtAuth::findByUsername error', [
                 'username' => $username,
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ]);
+
             return null;
         }
     }
@@ -156,12 +160,11 @@ class JwtAuth extends Model
     /**
      * 데이터로부터 모델 인스턴스 생성
      *
-     * @param array $data
      * @return self
      */
     public static function createFromData(array $data)
     {
-        $instance = new self();
+        $instance = new self;
 
         // 데이터를 모델 속성에 설정
         foreach ($data as $key => $value) {
@@ -179,9 +182,9 @@ class JwtAuth extends Model
     /**
      * 사용자 검색 (like 검색 지원)
      *
-     * @param string $column
-     * @param string $operator
-     * @param mixed $value
+     * @param  string  $column
+     * @param  string  $operator
+     * @param  mixed  $value
      * @return \Illuminate\Support\Collection
      */
     public static function searchUsers($column, $operator, $value)
@@ -228,8 +231,9 @@ class JwtAuth extends Model
                 'column' => $column,
                 'operator' => $operator,
                 'value' => $value,
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ]);
+
             return collect();
         }
     }
@@ -262,7 +266,7 @@ class JwtAuth extends Model
         $array = parent::toArray();
 
         // id가 없으면 uuid를 사용
-        if (!isset($array['id']) && isset($array['uuid'])) {
+        if (! isset($array['id']) && isset($array['uuid'])) {
             $array['id'] = $array['uuid'];
         }
 
@@ -283,7 +287,7 @@ class JwtAuth extends Model
     public function __get($key)
     {
         // id 요청 시 실제 id가 없으면 uuid 반환
-        if ($key === 'id' && !$this->attributes['id'] && isset($this->attributes['uuid'])) {
+        if ($key === 'id' && ! $this->attributes['id'] && isset($this->attributes['uuid'])) {
             return $this->attributes['uuid'];
         }
 
@@ -295,7 +299,7 @@ class JwtAuth extends Model
      */
     public function isActive()
     {
-        return $this->status === 'active' && !$this->deleted_at;
+        return $this->status === 'active' && ! $this->deleted_at;
     }
 
     /**

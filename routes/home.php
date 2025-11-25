@@ -16,7 +16,7 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-Route::middleware(['web'])->group(function () {
+Route::middleware(['web', 'jwt.auth'])->group(function () {
 
     /*
     |--------------------------------------------------------------------------
@@ -55,9 +55,6 @@ Route::middleware(['web'])->group(function () {
     //         ->name('agree');
     // });
 
-
-
-
     // 약관 동의 관리 (로그인 사용자)
     Route::prefix('home/account/terms')->name('account.terms.')->group(function () {
         Route::get('/', \Jiny\Auth\Http\Controllers\Home\Terms\IndexController::class)
@@ -84,14 +81,11 @@ Route::middleware(['web'])->group(function () {
         Route::delete('/avatar/{avatarId}', \Jiny\Auth\Http\Controllers\Home\Account\Avatar\DeleteController::class)
             ->name('avatar.delete');
 
-
-
         // 활동 로그
         Route::get('/logs', \Jiny\Auth\Http\Controllers\Home\Account\Logs\IndexController::class)
             ->name('logs');
 
     });
-
 
     /*
     |--------------------------------------------------------------------------

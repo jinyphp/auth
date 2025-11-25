@@ -2,8 +2,9 @@
 
 namespace Jiny\Auth\Http\Controllers\Auth\Register;
 
-use Illuminate\Routing\Controller;
 use Illuminate\Http\Request;
+use Illuminate\Routing\Controller;
+use Jiny\Auth\Facades\Shard;
 use Jiny\Auth\Services\TermsService;
 use Jiny\Auth\Services\ValidationService;
 
@@ -467,7 +468,7 @@ class ShowController extends Controller
         if (request()->getHost() === 'localhost' || request()->getHost() === '127.0.0.1') {
             return [
                 'auth_method' => config('admin.auth.method', 'jwt'),
-                'sharding_enabled' => config('admin.auth.sharding.enable', false),
+                'sharding_enabled' => Shard::isEnabled(),
             ];
         }
 

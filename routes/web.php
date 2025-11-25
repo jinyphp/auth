@@ -69,14 +69,24 @@ Route::middleware(['web'])->group(function () {
     Route::post('/logout', \Jiny\Auth\Http\Controllers\Auth\Logout\SubmitController::class)
         ->name('logout');
 
-    // 이메일 인증
-    Route::get('/email/verify', function () {
+    // 이메일 인증 안내 페이지 (경로: /signin/email/verify)
+    Route::get('/signin/email/verify', function () {
         return view('jiny-auth::auth.verification.notice');
     })->name('verification.notice');
 
-    // 이메일 인증 재발송
-    Route::post('/email/resend', \Jiny\Auth\Http\Controllers\Auth\Verification\ResendController::class)
+    // 기존 /email/verify 접근 시 신규 경로로 리다이렉트 (호환성 유지)
+    Route::get('/email/verify', function () {
+        return redirect()->route('verification.notice');
+    });
+
+    // 이메일 인증 재발송 (신규 경로: /signin/email/resend)
+    Route::post('/signin/email/resend', \Jiny\Auth\Http\Controllers\Auth\Verification\ResendController::class)
         ->name('verification.resend');
+
+    // 구경로 호환: /email/resend → 신규 경로로 리다이렉트
+    Route::post('/email/resend', function () {
+        return redirect()->route('verification.resend');
+    });
 });
 
 /*
@@ -86,9 +96,14 @@ Route::middleware(['web'])->group(function () {
 */
 Route::middleware(['web'])->group(function () {
 
-    // 이메일 인증 처리 (토큰 기반)
-    Route::get('/email/verify/{token}', \Jiny\Auth\Http\Controllers\Auth\Verification\VerifyController::class)
+    // 이메일 인증 처리 (신규 경로: /signin/email/verify/{token})
+    Route::get('/signin/email/verify/{token}', \Jiny\Auth\Http\Controllers\Auth\Verification\VerifyController::class)
         ->name('verification.verify');
+
+    // 구 경로 지원: /email/verify/{token} → 신규 경로로 리다이렉트
+    Route::get('/email/verify/{token}', function ($token) {
+        return redirect()->route('verification.verify', ['token' => $token]);
+    })->name('verification.verify.legacy');
 });
 
 /*
@@ -152,7 +167,7 @@ Route::middleware(['web', 'guest.jwt'])->group(function () {
 // 로그아웃 (GET)
 Route::get('/logout', function () {
     // JWT 토큰 해제
-    if ($jwtService = app(\Jiny\Auth\Services\JwtService::class)) {
+    if ($jwtService = app(\Jiny\Auth\Services\JwtAuthService::class)) {
         $token = $jwtService->getTokenFromRequest(request());
         if ($token) {
             try {

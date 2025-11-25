@@ -68,6 +68,16 @@ class JinyAuthServiceProvider extends ServiceProvider
             __DIR__.'/../config/setting.php' => config_path('admin/auth.php'),
         ]);
 
+        // 샤딩 설정 파일 복사
+        $this->publishes([
+            __DIR__.'/../config/shard.json' => config_path('shard.json'),
+        ], 'auth-shard-config');
+
+        // JWT 설정 파일 복사
+        $this->publishes([
+            __DIR__.'/../config/jwt.json' => config_path('jwt.json'),
+        ], 'auth-jwt-config');
+
         $this->publishes([
             __DIR__.'/../resources/actions/' => resource_path('actions')
         ], 'auth-actions');
@@ -82,8 +92,8 @@ class JinyAuthServiceProvider extends ServiceProvider
         $router = $this->app->make(Router::class);
 
         // JWT 인증 미들웨어
-        $router->aliasMiddleware('jwt.auth', \Jiny\Auth\Http\Middleware\JwtAuthMiddleware::class);
-        $router->aliasMiddleware('jwt', \Jiny\Auth\Http\Middleware\JwtAuthMiddleware::class);
+        $router->aliasMiddleware('jwt.auth', \Jiny\Auth\Http\Middleware\JwtAuthenticate::class);
+        $router->aliasMiddleware('jwt', \Jiny\Auth\Http\Middleware\JwtAuthenticate::class);
 
         // JWT 기반 guest 체크 미들웨어
         $router->aliasMiddleware('guest.jwt', \Jiny\Auth\Http\Middleware\RedirectIfAuthenticated::class);

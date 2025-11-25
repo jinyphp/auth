@@ -12,9 +12,9 @@ use Illuminate\Support\Facades\Validator;
 use Jiny\Auth\Services\ValidationService;
 use Jiny\Auth\Services\TermsService;
 use Jiny\Auth\Services\ActivityLogService;
-use Jiny\Auth\Services\JwtService;
+use Jiny\Auth\Services\JwtAuthService;
 use Jiny\Emoney\Services\PointService;
-use Jiny\Auth\Services\ShardingService;
+use Jiny\Auth\Facades\Shard;
 use Jiny\Auth\Models\UserProfile;
 use Jiny\Auth\Models\ShardedUser;
 
@@ -56,16 +56,14 @@ class StoreController extends Controller
         ValidationService $validationService,
         TermsService $termsService,
         ActivityLogService $activityLogService,
-        JwtService $jwtService,
-        PointService $pointService,
-        ShardingService $shardingService
+        JwtAuthService $jwtService,
+        PointService $pointService
     ) {
         $this->validationService = $validationService;
         $this->termsService = $termsService;
         $this->activityLogService = $activityLogService;
         $this->jwtService = $jwtService;
         $this->pointService = $pointService;
-        $this->shardingService = $shardingService;
         $this->loadConfig();
     }
 
@@ -201,6 +199,12 @@ class StoreController extends Controller
             $result = $this->createUserAccount($request);
             $user = $result['user'];
             $emailSent = $result['emailSent'];
+
+            if ($this->config['register']['require_email_verification'] ?? true) {
+                $this->storePendingVerificationSession($user);
+            } else {
+                $this->clearPendingVerificationSession();
+            }
 
             \Log::info('회원가입 핵심 단계 완료', [
                 'user_uuid' => $user->uuid ?? $user->id,
@@ -426,8 +430,8 @@ class StoreController extends Controller
     {
         try {
             // 샤딩 활성화 시 ShardingService 사용
-            if ($this->shardingService->isEnabled()) {
-                $existingUser = $this->shardingService->getUserByEmail($email);
+            if (Shard::isEnabled()) {
+                $existingUser = Shard::getUserByEmail($email);
             } else {
                 // 기본 테이블에서 확인
                 $existingUser = DB::table('users')->where('email', $email)->first();
@@ -462,8 +466,8 @@ class StoreController extends Controller
     {
         try {
             // 샤딩 활성화 시 ShardingService 사용
-            if ($this->shardingService->isEnabled()) {
-                $existingUser = $this->shardingService->getUserByUsername($username);
+            if (Shard::isEnabled()) {
+                $existingUser = Shard::getUserByUsername($username);
             } else {
                 // 기본 테이블에서 확인
                 $existingUser = DB::table('users')->where('username', $username)->first();
@@ -653,10 +657,10 @@ class StoreController extends Controller
             // 8-3. 약관 동의 기록
             $this->recordTermsAgreement($user, $request);
 
-            // 8-4. 이메일 인증 토큰 생성 (임시 주석)
-            // if ($this->config['require_email_verification']) {
-            //     $emailSent = $this->createEmailVerification($user);
-            // }
+            // 8-4. 이메일 인증 토큰 생성 (필요 시)
+            if ($this->config['register']['require_email_verification'] ?? true) {
+                $emailSent = $this->createEmailVerification($user);
+            }
 
             // 8-5. 가입 보너스 지급 (포인트) (임시 주석)
             // $this->giveSignupBonus($user);
@@ -713,7 +717,7 @@ class StoreController extends Controller
         ];
 
         // 샤딩 활성화 여부에 따라 사용자 생성
-        $shardingEnabled = $this->shardingService->isEnabled();
+        $shardingEnabled = Shard::isEnabled();
 
         \Log::info('사용자 생성 로직 선택', [
             'sharding_enabled' => $shardingEnabled,
@@ -763,7 +767,8 @@ class StoreController extends Controller
             ]);
 
             // 표준화된 샤딩 관계 데이터 생성
-            $shardingRelationData = $this->shardingService->createShardingRelationData($user);
+            // 표준화된 샤딩 관계 데이터 생성
+            $shardingRelationData = Shard::createShardingRelationData($user);
 
             // 프로필 특정 데이터 추가
             $profileData = array_merge($shardingRelationData, [
@@ -784,7 +789,7 @@ class StoreController extends Controller
             }
 
             // ShardingService의 표준화된 삽입 메서드 사용
-            $this->shardingService->insertRelatedData('user_profile', $profileData);
+            Shard::insertRelatedData('user_profile', $profileData);
 
             if ($this->config['sharding_enabled']) {
                 \DB::statement('PRAGMA foreign_keys = ON');
@@ -933,8 +938,8 @@ class StoreController extends Controller
             'updated_at' => now(),
         ]);
 
-        // 인증 URL 생성
-        $verificationUrl = url('/email/verify/' . $token);
+        // 인증 URL 생성 (신규 라우트인 /signin/email/verify/{token}를 사용)
+        $verificationUrl = route('verification.verify', ['token' => $token]);
 
         // jiny/admin 방식으로 이메일 발송 (실패해도 회원가입은 계속 진행)
         return $this->sendVerificationEmailSafely($user, $verificationUrl, $verificationCode);
@@ -1705,5 +1710,40 @@ class StoreController extends Controller
             ]);
             // 정리 실패는 회원가입을 중단시키지 않음
         }
+    }
+
+    /**
+     * 이메일 인증 대기 정보를 세션에 저장합니다.
+     *
+     * @param mixed $user
+     * @return void
+     */
+    protected function storePendingVerificationSession($user): void
+    {
+        try {
+            session([
+                'pending_verification_user_id' => $user->id ?? null,
+                'pending_verification_email' => $user->email ?? null,
+                'pending_verification_name' => $user->name ?? null,
+                'pending_verification_uuid' => $user->uuid ?? null,
+            ]);
+        } catch (\Throwable $e) {
+            \Log::warning('Pending verification 세션 저장 실패', ['error' => $e->getMessage()]);
+        }
+    }
+
+    /**
+     * 이메일 인증 대기 세션 정보를 삭제합니다.
+     *
+     * @return void
+     */
+    protected function clearPendingVerificationSession(): void
+    {
+        session()->forget([
+            'pending_verification_user_id',
+            'pending_verification_email',
+            'pending_verification_name',
+            'pending_verification_uuid',
+        ]);
     }
 }

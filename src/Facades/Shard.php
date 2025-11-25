@@ -23,6 +23,12 @@ use Illuminate\Support\Facades\Facade;
  * @method static bool deleteUser(string $uuid) 사용자 삭제 (소프트 딜리트)
  * @method static array getShardStatistics() 샤드별 통계 정보 조회
  * @method static array getAllShardTables() 전체 샤드 테이블 목록 조회
+ * @method static array getShardTableList(string $baseTableName = 'users') 샤드 테이블 목록 및 상태 조회
+ * @method static bool createShardTable(int $shardId, string $baseTableName = 'users') 특정 샤드 테이블 생성
+ * @method static array createAllShardTables(string $baseTableName = 'users') 모든 샤드 테이블 생성
+ * @method static bool dropShardTable(int $shardId, string $baseTableName = 'users') 특정 샤드 테이블 삭제
+ * @method static array dropAllShardTables(string $baseTableName = 'users') 모든 샤드 테이블 삭제
+ * @method static string getTableNameByShardId(int $shardId, string $prefix = 'users_') 샤드 ID로 테이블명 조회
  *
  * @see \Jiny\Auth\Services\ShardingService
  */

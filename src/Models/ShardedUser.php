@@ -2,7 +2,7 @@
 
 namespace Jiny\Auth\Models;
 
-use Illuminate\Database\Eloquent\Model;
+use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Jiny\Auth\Services\ShardingService;
@@ -12,12 +12,30 @@ use Jiny\Auth\Services\ShardingService;
  *
  * UUID 기반으로 샤딩된 테이블에서 사용자 조회/생성/수정
  */
-class ShardedUser extends Model
+class ShardedUser extends Authenticatable
 {
     protected $table = null; // 동적으로 설정
     protected $primaryKey = 'uuid';
     public $incrementing = false;
     protected $keyType = 'string';
+
+    /**
+     * 테이블 이름 동적 반환
+     *
+     * @return string
+     */
+    public function getTable()
+    {
+        if ($this->table) {
+            return $this->table;
+        }
+
+        if (isset($this->attributes['uuid'])) {
+            return $this->getShardTableName();
+        }
+
+        return parent::getTable();
+    }
 
     protected $fillable = [
         'uuid',
@@ -73,7 +91,9 @@ class ShardedUser extends Model
             return null;
         }
 
-        return self::hydrate([$userData])->first();
+        $instance = self::hydrate([$userData])->first();
+        $instance->setTable($shardingService->getShardTableName($uuid));
+        return $instance;
     }
 
     /**
@@ -91,7 +111,9 @@ class ShardedUser extends Model
             return null;
         }
 
-        return self::hydrate([$userData])->first();
+        $instance = self::hydrate([$userData])->first();
+        $instance->setTable($shardingService->getShardTableName($userData->uuid));
+        return $instance;
     }
 
     /**
@@ -109,7 +131,9 @@ class ShardedUser extends Model
             return null;
         }
 
-        return self::hydrate([$userData])->first();
+        $instance = self::hydrate([$userData])->first();
+        $instance->setTable($shardingService->getShardTableName($userData->uuid));
+        return $instance;
     }
 
     /**

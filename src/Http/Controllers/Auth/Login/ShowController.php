@@ -2,8 +2,10 @@
 
 namespace Jiny\Auth\Http\Controllers\Auth\Login;
 
-use Illuminate\Routing\Controller;
 use Illuminate\Http\Request;
+use Illuminate\Routing\Controller;
+use Illuminate\Support\Facades\View;
+use Jiny\Auth\Facades\Shard;
 
 /**
  * 로그인 폼 표시 컨트롤러
@@ -45,7 +47,7 @@ class ShowController extends Controller
             'register_enabled' => config('admin.auth.register.enable', true),
 
             // 샤딩 설정
-            'sharding_enabled' => config('admin.auth.sharding.enable', false),
+            'sharding_enabled' => Shard::isEnabled(),
         ];
     }
 
@@ -82,12 +84,15 @@ class ShowController extends Controller
         if ($request->getHost() === 'localhost' || $request->getHost() === '127.0.0.1') {
             $devInfo = [
                 'auth_method' => config('admin.auth.method', 'jwt'),
-                'sharding_enabled' => config('admin.auth.sharding.enable', false),
+                'sharding_enabled' => Shard::isEnabled(),
             ];
         }
 
-        // 5. 뷰 렌더링
-        return view($this->config['login_view'], [
+        // 5. 렌더링할 로그인 뷰 결정 (login.json 설정 기반)
+        $loginView = $this->resolveLoginView($request);
+
+        // 6. 뷰 렌더링
+        return view($loginView, [
             'social_providers' => $socialProviders,
             'social_enabled' => $this->config['social_enabled'],
             'password_reset_enabled' => $this->config['password_reset_enabled'],
@@ -127,6 +132,78 @@ class ShowController extends Controller
         return view($this->config['disabled_view'], [
             'message' => $message,
         ]);
+    }
+
+    /**
+     * login.json을 읽어 활성화된 디자인의 뷰를 결정합니다.
+     *
+     * 우선순위:
+     * 1) 쿼리스트링 ?design=PREVIEW (프리뷰 용, 유효할 때만)
+     * 2) login.json의 active 키
+     * 3) login.json의 default
+     * 4) config('admin.auth.login.view') 설정값
+     */
+    protected function resolveLoginView(Request $request)
+    {
+        // 기본값: config에 정의된 뷰
+        $fallback = $this->config['login_view'] ?? 'jiny-auth::auth.login.index';
+
+        // login.json 읽기
+        $json = $this->readLoginJson();
+        if (!$json || !is_array($json)) {
+            return $this->ensureViewExistsOrFallback($fallback);
+        }
+
+        $designs = $json['designs'] ?? [];
+        $default = $json['default'] ?? $fallback;
+        $activeKey = $json['active'] ?? null;
+
+        // 프리뷰: 쿼리 파라미터로 특정 디자인 강제
+        $previewKey = $request->query('design');
+        if (is_string($previewKey) && isset($designs[$previewKey])) {
+            return $this->ensureViewExistsOrFallback($designs[$previewKey], $default, $fallback);
+        }
+
+        // active 우선, 없으면 default, 둘 다 없으면 fallback
+        if ($activeKey && isset($designs[$activeKey])) {
+            return $this->ensureViewExistsOrFallback($designs[$activeKey], $default, $fallback);
+        }
+
+        return $this->ensureViewExistsOrFallback($default, null, $fallback);
+    }
+
+    /**
+     * login.json 파일을 읽어 배열로 반환합니다.
+     */
+    protected function readLoginJson(): ?array
+    {
+        // 현재 디렉터리 기준의 login.json 경로
+        $path = __DIR__ . '/login.json';
+        if (!is_file($path)) {
+            return null;
+        }
+
+        $contents = @file_get_contents($path);
+        if ($contents === false) {
+            return null;
+        }
+
+        $data = json_decode($contents, true);
+        return is_array($data) ? $data : null;
+    }
+
+    /**
+     * 주어진 뷰 이름이 존재하면 그대로, 존재하지 않으면 default → fallback 순으로 리턴
+     */
+    protected function ensureViewExistsOrFallback(string $view, ?string $default = null, ?string $fallback = null): string
+    {
+        if (is_string($view) && View::exists($view)) {
+            return $view;
+        }
+        if ($default && View::exists($default)) {
+            return $default;
+        }
+        return $fallback ?? 'jiny-auth::auth.login.index';
     }
 
     /**

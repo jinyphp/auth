@@ -24,6 +24,17 @@ Route::prefix('admin')->middleware(['web'])->group(function () {
         Route::post('/', \Jiny\Auth\Http\Controllers\Admin\AuthUsers\StoreController::class)->name('store');
         Route::get('/shard/{shardId}', \Jiny\Auth\Http\Controllers\Admin\AuthUsers\ShardController::class)->name('shard');
         Route::get('/{id}', \Jiny\Auth\Http\Controllers\Admin\AuthUsers\ShowController::class)->name('show');
+        Route::get('/{id}/mail', [\Jiny\Mail\Http\Controllers\Admin\AuthUsers\MailController::class, 'create'])->name('mail');
+        Route::post('/{id}/mail', [\Jiny\Mail\Http\Controllers\Admin\AuthUsers\MailController::class, 'send'])->name('mail.send');
+        // 이메일 인증 관리 페이지
+        Route::get('/{id}/verification', \Jiny\Auth\Http\Controllers\Admin\AuthUsers\Verify\VerificationController::class)->name('verification');
+        // 이메일 인증 관련 기능
+        // 1) 인증 메일 재전송 (@mail 패키지의 VerificationMail 사용)
+        Route::post('/{id}/verification/resend', \Jiny\Auth\Http\Controllers\Admin\AuthUsers\Verify\ResendVerificationController::class)->name('verification.resend');
+        // 2) 강제 인증 처리
+        Route::post('/{id}/verification/force-verify', \Jiny\Auth\Http\Controllers\Admin\AuthUsers\Verify\ForceVerifyController::class)->name('verification.force-verify');
+        // 3) 인증 해제 처리
+        Route::post('/{id}/verification/force-unverify', \Jiny\Auth\Http\Controllers\Admin\AuthUsers\Verify\ForceUnverifyController::class)->name('verification.force-unverify');
         Route::get('/{id}/approval', \Jiny\Auth\Http\Controllers\Admin\AuthUsers\UserApprovalController::class)->name('approval');
         Route::post('/{id}/approval/update', [\Jiny\Auth\Http\Controllers\Admin\AuthUsers\UserApprovalController::class, 'updateApprovalStatus'])->name('approval.update');
         Route::post('/{id}/toggle-status', \Jiny\Auth\Http\Controllers\Admin\AuthUsers\ToggleStatusController::class)->name('toggle-status');

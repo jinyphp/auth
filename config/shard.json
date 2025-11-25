@@ -1,0 +1,14 @@
+{
+    "enable": true,
+    "shard_count": 2,
+    "shard_key": "uuid",
+    "strategy": "hash",
+    "use_uuid": true,
+    "uuid_version": 4,
+    "use_index_tables": true,
+    "table_prefix": "users_",
+    "index_tables": {
+        "email": "user_email_index",
+        "username": "user_username_index"
+    }
+}

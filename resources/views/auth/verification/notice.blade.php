@@ -35,6 +35,8 @@
                     @endif
 
                     <!-- Info Box -->
+                    @php($pendingEmail = session('pending_verification_email'))
+
                     <div class="alert alert-info d-flex align-items-start" role="alert">
                         <i class="bi bi-info-circle fs-4 me-3"></i>
                         <div>
@@ -42,6 +44,9 @@
                             <p class="mb-2">
                                 @if(auth()->check())
                                     <strong>{{ auth()->user()->email }}</strong><br>
+                                    위 이메일로 인증 링크를 발송했습니다.
+                                @elseif($pendingEmail)
+                                    <strong>{{ $pendingEmail }}</strong><br>
                                     위 이메일로 인증 링크를 발송했습니다.
                                 @else
                                     가입하신 이메일로 인증 링크를 발송했습니다.
@@ -57,7 +62,7 @@
 
                     <!-- Action Buttons -->
                     <div class="d-grid gap-2 mt-4">
-                        @if(auth()->check())
+                        @if(auth()->check() || $pendingEmail)
                             <form action="{{ route('verification.resend') }}" method="POST">
                                 @csrf
                                 <button type="submit" class="btn btn-primary w-100">
@@ -65,7 +70,9 @@
                                     인증 이메일 재발송
                                 </button>
                             </form>
+                        @endif
 
+                        @if(auth()->check())
                             <form action="{{ route('logout') }}" method="POST">
                                 @csrf
                                 <button type="submit" class="btn btn-outline-secondary w-100">

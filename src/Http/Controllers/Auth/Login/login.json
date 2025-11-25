@@ -1,0 +1,9 @@
+{
+    "default": "jiny-auth::auth.login.index",
+    "designs": {
+        "classic": "jiny-auth::auth.login.index",
+        "split": "jiny-auth::auth.login.index_design2"
+    },
+    "active": "classic"
+}
+

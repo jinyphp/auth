@@ -11,8 +11,8 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 use Jiny\Auth\Services\ActivityLogService;
 use Jiny\Auth\Services\AccountLockoutService;
-use Jiny\Auth\Services\JwtService;
-use Jiny\Auth\Services\ShardingService;
+use Jiny\Auth\Services\JwtAuthService;
+use Jiny\Auth\Facades\Shard;
 
 /**
  * 로그인 처리 컨트롤러 (JWT + 샤딩 지원)
@@ -31,13 +31,11 @@ class SubmitController extends Controller
     public function __construct(
         ActivityLogService $activityLogService,
         AccountLockoutService $lockoutService,
-        JwtService $jwtService,
-        ShardingService $shardingService
+        JwtAuthService $jwtService
     ) {
         $this->activityLogService = $activityLogService;
         $this->lockoutService = $lockoutService;
         $this->jwtService = $jwtService;
-        $this->shardingService = $shardingService;
         $this->configPath = dirname(__DIR__, 5) . '/config/setting.json';
         $this->jwtConfigPath = dirname(__DIR__, 5) . '/config/jwt.json';
         $this->config = $this->loadSettings();
@@ -176,8 +174,8 @@ class SubmitController extends Controller
     protected function authenticateUser(Request $request)
     {
         // 샤딩 활성화 시 ShardingService 사용
-        if ($this->config['sharding']['enable'] ?? false) {
-            $userData = $this->shardingService->getUserByEmail($request->email);
+        if (Shard::isEnabled()) {
+            $userData = Shard::getUserByEmail($request->email);
 
             if (!$userData) {
                 return null;
@@ -253,6 +251,18 @@ class SubmitController extends Controller
             ];
         }
 
+        // 이메일 인증 필요
+        if (($this->config['register']['require_email_verification'] ?? true) && empty($user->email_verified_at)) {
+            $this->storePendingVerificationSession($user);
+            return [
+                'code' => 'EMAIL_VERIFICATION_REQUIRED',
+                'message' => '이메일 인증 후 로그인해주세요.',
+                'redirect_route' => 'verification.notice',
+                'flash_type' => 'warning',
+                'user_data' => $user,
+            ];
+        }
+
         return true;
     }
 
@@ -266,7 +276,7 @@ class SubmitController extends Controller
                 ->where('status', 'approved');
 
             // 샤딩 활성화 시 uuid로 조회, 비활성화 시 user_id로 조회
-            if (($this->config['sharding']['enable'] ?? false) && isset($user->uuid)) {
+            if (Shard::isEnabled() && isset($user->uuid)) {
                 $query->where('user_uuid', $user->uuid);
             } elseif (isset($user->id)) {
                 $query->where('user_id', $user->id);
@@ -311,8 +321,8 @@ class SubmitController extends Controller
         }
 
         // 3. 마지막 로그인 시간 업데이트
-        if ($this->config['sharding']['enable'] ?? false) {
-            $this->shardingService->updateUser($user->uuid, [
+        if (Shard::isEnabled()) {
+            Shard::updateUser($user->uuid, [
                 'last_login_at' => now(),
                 'updated_at' => now(),
             ]);
@@ -322,6 +332,9 @@ class SubmitController extends Controller
 
         // 4. 성공 로그 기록
         $this->logSuccessfulLogin($user, $request);
+
+        // 5. 기존 대기 세션 정리
+        $this->clearPendingVerificationSession();
 
         // 5. 응답 생성
         if (($this->config['method'] ?? 'jwt') === 'jwt') {
@@ -402,8 +415,8 @@ class SubmitController extends Controller
             $user = null;
             $userUuid = null;
 
-            if ($this->config['sharding']['enable'] ?? false) {
-                $userData = $this->shardingService->getUserByEmail($request->email);
+            if (Shard::isEnabled()) {
+                $userData = Shard::getUserByEmail($request->email);
                 if ($userData) {
                     $userUuid = $userData->uuid ?? null;
                 }
@@ -547,8 +560,9 @@ class SubmitController extends Controller
         }
 
         if (isset($error['redirect_route'])) {
+            $flashType = $error['flash_type'] ?? 'error';
             $redirect = redirect()->route($error['redirect_route'])
-                ->with('error', $error['message']);
+                ->with($flashType, $error['message']);
 
             // 탈퇴 정보가 있으면 세션에 추가
             if (isset($error['unregist_data'])) {
@@ -558,7 +572,7 @@ class SubmitController extends Controller
             }
 
             // 승인 대기 사용자 정보가 있으면 세션에 추가
-            if (isset($error['user_data'])) {
+            if (($error['code'] ?? null) === 'ACCOUNT_PENDING_APPROVAL' && isset($error['user_data'])) {
                 $userData = $error['user_data'];
                 $pendingUserData = [
                     'id' => $userData->id ?? null,
@@ -584,6 +598,34 @@ class SubmitController extends Controller
 
         throw ValidationException::withMessages([
             'email' => [$error['message']],
+        ]);
+    }
+
+    /**
+     * 이메일 인증 대기 정보를 세션에 저장합니다.
+     */
+    protected function storePendingVerificationSession($user): void
+    {
+        if (!$user) { return; }
+
+        session([
+            'pending_verification_user_id' => $user->id ?? null,
+            'pending_verification_email' => $user->email ?? null,
+            'pending_verification_name' => $user->name ?? null,
+            'pending_verification_uuid' => $user->uuid ?? null,
+        ]);
+    }
+
+    /**
+     * 이메일 인증 대기 세션 정보를 삭제합니다.
+     */
+    protected function clearPendingVerificationSession(): void
+    {
+        session()->forget([
+            'pending_verification_user_id',
+            'pending_verification_email',
+            'pending_verification_name',
+            'pending_verification_uuid',
         ]);
     }
 }

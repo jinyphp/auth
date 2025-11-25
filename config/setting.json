@@ -244,15 +244,6 @@
         "email_changed": true,
         "suspicious_activity": true
     },
-    "sharding": {
-        "enable": true,
-        "shard_count": 2,
-        "shard_key": "uuid",
-        "strategy": "hash",
-        "use_uuid": true,
-        "uuid_version": 4,
-        "use_index_tables": true
-    },
     "account_deletion": {
         "enable": true,
         "require_approval": false,

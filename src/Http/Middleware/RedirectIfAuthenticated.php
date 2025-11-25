@@ -27,7 +27,7 @@ class RedirectIfAuthenticated
             if ($request->hasCookie('access_token')) {
                 try {
                     // JWT 서비스를 통해 토큰 유효성 검사
-                    $jwtService = app(\Jiny\Auth\Services\JwtService::class);
+                    $jwtService = app(\Jiny\Auth\Services\JwtAuthService::class);
                     $token = $request->cookie('access_token');
 
                     if ($token && $jwtService->validateToken($token)) {
