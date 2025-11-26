@@ -33,6 +33,10 @@
                                 <i class="fe fe-user-check me-2"></i>
                                 승인 관리
                             </a>
+                            <a href="{{ route('admin.auth.users.two-factor.show', $user->id) }}{{ isset($shardId) ? '?shard_id=' . $shardId : '' }}" class="btn btn-warning">
+                                <i class="fe fe-smartphone me-2"></i>
+                                2FA 설정
+                            </a>
                             <a href="{{ route('admin.auth.users.edit', $user->id) }}{{ isset($shardId) ? '?shard_id=' . $shardId : '' }}" class="btn btn-primary">
                                 <i class="fe fe-edit me-2"></i>
                                 편집
@@ -160,6 +164,10 @@
                             <a href="{{ route('admin.auth.users.mail', $user->id) }}{{ isset($shardId) ? '?shard_id=' . $shardId : '' }}" class="btn btn-outline-primary">
                                 <i class="fe fe-mail me-2"></i>
                                 이메일 보내기
+                            </a>
+                            <a href="{{ route('admin.auth.users.two-factor.show', $user->id) }}{{ isset($shardId) ? '?shard_id=' . $shardId : '' }}" class="btn btn-outline-warning">
+                                <i class="fe fe-smartphone me-2"></i>
+                                2FA 설정
                             </a>
                             <a href="{{ route('admin.auth.users.verification', $user->id) }}{{ isset($shardId) ? '?shard_id=' . $shardId : '' }}" class="btn btn-outline-info">
                                 <i class="fe fe-shield me-2"></i>
@@ -350,6 +358,25 @@
                                 @else
                                     <span class="badge bg-warning ms-2">미인증</span>
                                 @endif
+                            </div>
+                        </div>
+                        <hr>
+                        <div class="row mb-3">
+                            <div class="col-sm-3">
+                                <h6 class="mb-0">2FA 상태</h6>
+                            </div>
+                            <div class="col-sm-9 text-secondary d-flex flex-wrap align-items-center gap-2">
+                                @if($user->two_factor_enabled ?? false)
+                                    <span class="badge bg-success">활성화</span>
+                                    <span class="text-muted small">
+                                        {{ strtoupper($user->two_factor_method ?? 'totp') }}
+                                    </span>
+                                @else
+                                    <span class="badge bg-secondary">비활성</span>
+                                @endif
+                                <a href="{{ route('admin.auth.users.two-factor.show', $user->id) }}{{ isset($shardId) ? '?shard_id=' . $shardId : '' }}" class="btn btn-sm btn-outline-warning ms-auto">
+                                    설정 페이지
+                                </a>
                             </div>
                         </div>
                         <hr>

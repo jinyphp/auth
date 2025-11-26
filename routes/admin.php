@@ -26,6 +26,13 @@ Route::prefix('admin')->middleware(['web'])->group(function () {
         Route::get('/{id}', \Jiny\Auth\Http\Controllers\Admin\AuthUsers\ShowController::class)->name('show');
         Route::get('/{id}/mail', [\Jiny\Mail\Http\Controllers\Admin\AuthUsers\MailController::class, 'create'])->name('mail');
         Route::post('/{id}/mail', [\Jiny\Mail\Http\Controllers\Admin\AuthUsers\MailController::class, 'send'])->name('mail.send');
+        Route::prefix('/{id}/two-factor')->name('two-factor.')->group(function () {
+            Route::get('/', \Jiny\Auth\Http\Controllers\Admin\AuthUsers\TwoFactor\ShowController::class)->name('show');
+            Route::post('/setup', \Jiny\Auth\Http\Controllers\Admin\AuthUsers\TwoFactor\SetupController::class)->name('setup');
+            Route::post('/enable', \Jiny\Auth\Http\Controllers\Admin\AuthUsers\TwoFactor\EnableController::class)->name('enable');
+            Route::post('/disable', \Jiny\Auth\Http\Controllers\Admin\AuthUsers\TwoFactor\DisableController::class)->name('disable');
+            Route::post('/backup/regenerate', \Jiny\Auth\Http\Controllers\Admin\AuthUsers\TwoFactor\RegenerateBackupCodesController::class)->name('backup.regenerate');
+        });
         // 이메일 인증 관리 페이지
         Route::get('/{id}/verification', \Jiny\Auth\Http\Controllers\Admin\AuthUsers\Verify\VerificationController::class)->name('verification');
         // 이메일 인증 관련 기능

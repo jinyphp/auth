@@ -169,6 +169,11 @@ class JinyAuthServiceProvider extends ServiceProvider
             return new \Jiny\Auth\Services\JwtAuthService();
         });
 
+        // TwoFactor 서비스 바인딩
+        $this->app->singleton(\Jiny\Auth\Services\TwoFactorService::class, function ($app) {
+            return new \Jiny\Auth\Services\TwoFactorService();
+        });
+
         // 파사드 별칭 등록
         $this->app->booting(function () {
             $loader = \Illuminate\Foundation\AliasLoader::getInstance();

@@ -35,6 +35,10 @@ Route::middleware(['web', 'guest.jwt'])->group(function () {
         ->name('login');
     Route::post('/login', \Jiny\Auth\Http\Controllers\Auth\Login\SubmitController::class)
         ->name('login.submit');
+    Route::get('/login/2fa', \Jiny\Auth\Http\Controllers\Auth\TwoFactor\ChallengeController::class)
+        ->name('login.2fa');
+    Route::post('/login/2fa', \Jiny\Auth\Http\Controllers\Auth\TwoFactor\VerifyController::class)
+        ->name('login.2fa.verify');
 
     // 승인 대기
     Route::get('/login/approval', \Jiny\Auth\Http\Controllers\Auth\Approval\PendingController::class)

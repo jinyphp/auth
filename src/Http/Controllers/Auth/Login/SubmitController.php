@@ -12,6 +12,7 @@ use Illuminate\Validation\ValidationException;
 use Jiny\Auth\Services\ActivityLogService;
 use Jiny\Auth\Services\AccountLockoutService;
 use Jiny\Auth\Services\JwtAuthService;
+use Jiny\Auth\Services\TwoFactorService;
 use Jiny\Auth\Facades\Shard;
 
 /**
@@ -23,6 +24,7 @@ class SubmitController extends Controller
     protected $lockoutService;
     protected $jwtService;
     protected $shardingService;
+    protected $twoFactorService;
     protected $config;
     protected $configPath;
     protected $jwtConfig;
@@ -31,11 +33,13 @@ class SubmitController extends Controller
     public function __construct(
         ActivityLogService $activityLogService,
         AccountLockoutService $lockoutService,
-        JwtAuthService $jwtService
+        JwtAuthService $jwtService,
+        TwoFactorService $twoFactorService
     ) {
         $this->activityLogService = $activityLogService;
         $this->lockoutService = $lockoutService;
         $this->jwtService = $jwtService;
+        $this->twoFactorService = $twoFactorService;
         $this->configPath = dirname(__DIR__, 5) . '/config/setting.json';
         $this->jwtConfigPath = dirname(__DIR__, 5) . '/config/jwt.json';
         $this->config = $this->loadSettings();
@@ -165,6 +169,18 @@ class SubmitController extends Controller
         }
 
         // 6. 로그인 처리
+        if ($this->twoFactorService->requiresChallenge($user)) {
+            $this->clearLoginAttempts($request);
+            $this->twoFactorService->beginLoginChallenge($user, [
+                'remember' => $request->filled('remember'),
+                'login_method' => $this->config['method'] ?? 'jwt',
+                'ip' => $request->ip(),
+                'user_agent' => $request->userAgent(),
+            ]);
+
+            return redirect()->route('login.2fa')->with('info', '2차 인증 코드를 입력해주세요.');
+        }
+
         return $this->performLogin($user, $request);
     }
 
@@ -304,7 +320,7 @@ class SubmitController extends Controller
     /**
      * 로그인 처리 (JWT 또는 Session)
      */
-    protected function performLogin($user, Request $request)
+    public function performLogin($user, Request $request)
     {
         // 1. 로그인 시도 초기화
         $this->clearLoginAttempts($request);
@@ -335,6 +351,7 @@ class SubmitController extends Controller
 
         // 5. 기존 대기 세션 정리
         $this->clearPendingVerificationSession();
+        $this->twoFactorService->clearPendingChallenge();
 
         // 5. 응답 생성
         if (($this->config['method'] ?? 'jwt') === 'jwt') {

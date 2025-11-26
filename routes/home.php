@@ -85,6 +85,20 @@ Route::middleware(['web', 'jwt.auth'])->group(function () {
         Route::get('/logs', \Jiny\Auth\Http\Controllers\Home\Account\Logs\IndexController::class)
             ->name('logs');
 
+        // 2FA 관리
+        Route::prefix('2fa')->name('2fa.')->group(function () {
+            Route::get('/', \Jiny\Auth\Http\Controllers\Home\Account\TwoFactor\ShowController::class)
+                ->name('index');
+            Route::post('/setup', \Jiny\Auth\Http\Controllers\Home\Account\TwoFactor\SetupController::class)
+                ->name('setup');
+            Route::post('/enable', \Jiny\Auth\Http\Controllers\Home\Account\TwoFactor\EnableController::class)
+                ->name('enable');
+            Route::post('/disable', \Jiny\Auth\Http\Controllers\Home\Account\TwoFactor\DisableController::class)
+                ->name('disable');
+            Route::post('/backup/regenerate', \Jiny\Auth\Http\Controllers\Home\Account\TwoFactor\RegenerateBackupCodesController::class)
+                ->name('backup.regenerate');
+        });
+
     });
 
     /*
