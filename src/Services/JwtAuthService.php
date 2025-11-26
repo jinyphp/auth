@@ -326,9 +326,34 @@ class JwtAuthService
             ->withClaim('remember', $remember)
             ->getToken($this->config->signer(), $this->config->signingKey());
 
-        // DB에 토큰 정보 저장 (선택적)
+        // DB에 토큰 정보 저장 (JWT 토큰 로그 기록)
+        // SubmitController::performLogin()에서 generateTokenPair() 호출 시 자동으로 실행됨
         try {
-            DB::table('jwt_tokens')->insert([
+            // 테이블 존재 여부 확인
+            $tableExists = DB::getSchemaBuilder()->hasTable('jwt_tokens');
+            if (!$tableExists) {
+                Log::warning('jwt_tokens table does not exist. Run migration: php artisan migrate', [
+                    'token_id' => $tokenId,
+                    'user_id' => $user->id ?? null,
+                    'user_uuid' => $user->uuid ?? null,
+                ]);
+                return $token->toString();
+            }
+
+            // user_id와 user_uuid가 모두 null인 경우 경고
+            if (empty($user->id) && empty($user->uuid)) {
+                Log::warning('Cannot save JWT token: both user_id and user_uuid are null', [
+                    'token_id' => $tokenId,
+                    'user_object' => [
+                        'has_id' => isset($user->id),
+                        'has_uuid' => isset($user->uuid),
+                        'user_keys' => array_keys((array)$user),
+                    ],
+                ]);
+            }
+
+            // 토큰 데이터 준비
+            $tokenData = [
                 'user_id' => $user->id ?? null,
                 'user_uuid' => $user->uuid ?? null,
                 'token_id' => $tokenId,
@@ -341,9 +366,51 @@ class JwtAuthService
                 'expires_at' => $now->modify("+{$expiry} seconds")->format('Y-m-d H:i:s'),
                 'created_at' => now(),
                 'updated_at' => now(),
+            ];
+
+            // 데이터베이스에 저장
+            $insertResult = DB::table('jwt_tokens')->insert($tokenData);
+
+            if ($insertResult) {
+                // 토큰 저장 성공 로그
+                Log::info('JWT Access Token saved to database successfully', [
+                    'user_id' => $user->id ?? null,
+                    'user_uuid' => $user->uuid ?? null,
+                    'token_id' => $tokenId,
+                    'token_type' => 'access',
+                    'remember' => $remember,
+                ]);
+            } else {
+                // insert()가 false를 반환한 경우 (일반적으로 발생하지 않지만 안전장치)
+                Log::error('JWT Access Token insert returned false', [
+                    'user_id' => $user->id ?? null,
+                    'user_uuid' => $user->uuid ?? null,
+                    'token_id' => $tokenId,
+                ]);
+            }
+        } catch (\Illuminate\Database\QueryException $e) {
+            // 데이터베이스 쿼리 에러 (테이블 없음, 컬럼 없음, 제약조건 위반 등)
+            Log::error('Failed to save JWT Access Token to database (QueryException)', [
+                'error' => $e->getMessage(),
+                'sql_state' => $e->getCode(),
+                'sql' => $e->getSql() ?? null,
+                'bindings' => $e->getBindings() ?? null,
+                'user_id' => $user->id ?? null,
+                'user_uuid' => $user->uuid ?? null,
+                'token_id' => $tokenId,
+                'table_exists' => DB::getSchemaBuilder()->hasTable('jwt_tokens'),
             ]);
         } catch (\Exception $e) {
-            // 테이블이 없으면 무시
+            // 기타 에러
+            Log::error('Failed to save JWT Access Token to database (Exception)', [
+                'error' => $e->getMessage(),
+                'error_type' => get_class($e),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+                'user_id' => $user->id ?? null,
+                'user_uuid' => $user->uuid ?? null,
+                'token_id' => $tokenId,
+            ]);
         }
 
         return $token->toString();
@@ -380,9 +447,34 @@ class JwtAuthService
             ->withClaim('remember', $remember)
             ->getToken($this->config->signer(), $this->config->signingKey());
 
-        // DB에 토큰 정보 저장 (선택적)
+        // DB에 토큰 정보 저장 (JWT 토큰 로그 기록)
+        // SubmitController::performLogin()에서 generateTokenPair() 호출 시 자동으로 실행됨
         try {
-            DB::table('jwt_tokens')->insert([
+            // 테이블 존재 여부 확인
+            $tableExists = DB::getSchemaBuilder()->hasTable('jwt_tokens');
+            if (!$tableExists) {
+                Log::warning('jwt_tokens table does not exist. Run migration: php artisan migrate', [
+                    'token_id' => $tokenId,
+                    'user_id' => $user->id ?? null,
+                    'user_uuid' => $user->uuid ?? null,
+                ]);
+                return $token->toString();
+            }
+
+            // user_id와 user_uuid가 모두 null인 경우 경고
+            if (empty($user->id) && empty($user->uuid)) {
+                Log::warning('Cannot save JWT token: both user_id and user_uuid are null', [
+                    'token_id' => $tokenId,
+                    'user_object' => [
+                        'has_id' => isset($user->id),
+                        'has_uuid' => isset($user->uuid),
+                        'user_keys' => array_keys((array)$user),
+                    ],
+                ]);
+            }
+
+            // 토큰 데이터 준비
+            $tokenData = [
                 'user_id' => $user->id ?? null,
                 'user_uuid' => $user->uuid ?? null,
                 'token_id' => $tokenId,
@@ -395,9 +487,51 @@ class JwtAuthService
                 'expires_at' => $now->modify("+{$expiry} seconds")->format('Y-m-d H:i:s'),
                 'created_at' => now(),
                 'updated_at' => now(),
+            ];
+
+            // 데이터베이스에 저장
+            $insertResult = DB::table('jwt_tokens')->insert($tokenData);
+
+            if ($insertResult) {
+                // 토큰 저장 성공 로그
+                Log::info('JWT Refresh Token saved to database successfully', [
+                    'user_id' => $user->id ?? null,
+                    'user_uuid' => $user->uuid ?? null,
+                    'token_id' => $tokenId,
+                    'token_type' => 'refresh',
+                    'remember' => $remember,
+                ]);
+            } else {
+                // insert()가 false를 반환한 경우 (일반적으로 발생하지 않지만 안전장치)
+                Log::error('JWT Refresh Token insert returned false', [
+                    'user_id' => $user->id ?? null,
+                    'user_uuid' => $user->uuid ?? null,
+                    'token_id' => $tokenId,
+                ]);
+            }
+        } catch (\Illuminate\Database\QueryException $e) {
+            // 데이터베이스 쿼리 에러 (테이블 없음, 컬럼 없음, 제약조건 위반 등)
+            Log::error('Failed to save JWT Refresh Token to database (QueryException)', [
+                'error' => $e->getMessage(),
+                'sql_state' => $e->getCode(),
+                'sql' => $e->getSql() ?? null,
+                'bindings' => $e->getBindings() ?? null,
+                'user_id' => $user->id ?? null,
+                'user_uuid' => $user->uuid ?? null,
+                'token_id' => $tokenId,
+                'table_exists' => DB::getSchemaBuilder()->hasTable('jwt_tokens'),
             ]);
         } catch (\Exception $e) {
-            // 테이블이 없으면 무시
+            // 기타 에러
+            Log::error('Failed to save JWT Refresh Token to database (Exception)', [
+                'error' => $e->getMessage(),
+                'error_type' => get_class($e),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+                'user_id' => $user->id ?? null,
+                'user_uuid' => $user->uuid ?? null,
+                'token_id' => $tokenId,
+            ]);
         }
 
         return $token->toString();
@@ -418,9 +552,23 @@ class JwtAuthService
      */
     public function generateTokenPair($user, $remember = false, $jwtConfig = null): array
     {
+        Log::info('JwtAuthService: generateTokenPair called', [
+            'user_id' => $user->id ?? null,
+            'user_uuid' => $user->uuid ?? null,
+            'remember' => $remember,
+        ]);
+
+        $accessToken = $this->generateAccessToken($user, $remember, $jwtConfig);
+        $refreshToken = $this->generateRefreshToken($user, $remember, $jwtConfig);
+
+        Log::info('JwtAuthService: generateTokenPair completed', [
+            'access_token_length' => strlen($accessToken),
+            'refresh_token_length' => strlen($refreshToken),
+        ]);
+
         return [
-            'access_token' => $this->generateAccessToken($user, $remember, $jwtConfig),
-            'refresh_token' => $this->generateRefreshToken($user, $remember, $jwtConfig),
+            'access_token' => $accessToken,
+            'refresh_token' => $refreshToken,
             'token_type' => 'Bearer',
             'expires_in' => $this->getAccessTokenExpiry($remember, $jwtConfig),
             'remember' => $remember,
@@ -456,16 +604,49 @@ class JwtAuthService
 
             // 토큰이 폐기되었는지 확인
             try {
-                $revoked = DB::table('jwt_tokens')
-                    ->where('token_id', $token->claims()->get('jti'))
-                    ->where('revoked', true)
-                    ->exists();
+                $tokenId = $token->claims()->get('jti');
 
-                if ($revoked) {
-                    throw new \Exception('Token has been revoked');
+                // 1. 기본 jwt_tokens 테이블에서 확인
+                if (DB::getSchemaBuilder()->hasTable('jwt_tokens')) {
+                    $revoked = DB::table('jwt_tokens')
+                        ->where('token_id', $tokenId)
+                        ->where('revoked', true)
+                        ->exists();
+
+                    if ($revoked) {
+                        throw new \Exception('Token has been revoked');
+                    }
+                }
+
+                // 2. jwt_tokens 테이블이 샤딩되어 있는 경우 모든 샤드 테이블에서도 확인
+                $shardTable = DB::table('shard_tables')
+                    ->where('table_name', 'jwt_tokens')
+                    ->where('sharding_enabled', true)
+                    ->first();
+
+                if ($shardTable) {
+                    // 모든 샤드 테이블을 순회하며 폐기된 토큰 확인
+                    for ($i = 1; $i <= $shardTable->shard_count; $i++) {
+                        $shardTableName = ($shardTable->table_prefix ?: 'jwt_tokens_') . str_pad($i, 3, '0', STR_PAD_LEFT);
+
+                        if (DB::getSchemaBuilder()->hasTable($shardTableName)) {
+                            $revoked = DB::table($shardTableName)
+                                ->where('token_id', $tokenId)
+                                ->where('revoked', true)
+                                ->exists();
+
+                            if ($revoked) {
+                                throw new \Exception('Token has been revoked');
+                            }
+                        }
+                    }
                 }
             } catch (\Exception $e) {
-                // 테이블이 없으면 무시
+                // 테이블이 없거나 조회 실패 시, 폐기 관련 예외는 재발생
+                if (str_contains($e->getMessage(), 'revoked')) {
+                    throw $e;
+                }
+                // 그 외의 경우는 무시 (테이블이 없는 환경)
             }
 
             return $token;
@@ -650,18 +831,59 @@ class JwtAuthService
 
     /**
      * 토큰 폐기
+     *
+     * 기본 jwt_tokens 테이블과 샤드 테이블(있는 경우) 모두에서 토큰을 폐기합니다.
+     *
+     * @param string $tokenId 토큰 ID (JTI)
+     * @return bool 폐기 성공 여부
      */
     public function revokeToken(string $tokenId): bool
     {
         try {
-            return DB::table('jwt_tokens')
-                ->where('token_id', $tokenId)
-                ->update([
-                    'revoked' => true,
-                    'revoked_at' => now(),
-                    'updated_at' => now(),
-                ]);
+            $revoked = false;
+
+            // 1. 기본 jwt_tokens 테이블에서 폐기
+            if (DB::getSchemaBuilder()->hasTable('jwt_tokens')) {
+                $result = DB::table('jwt_tokens')
+                    ->where('token_id', $tokenId)
+                    ->update([
+                        'revoked' => true,
+                        'revoked_at' => now(),
+                        'updated_at' => now(),
+                    ]);
+                $revoked = $revoked || ($result > 0);
+            }
+
+            // 2. jwt_tokens 테이블이 샤딩되어 있는 경우 모든 샤드 테이블에서도 폐기
+            $shardTable = DB::table('shard_tables')
+                ->where('table_name', 'jwt_tokens')
+                ->where('sharding_enabled', true)
+                ->first();
+
+            if ($shardTable) {
+                // 모든 샤드 테이블을 순회하며 토큰 폐기
+                for ($i = 1; $i <= $shardTable->shard_count; $i++) {
+                    $shardTableName = ($shardTable->table_prefix ?: 'jwt_tokens_') . str_pad($i, 3, '0', STR_PAD_LEFT);
+
+                    if (DB::getSchemaBuilder()->hasTable($shardTableName)) {
+                        $result = DB::table($shardTableName)
+                            ->where('token_id', $tokenId)
+                            ->update([
+                                'revoked' => true,
+                                'revoked_at' => now(),
+                                'updated_at' => now(),
+                            ]);
+                        $revoked = $revoked || ($result > 0);
+                    }
+                }
+            }
+
+            return $revoked;
         } catch (\Exception $e) {
+            Log::error('Token revoke error', [
+                'token_id' => $tokenId,
+                'error' => $e->getMessage(),
+            ]);
             return false;
         }
     }
@@ -669,27 +891,74 @@ class JwtAuthService
     /**
      * 사용자의 모든 토큰 폐기
      *
-     * @param  string|int  $userId
+     * 기본 jwt_tokens 테이블과 샤드 테이블(있는 경우) 모두에서 사용자의 모든 토큰을 폐기합니다.
+     *
+     * @param  string|int  $userId 사용자 ID 또는 UUID
+     * @return bool 폐기 성공 여부
      */
     public function revokeAllUserTokens($userId): bool
     {
         try {
-            $query = DB::table('jwt_tokens')
-                ->where('revoked', false);
+            $revoked = false;
 
-            // UUID 형식인지 확인
-            if (is_string($userId) && \Str::isUuid($userId)) {
-                $query->where('user_uuid', $userId);
-            } else {
-                $query->where('user_id', $userId);
+            // 1. 기본 jwt_tokens 테이블에서 폐기
+            if (DB::getSchemaBuilder()->hasTable('jwt_tokens')) {
+                $query = DB::table('jwt_tokens')
+                    ->where('revoked', false);
+
+                // UUID 형식인지 확인
+                if (is_string($userId) && \Str::isUuid($userId)) {
+                    $query->where('user_uuid', $userId);
+                } else {
+                    $query->where('user_id', $userId);
+                }
+
+                $result = $query->update([
+                    'revoked' => true,
+                    'revoked_at' => now(),
+                    'updated_at' => now(),
+                ]);
+                $revoked = $revoked || ($result > 0);
             }
 
-            return $query->update([
-                'revoked' => true,
-                'revoked_at' => now(),
-                'updated_at' => now(),
-            ]);
+            // 2. jwt_tokens 테이블이 샤딩되어 있는 경우 모든 샤드 테이블에서도 폐기
+            $shardTable = DB::table('shard_tables')
+                ->where('table_name', 'jwt_tokens')
+                ->where('sharding_enabled', true)
+                ->first();
+
+            if ($shardTable) {
+                // 모든 샤드 테이블을 순회하며 사용자의 모든 토큰 폐기
+                for ($i = 1; $i <= $shardTable->shard_count; $i++) {
+                    $shardTableName = ($shardTable->table_prefix ?: 'jwt_tokens_') . str_pad($i, 3, '0', STR_PAD_LEFT);
+
+                    if (DB::getSchemaBuilder()->hasTable($shardTableName)) {
+                        $query = DB::table($shardTableName)
+                            ->where('revoked', false);
+
+                        // UUID 형식인지 확인
+                        if (is_string($userId) && \Str::isUuid($userId)) {
+                            $query->where('user_uuid', $userId);
+                        } else {
+                            $query->where('user_id', $userId);
+                        }
+
+                        $result = $query->update([
+                            'revoked' => true,
+                            'revoked_at' => now(),
+                            'updated_at' => now(),
+                        ]);
+                        $revoked = $revoked || ($result > 0);
+                    }
+                }
+            }
+
+            return $revoked;
         } catch (\Exception $e) {
+            Log::error('Revoke all user tokens error', [
+                'user_id' => $userId,
+                'error' => $e->getMessage(),
+            ]);
             return false;
         }
     }

@@ -246,7 +246,7 @@
     },
     "account_deletion": {
         "enable": true,
-        "require_approval": false,
+        "require_approval": true,
         "require_password_confirm": true,
         "auto_delete_days": 30,
         "create_backup": true,
@@ -286,5 +286,10 @@
             "detail_view": "jiny-auth::admin.lockout.show",
             "unlock_view": "jiny-auth::admin.lockout.unlock"
         }
+    },
+    "sharding": {
+        "enable": false,
+        "shard_count": 2,
+        "use_uuid": false
     }
 }

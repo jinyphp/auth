@@ -7,29 +7,31 @@ use Illuminate\Http\Request;
 use Jiny\Auth\Models\UserUnregist;
 
 /**
- * 관리자: 탈퇴 요청 거부
+ * 관리자: 회원 탈퇴 거부 처리
  */
 class RejectController extends Controller
 {
     public function __invoke(Request $request, $id)
     {
-        $admin = auth()->user() ?? $request->auth_user;
+        $unregist = UserUnregist::findOrFail($id);
 
-        if (!$admin) {
-            return redirect()->route('login');
+        if ($unregist->status !== 'pending') {
+            return response()->json([
+                'success' => false,
+                'message' => '대기 중인 신청만 거부할 수 있습니다.'
+            ], 400);
         }
 
-        $unregistRequest = UserUnregist::findOrFail($id);
+        $unregist->update([
+            'status' => 'rejected',
+            'rejected_at' => now(),
+            'rejected_by' => auth()->id(),
+            'reject_reason' => $request->input('reject_reason') // 거부 사유 (선택)
+        ]);
 
-        if ($unregistRequest->status !== 'pending') {
-            return back()->withErrors(['error' => '이미 처리된 요청입니다.']);
-        }
-
-        // 거부 처리
-        $unregistRequest->reject($admin->id);
-
-        return redirect()
-            ->route('admin.user-unregist.index')
-            ->with('success', '탈퇴 요청이 거부되었습니다.');
+        return response()->json([
+            'success' => true,
+            'message' => '회원 탈퇴 신청이 거부되었습니다.'
+        ]);
     }
 }

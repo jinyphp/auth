@@ -1,6 +1,6 @@
 <?php
 
-namespace Jiny\Auth\Http\Controllers\Home\Account\Deletion;
+namespace Jiny\Auth\Http\Controllers\Home\UserDelete;
 
 use Illuminate\Routing\Controller;
 use Illuminate\Http\Request;
@@ -32,8 +32,18 @@ class CancelController extends Controller
         // 탈퇴 신청 삭제
         $unregistRequest->delete();
 
+        // AJAX 요청인 경우 JSON 응답
+        if ($request->ajax() || $request->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => '탈퇴 신청이 취소되었습니다.',
+                'redirect' => route('account.deletion.show')
+            ]);
+        }
+
         return redirect()
             ->route('account.deletion.show')
             ->with('success', '탈퇴 신청이 취소되었습니다.');
     }
 }
+

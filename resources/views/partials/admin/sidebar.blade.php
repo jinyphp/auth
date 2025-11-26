@@ -1,24 +1,24 @@
 <!-- Sidebar -->
 <style>
-.navbar-heading {
-    color: #8492a6 !important;
-    font-size: 0.75rem;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    padding: 0.75rem 1rem 0.25rem 1rem;
-    opacity: 0.8;
-}
+    .navbar-heading {
+        color: #8492a6 !important;
+        font-size: 0.75rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        padding: 0.75rem 1rem 0.25rem 1rem;
+        opacity: 0.8;
+    }
 
-.navbar-vertical.navbar .navbar-heading {
-    color: #8492a6 !important;
-}
+    .navbar-vertical.navbar .navbar-heading {
+        color: #8492a6 !important;
+    }
 
-/* 다크 테마에서 더 밝게 */
-.navbar-vertical.navbar-dark .navbar-heading,
-.navbar-vertical .navbar-heading {
-    color: #a6b0cf !important;
-}
+    /* 다크 테마에서 더 밝게 */
+    .navbar-vertical.navbar-dark .navbar-heading,
+    .navbar-vertical .navbar-heading {
+        color: #a6b0cf !important;
+    }
 </style>
 
 <nav class="navbar-vertical navbar">
@@ -100,7 +100,8 @@
                             </a>
                         </li> --}}
                         <li class="nav-item">
-                            <a class="nav-link" href="{{ route('admin.user-unregist.index') }}">
+                            <a class="nav-link {{ request()->routeIs('admin.user-unregist.*') ? 'active' : '' }}"
+                                href="{{ route('admin.user-unregist.index') }}">
                                 탈퇴 신청
                             </a>
                         </li>
@@ -110,8 +111,15 @@
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" href="{{ route('admin.auth.jwt.index') }}">
+                            <a class="nav-link {{ request()->routeIs('admin.auth.jwt.*') ? 'active' : '' }}"
+                                href="{{ route('admin.auth.jwt.index') }}">
                                 Jwt 로그인
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link {{ request()->routeIs('admin.auth.token.*') ? 'active' : '' }}"
+                                href="{{ route('admin.auth.token.index') }}">
+                                JWT 토큰 목록
                             </a>
                         </li>
                     </ul>
@@ -189,10 +197,10 @@
             </li>
 
             {{-- 메일 --}}
-            @includeIf("jiny-mail::partials.admin.menu")
+            @includeIf('jiny-mail::partials.admin.menu')
 
             {{-- jiny/emoney 패키지 참조 --}}
-            @includeIf("jiny-emoney::partials.admin.menu")
+            @includeIf('jiny-emoney::partials.admin.menu')
 
             <li class="nav-item">
                 <div class="navbar-heading">로그</div>

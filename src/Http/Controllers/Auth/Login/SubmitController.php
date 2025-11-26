@@ -327,12 +327,41 @@ class SubmitController extends Controller
 
         // 2. JWT 또는 세션 로그인
         $tokens = null;
-        if (($this->config['method'] ?? 'jwt') === 'jwt') {
+        $authMethod = $this->config['method'] ?? 'jwt';
+
+        \Log::info('Login: Auth method check', [
+            'method' => $authMethod,
+            'user_id' => $user->id ?? null,
+            'user_uuid' => $user->uuid ?? null,
+            'user_email' => $user->email ?? null,
+        ]);
+
+        if ($authMethod === 'jwt') {
             // JWT 토큰 생성 (remember 옵션 고려)
+            // generateTokenPair() 메서드는 내부에서 generateAccessToken()과 generateRefreshToken()을 호출하며,
+            // 각 메서드 내부에서 jwt_tokens 테이블에 토큰 정보를 자동으로 저장합니다.
+            // 저장 위치: JwtAuthService::generateAccessToken() (329-360라인)
+            //            JwtAuthService::generateRefreshToken() (383-414라인)
             $remember = $request->filled('remember') && ($this->jwtConfig['remember']['enable'] ?? true);
+
+            \Log::info('Login: Generating JWT token pair', [
+                'user_id' => $user->id ?? null,
+                'user_uuid' => $user->uuid ?? null,
+                'remember' => $remember,
+            ]);
+
             $tokens = $this->jwtService->generateTokenPair($user, $remember, $this->jwtConfig);
+
+            \Log::info('Login: JWT token pair generated', [
+                'has_access_token' => !empty($tokens['access_token']),
+                'has_refresh_token' => !empty($tokens['refresh_token']),
+                'access_token_preview' => !empty($tokens['access_token']) ? substr($tokens['access_token'], 0, 50) . '...' : null,
+            ]);
         } else {
             // 세션 로그인
+            \Log::info('Login: Using session authentication (not JWT)', [
+                'method' => $authMethod,
+            ]);
             Auth::login($user, $request->filled('remember'));
         }
 

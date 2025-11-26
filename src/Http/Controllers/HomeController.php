@@ -131,13 +131,14 @@ class HomeController extends Controller
      * JWT 토큰 직접 검증 및 파싱
      *
      * JWT 토큰의 구조를 확인하고 payload를 디코딩하여 클레임을 추출합니다.
-     * 기본적인 토큰 검증(만료시간, 활성화시간)도 수행합니다.
+     * 기본적인 토큰 검증(만료시간, 활성화시간, 폐기 여부)도 수행합니다.
      *
      * 검증 항목:
      * - JWT 3부분 구조 확인 (header.payload.signature)
      * - Payload Base64 디코딩 및 JSON 파싱
      * - 토큰 만료시간(exp) 검증
      * - 토큰 활성화시간(nbf) 검증
+     * - 토큰 폐기 여부 확인 (jwt_tokens 테이블에서 revoked 상태 확인)
      *
      * @param string $tokenString JWT 토큰 문자열
      * @return array|null 토큰 클레임 배열 또는 null
@@ -170,6 +171,60 @@ class HomeController extends Controller
             // 토큰 활성화 시간 확인
             if (isset($claims['nbf']) && $claims['nbf'] > $now) {
                 return null;
+            }
+
+            // 토큰 폐기 여부 확인 (jwt_tokens 테이블에서 확인)
+            // 토큰 ID(jti)가 있는 경우에만 폐기 여부 확인
+            if (isset($claims['jti'])) {
+                try {
+                    $tokenId = $claims['jti'];
+                    
+                    // 1. 기본 jwt_tokens 테이블에서 확인
+                    $revoked = \DB::table('jwt_tokens')
+                        ->where('token_id', $tokenId)
+                        ->where('revoked', true)
+                        ->exists();
+
+                    if ($revoked) {
+                        // 토큰이 폐기되었으면 null 반환하여 인증 실패 처리
+                        \Log::info('Revoked token detected in jwt_tokens table', ['token_id' => $tokenId]);
+                        return null;
+                    }
+
+                    // 2. jwt_tokens 테이블이 샤딩되어 있는 경우 모든 샤드 테이블에서도 확인
+                    // shard_tables에 jwt_tokens가 등록되어 있고 샤딩이 활성화된 경우
+                    $shardTable = \DB::table('shard_tables')
+                        ->where('table_name', 'jwt_tokens')
+                        ->where('sharding_enabled', true)
+                        ->first();
+
+                    if ($shardTable) {
+                        // 모든 샤드 테이블을 순회하며 폐기된 토큰 확인
+                        for ($i = 1; $i <= $shardTable->shard_count; $i++) {
+                            $shardTableName = ($shardTable->table_prefix ?: 'jwt_tokens_') . str_pad($i, 3, '0', STR_PAD_LEFT);
+                            
+                            if (\DB::getSchemaBuilder()->hasTable($shardTableName)) {
+                                $revoked = \DB::table($shardTableName)
+                                    ->where('token_id', $tokenId)
+                                    ->where('revoked', true)
+                                    ->exists();
+
+                                if ($revoked) {
+                                    // 샤드 테이블에서 폐기된 토큰 발견
+                                    \Log::info('Revoked token detected in sharded table', [
+                                        'token_id' => $tokenId,
+                                        'shard_table' => $shardTableName,
+                                    ]);
+                                    return null;
+                                }
+                            }
+                        }
+                    }
+                } catch (\Exception $e) {
+                    // jwt_tokens 테이블이 없거나 조회 실패 시 로그만 남기고 계속 진행
+                    // (테이블이 없는 환경에서는 폐기 검증을 건너뛰고 기본 검증만 수행)
+                    \Log::debug('Token revocation check skipped', ['error' => $e->getMessage()]);
+                }
             }
 
             return $claims;

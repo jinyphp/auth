@@ -7,33 +7,39 @@ use Illuminate\Http\Request;
 use Jiny\Auth\Models\UserUnregist;
 
 /**
- * 관리자: 탈퇴 요청 목록
+ * 관리자: 회원 탈퇴 신청 목록
  */
 class IndexController extends Controller
 {
     public function __invoke(Request $request)
     {
-        $query = UserUnregist::with(['user', 'manager']);
+        // 통계 데이터 조회
+        $stats = [
+            'pending' => UserUnregist::where('status', 'pending')->count(),
+            'approved' => UserUnregist::where('status', 'approved')->count(),
+            'rejected' => UserUnregist::where('status', 'rejected')->count(),
+        ];
 
-        // 상태 필터
-        if ($request->has('status') && $request->status !== '') {
+        // 목록 조회 (검색 및 필터링)
+        $query = UserUnregist::query()->latest();
+
+        if ($request->filled('status')) {
             $query->where('status', $request->status);
         }
 
-        // 검색
-        if ($request->has('search') && $request->search !== '') {
-            $search = $request->search;
-            $query->where(function($q) use ($search) {
-                $q->where('email', 'like', "%{$search}%")
-                  ->orWhere('name', 'like', "%{$search}%");
+        if ($request->filled('keyword')) {
+            $keyword = $request->keyword;
+            $query->where(function($q) use ($keyword) {
+                $q->where('email', 'like', "%{$keyword}%")
+                  ->orWhere('name', 'like', "%{$keyword}%");
             });
         }
 
-        $unregistRequests = $query->orderBy('created_at', 'desc')
-            ->paginate(20);
+        $unregists = $query->paginate(20);
 
         return view('jiny-auth::admin.user-unregist.index', [
-            'unregistRequests' => $unregistRequests,
+            'unregists' => $unregists,
+            'stats' => $stats,
         ]);
     }
 }

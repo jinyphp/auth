@@ -33,13 +33,13 @@ Route::middleware(['web', 'jwt.auth'])->group(function () {
     | Home\Account\Deletion namespace를 사용하는 컨트롤러들
     */
     Route::prefix('home/account/deletion')->name('account.deletion.')->group(function () {
-        Route::get('/', \Jiny\Auth\Http\Controllers\Home\Account\Deletion\IndexController::class)
+        Route::get('/', \Jiny\Auth\Http\Controllers\Home\UserDelete\IndexController::class)
             ->name('show');
-        Route::post('/', \Jiny\Auth\Http\Controllers\Home\Account\Deletion\StoreController::class)
+        Route::post('/', \Jiny\Auth\Http\Controllers\Home\UserDelete\StoreController::class)
             ->name('store');
-        Route::post('/cancel', \Jiny\Auth\Http\Controllers\Home\Account\Deletion\CancelController::class)
+        Route::post('/cancel', \Jiny\Auth\Http\Controllers\Home\UserDelete\CancelController::class)
             ->name('cancel');
-        Route::get('/requested', \Jiny\Auth\Http\Controllers\Home\Account\Deletion\RequestedController::class)
+        Route::get('/requested', \Jiny\Auth\Http\Controllers\Home\UserDelete\RequestedController::class)
             ->name('requested');
     });
 

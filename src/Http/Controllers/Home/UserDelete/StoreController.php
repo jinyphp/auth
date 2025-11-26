@@ -1,6 +1,6 @@
 <?php
 
-namespace Jiny\Auth\Http\Controllers\Home\Account\Deletion;
+namespace Jiny\Auth\Http\Controllers\Home\UserDelete;
 
 use Illuminate\Routing\Controller;
 use Illuminate\Http\Request;
@@ -23,7 +23,7 @@ class StoreController extends Controller
         // 설정 확인
         $config = config('admin.auth.account_deletion');
         
-        if (!$config['enable']) {
+        if (!$config || empty($config['enable'])) {
             abort(403, '회원 탈퇴 기능이 비활성화되어 있습니다.');
         }
 
@@ -41,6 +41,9 @@ class StoreController extends Controller
         // 비밀번호 확인
         if ($config['require_password_confirm']) {
             if (!Hash::check($validated['password'], $user->password)) {
+                if ($request->ajax() || $request->wantsJson()) {
+                    return response()->json(['errors' => ['password' => ['비밀번호가 일치하지 않습니다.']]], 422);
+                }
                 return back()->withErrors(['password' => '비밀번호가 일치하지 않습니다.']);
             }
         }
@@ -51,6 +54,9 @@ class StoreController extends Controller
             ->first();
 
         if ($existingRequest) {
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json(['success' => false, 'message' => '이미 탈퇴 신청이 진행 중입니다.'], 422);
+            }
             return back()->withErrors(['error' => '이미 탈퇴 신청이 진행 중입니다.']);
         }
 
@@ -59,7 +65,7 @@ class StoreController extends Controller
         $userUuid = null;
         $shardId = null;
 
-        if ($shardingConfig['enable'] && $shardingConfig['use_uuid']) {
+        if ($shardingConfig && !empty($shardingConfig['enable']) && !empty($shardingConfig['use_uuid'])) {
             $userUuid = $user->uuid ?? null;
             $shardId = $user->shard_id ?? null;
         }
@@ -77,17 +83,26 @@ class StoreController extends Controller
         ]);
 
         // 관리자 승인이 필요한 경우
+        $message = '탈퇴 신청이 완료되었습니다.';
         if ($config['require_approval']) {
-            return redirect()
-                ->route('account.deletion.requested')
-                ->with('success', '탈퇴 신청이 완료되었습니다. 관리자 승인 후 처리됩니다.');
+            $message .= ' 관리자 승인 후 처리됩니다.';
+        } else {
+            // 즉시 탈퇴 처리 (추가 구현 필요)
+            // TODO: 실제 계정 비활성화 또는 삭제 로직
         }
 
-        // 즉시 탈퇴 처리 (추가 구현 필요)
-        // TODO: 실제 계정 비활성화 또는 삭제 로직
+        // AJAX 요청인 경우 JSON 응답
+        if ($request->ajax() || $request->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => $message,
+                'redirect' => route('account.deletion.requested')
+            ]);
+        }
 
         return redirect()
             ->route('account.deletion.requested')
-            ->with('success', '탈퇴 신청이 완료되었습니다.');
+            ->with('success', $message);
     }
 }
+

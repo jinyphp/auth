@@ -4,11 +4,11 @@
 
 @section('content')
     <div class="container mb-4">
-        <div class="row mb-5">
+        <section class="row mb-5">
             <div class="col-12">
                 <h1 class="h2 mb-0">탈퇴 신청 완료</h1>
             </div>
-        </div>
+        </section>
 
         @if(session('success'))
         <div class="row mb-3">
@@ -104,5 +104,82 @@
                 </div>
             </div>
         </div>
+
+        {{-- 회원 탈퇴 신청 이력 --}}
+        @if (isset($unregistHistory) && $unregistHistory->count() > 0)
+            <div class="row mt-4">
+                <div class="col-12">
+                    <!-- Card -->
+                    <section class="card">
+                        <!-- Card header -->
+                        <div class="card-header">
+                            <h3 class="mb-0">회원 탈퇴 신청 이력</h3>
+                            <p class="mb-0 text-muted small">최근 10개의 탈퇴 신청 기록을 표시합니다.</p>
+                        </div>
+
+                        <!-- Card body -->
+                        <div class="card-body p-0">
+                            <div class="table-responsive">
+                                <table class="table table-hover mb-0">
+                                    <thead class="bg-light">
+                                        <tr>
+                                            <th style="width: 15%">신청일</th>
+                                            <th style="width: 15%">상태</th>
+                                            <th style="width: 15%">승인일</th>
+                                            <th style="width: 15%">거부일</th>
+                                            <th style="width: 40%">탈퇴 사유</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach ($unregistHistory as $history)
+                                            <tr>
+                                                <td>
+                                                    @if ($history['created_at'])
+                                                        {{ $history['created_at']->format('Y-m-d H:i') }}
+                                                    @else
+                                                        -
+                                                    @endif
+                                                </td>
+                                                <td>
+                                                    @php
+                                                        $statusBadges = [
+                                                            'pending' => 'bg-warning',
+                                                            'approved' => 'bg-success',
+                                                            'rejected' => 'bg-danger',
+                                                            'deleted' => 'bg-info',
+                                                        ];
+                                                        $badgeClass = $statusBadges[$history['status']] ?? 'bg-secondary';
+                                                    @endphp
+                                                    <span class="badge {{ $badgeClass }}">{{ $history['status_label'] }}</span>
+                                                </td>
+                                                <td>
+                                                    @if ($history['approved_at'])
+                                                        {{ $history['approved_at']->format('Y-m-d H:i') }}
+                                                    @else
+                                                        -
+                                                    @endif
+                                                </td>
+                                                <td>
+                                                    @if ($history['rejected_at'])
+                                                        {{ $history['rejected_at']->format('Y-m-d H:i') }}
+                                                    @else
+                                                        -
+                                                    @endif
+                                                </td>
+                                                <td>
+                                                    <small class="text-muted">
+                                                        {{ $history['reason'] ? Str::limit($history['reason'], 50) : '-' }}
+                                                    </small>
+                                                </td>
+                                            </tr>
+                                        @endforeach
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </section>
+                </div>
+            </div>
+        @endif
     </div>
 @endsection

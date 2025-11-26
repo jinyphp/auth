@@ -11,7 +11,7 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-Route::prefix('admin')->middleware(['web'])->group(function () {
+Route::prefix('admin')->middleware(['web', 'admin'])->group(function () {
 
     // 회원 관리 대시보드 (임시로 auth, admin 미들웨어 제거)
     Route::get('/auth', \Jiny\Auth\Http\Controllers\Admin\Dashboard\IndexController::class)->name('admin.auth.dashboard');
@@ -236,11 +236,14 @@ Route::prefix('admin')->middleware(['web'])->group(function () {
     });
 
     // 회원 탈퇴 요청 관리 (UserUnregist)
-    Route::prefix('auth/user-unregist')->name('admin.user-unregist.')->group(function () {
+    Route::prefix('auth/unregist')->name('admin.user-unregist.')->group(function () {
         Route::get('/', \Jiny\Auth\Http\Controllers\Admin\UserUnregist\IndexController::class)->name('index');
+        Route::get('/{id}', \Jiny\Auth\Http\Controllers\Admin\UserUnregist\ShowController::class)->name('show');
         Route::post('/{id}/approve', \Jiny\Auth\Http\Controllers\Admin\UserUnregist\ApproveController::class)->name('approve');
         Route::post('/{id}/reject', \Jiny\Auth\Http\Controllers\Admin\UserUnregist\RejectController::class)->name('reject');
-        Route::delete('/{id}/delete', \Jiny\Auth\Http\Controllers\Admin\UserUnregist\DeleteController::class)->name('delete');
+        Route::post('/{id}/cancel-approve', \Jiny\Auth\Http\Controllers\Admin\UserUnregist\CancelApprovalController::class)->name('cancel');
+        Route::post('/{id}/delete', \Jiny\Auth\Http\Controllers\Admin\UserUnregist\DeleteController::class)->name('delete');
+        Route::delete('/{id}', \Jiny\Auth\Http\Controllers\Admin\UserUnregist\DestroyController::class)->name('destroy');
     });
 
     // 사용자 승인 로그 관리 (UserApproval/Logs)
@@ -254,6 +257,15 @@ Route::prefix('admin')->middleware(['web'])->group(function () {
         Route::get('/', \Jiny\Auth\Http\Controllers\Admin\Jwt\IndexController::class)->name('index');
         Route::post('/update', \Jiny\Auth\Http\Controllers\Admin\Jwt\UpdateController::class)->name('update');
         Route::post('/reset', \Jiny\Auth\Http\Controllers\Admin\Jwt\ResetController::class)->name('reset');
+    });
+
+    // JWT 토큰 관리 (발급된 토큰 목록)
+    Route::prefix('auth/token')->name('admin.auth.token.')->group(function () {
+        Route::get('/', \Jiny\Auth\Http\Controllers\Admin\UserToken\IndexController::class)->name('index');
+        // 단일 토큰 폐기
+        Route::post('/revoke', [\Jiny\Auth\Http\Controllers\Admin\UserToken\IndexController::class, 'revokeToken'])->name('revoke');
+        // 사용자의 모든 토큰 폐기
+        Route::post('/revoke-all', [\Jiny\Auth\Http\Controllers\Admin\UserToken\IndexController::class, 'revokeAllUserTokens'])->name('revoke-all');
     });
 
 });

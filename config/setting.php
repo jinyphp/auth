@@ -19,6 +19,16 @@ if (!file_exists($configPath)) {
         'method' => 'jwt',
         'maintenance_mode' => false,
         'maintenance_message' => '시스템 유지보수 중입니다.',
+        'account_deletion' => [
+            'enable' => true,
+            'require_approval' => true,
+            'require_password_confirm' => true,
+        ],
+        'sharding' => [
+            'enable' => false,
+            'shard_count' => 2,
+            'use_uuid' => false,
+        ],
     ];
 }
 
@@ -47,5 +57,15 @@ try {
         'method' => 'jwt',
         'maintenance_mode' => false,
         'maintenance_message' => '시스템 유지보수 중입니다.',
+        'account_deletion' => [
+            'enable' => true,
+            'require_approval' => true,
+            'require_password_confirm' => true,
+        ],
+        'sharding' => [
+            'enable' => false,
+            'shard_count' => 2,
+            'use_uuid' => false,
+        ],
     ];
 }

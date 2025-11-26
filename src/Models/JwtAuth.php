@@ -61,11 +61,32 @@ class JwtAuth extends Model
                 return self::createFromData((array) $userFromMain);
             }
 
-            // 샤딩된 테이블에서 조회
-            $userData = Shard::getUserById($id);
-
-            if ($userData) {
-                return self::createFromData((array) $userData);
+            // 샤딩된 테이블에서 조회 (user_id로 모든 샤드 테이블 검색)
+            if (Shard::isEnabled()) {
+                try {
+                    $shardTable = DB::table('shard_tables')->where('table_name', 'users')->first();
+                    if ($shardTable) {
+                        // 모든 샤드 테이블을 순회하며 user_id로 조회
+                        for ($i = 1; $i <= $shardTable->shard_count; $i++) {
+                            $shardTableName = 'users_' . str_pad($i, 3, '0', STR_PAD_LEFT);
+                            
+                            if (DB::getSchemaBuilder()->hasTable($shardTableName)) {
+                                $userData = DB::table($shardTableName)
+                                    ->where('id', $id)
+                                    ->first();
+                                
+                                if ($userData) {
+                                    return self::createFromData((array) $userData);
+                                }
+                            }
+                        }
+                    }
+                } catch (\Exception $e) {
+                    \Log::warning('JwtAuth::find - Shard lookup error', [
+                        'id' => $id,
+                        'error' => $e->getMessage(),
+                    ]);
+                }
             }
 
             return null;
