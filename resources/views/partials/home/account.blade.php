@@ -51,6 +51,14 @@
             </a>
         </li>
 
+        <!-- Nav item (2FA 설정 진입: 이중 인증 관리 뷰로 연결) -->
+        <li class="nav-item">
+            <a class="nav-link" href="{{ route('home.account.2fa.index') }}">
+                <i class="fe fe-shield nav-icon"></i>
+                2FA 설정
+            </a>
+        </li>
+
         <!-- Nav item -->
         <li class="nav-item">
             <a class="nav-link" href="{{ route('home.profile.privacy') }}">

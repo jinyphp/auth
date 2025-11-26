@@ -36,7 +36,7 @@ class HomeDashboardController extends HomeController
 
         $userUuid = $user->uuid ?? '';
 
-        // 최근 로그인 기록 조회
+        // Step2. 최근 로그인 기록 조회
         $recentLogins = [];
         try {
             $recentLogins = DB::table('auth_login_attempts')
@@ -49,7 +49,7 @@ class HomeDashboardController extends HomeController
             // 테이블이 없으면 무시
         }
 
-        // 이머니 정보 조회
+        // Step3. 이머니 정보 조회
         $emoney = null;
         $emoneyLogs = collect();
         if ($userUuid) {
@@ -65,7 +65,7 @@ class HomeDashboardController extends HomeController
             }
         }
 
-        // 포인트 정보 조회
+        // Step4. 포인트 정보 조회
         $point = null;
         $pointLogs = collect();
         if ($userUuid) {
@@ -81,7 +81,7 @@ class HomeDashboardController extends HomeController
             }
         }
 
-        // 은행 계좌 정보
+        // Step5. 은행 계좌 정보
         $bankAccounts = collect();
         if ($userUuid) {
             try {
@@ -94,7 +94,7 @@ class HomeDashboardController extends HomeController
             }
         }
 
-        // 접속 정보 수집
+        // Step6. 접속 정보 수집
         $connectionInfo = [
             'ip' => $request->ip(),
             'user_agent' => $request->userAgent(),
@@ -104,14 +104,14 @@ class HomeDashboardController extends HomeController
             'created_at' => $user->created_at,
         ];
 
-        // JWT 인증 정보
+        // Step7. JWT 인증 정보
         $jwtInfo = [
             'has_access_token' => isset($_COOKIE['access_token']),
             'has_refresh_token' => isset($_COOKIE['refresh_token']),
             'auth_method' => 'JWT',
         ];
 
-        // 소셜 로그인 제공자 확인
+        // Step8. 소셜 로그인 제공자 확인
         $socialProvider = null;
         if ($userUuid) {
             try {
@@ -119,7 +119,7 @@ class HomeDashboardController extends HomeController
                     ->where('user_uuid', $userUuid)
                     ->orderBy('created_at', 'desc')
                     ->first();
-                
+
                 if ($socialAccount) {
                     $socialProvider = $socialAccount->provider; // google, kakao, naver 등
                 }
@@ -128,8 +128,15 @@ class HomeDashboardController extends HomeController
             }
         }
 
-        // 로그인 타입 결정
+        // Step9. 로그인 타입 결정
         $loginType = $socialProvider ? 'social' : 'email';
+
+        // Step10. 2FA(이중 인증) 상태 정보
+        $twoFactorInfo = [
+            'enabled' => (bool) ($user->two_factor_enabled ?? false),
+            'method' => $user->two_factor_method ?? 'totp',
+            'confirmed_at' => $user->two_factor_confirmed_at,
+        ];
 
         return view('jiny-auth::home.dashboard.index', [
             'user' => $user,
@@ -143,6 +150,7 @@ class HomeDashboardController extends HomeController
             'point' => $point,
             'pointLogs' => $pointLogs,
             'bankAccounts' => $bankAccounts,
+            'twoFactorInfo' => $twoFactorInfo,
         ]);
     }
 }
