@@ -54,43 +54,19 @@
         <!-- 프로필 수정 폼 -->
         <div class="col-lg-8">
             <!-- 아바타 카드 -->
-            <div class="card mb-4">
-                <div class="card-body">
-                    <div class="d-flex align-items-center">
-                        <div class="me-3">
-                            <a href="{{ route('home.account.avatar') }}" title="아바타 변경">
-                                @if($user->avatar)
-                                    <img src="{{ $user->avatar }}"
-                                         alt="{{ $user->name }}"
-                                         class="rounded-circle"
-                                         style="width: 80px; height: 80px; object-fit: cover; cursor: pointer;">
-                                @else
-                                    <div class="rounded-circle bg-primary d-flex align-items-center justify-content-center text-white"
-                                         style="width: 80px; height: 80px; font-size: 32px; font-weight: bold; cursor: pointer;">
-                                        {{ mb_substr($user->name, 0, 1) }}
-                                    </div>
-                                @endif
-                            </a>
-                        </div>
-                        <div class="flex-grow-1">
-                            <h5 class="mb-1">{{ $user->name }}</h5>
-                            <p class="text-muted mb-2">{{ $user->email }}</p>
-                            <a href="{{ route('home.account.avatar') }}" class="btn btn-sm btn-outline-primary">
-                                <i class="bi bi-camera"></i> 아바타 변경
-                            </a>
-                        </div>
-                    </div>
-                </div>
-            </div>
+            @include('jiny-auth::home.user-edit.partials.avatar')
 
-            <div class="card">
+            <!-- 기본 정보 카드 -->
+            <div class="card mb-4">
                 <div class="card-header">
                     <h4 class="mb-0">기본 정보</h4>
                 </div>
                 <div class="card-body">
-                    <form action="{{ route('home.account.update') }}" method="POST">
+                    <div id="profileAlert"></div>
+                    <form id="profileForm" action="{{ route('home.account.update') }}" method="POST">
                         @csrf
                         @method('PUT')
+                        <input type="hidden" name="form_type" value="profile">
 
                         <!-- 이름 -->
                         <div class="mb-4">
@@ -205,45 +181,9 @@
                             @endif
                         </div>
 
-                        <hr class="my-4">
-
-                        <!-- 비밀번호 변경 섹션 -->
-                        <h5 class="mb-3">비밀번호 변경 (선택사항)</h5>
-                        <p class="text-muted small mb-3">
-                            비밀번호를 변경하지 않으려면 이 필드를 비워두세요.
-                        </p>
-
-                        <!-- 새 비밀번호 -->
-                        <div class="mb-4">
-                            <label for="password" class="form-label fw-semibold">
-                                새 비밀번호
-                            </label>
-                            <input type="password"
-                                   class="form-control @error('password') is-invalid @enderror"
-                                   id="password"
-                                   name="password"
-                                   autocomplete="new-password">
-                            <div class="form-text">최소 8자 이상</div>
-                            @error('password')
-                                <div class="invalid-feedback">{{ $message }}</div>
-                            @enderror
-                        </div>
-
-                        <!-- 비밀번호 확인 -->
-                        <div class="mb-4">
-                            <label for="password_confirmation" class="form-label fw-semibold">
-                                비밀번호 확인
-                            </label>
-                            <input type="password"
-                                   class="form-control"
-                                   id="password_confirmation"
-                                   name="password_confirmation"
-                                   autocomplete="new-password">
-                        </div>
-
                         <!-- 버튼 -->
                         <div class="d-flex gap-2">
-                            <button type="submit" class="btn btn-primary">
+                            <button type="submit" class="btn btn-primary" data-loading-text="저장 중...">
                                 <i class="bi bi-check-circle me-2"></i>변경사항 저장
                             </button>
                             <a href="{{ route('home.dashboard') }}" class="btn btn-outline-secondary">
@@ -253,79 +193,18 @@
                     </form>
                 </div>
             </div>
+
+            <!-- 비밀번호 카드 -->
+            @include('jiny-auth::home.user-edit.partials.password')
         </div>
 
         <!-- 사이드 정보 -->
         <div class="col-lg-4">
             <!-- 계정 정보 -->
-            <div class="card mb-4">
-                <div class="card-header">
-                    <h5 class="mb-0">계정 정보</h5>
-                </div>
-                <div class="card-body">
-                    <div class="mb-3">
-                        <small class="text-muted d-block mb-1">계정 상태</small>
-                        <span class="badge bg-{{ $user->status === 'active' ? 'success' : 'secondary' }}">
-                            {{ $user->status ?? 'active' }}
-                        </span>
-                    </div>
-
-                    @if($user->grade)
-                    <div class="mb-3">
-                        <small class="text-muted d-block mb-1">등급</small>
-                        <span class="badge bg-info">{{ $user->grade }}</span>
-                    </div>
-                    @endif
-
-                    <div class="mb-3">
-                        <small class="text-muted d-block mb-1">가입일</small>
-                        <span>{{ $user->created_at ? $user->created_at->format('Y-m-d') : '-' }}</span>
-                    </div>
-
-                    @if($user->last_login_at)
-                    <div class="mb-3">
-                        <small class="text-muted d-block mb-1">마지막 로그인</small>
-                        <span>{{ $user->last_login_at->format('Y-m-d H:i') }}</span>
-                    </div>
-                    @endif
-
-                    @if($user->login_count)
-                    <div>
-                        <small class="text-muted d-block mb-1">로그인 횟수</small>
-                        <span>{{ number_format($user->login_count) }}회</span>
-                    </div>
-                    @endif
-                </div>
-            </div>
+            @include('jiny-auth::home.user-edit.partials.info')
 
             <!-- 빠른 링크 -->
-            <div class="card">
-                <div class="card-header">
-                    <h5 class="mb-0">빠른 링크</h5>
-                </div>
-                <div class="card-body">
-                    <div class="d-grid gap-2">
-                        <a href="{{ route('home.account.avatar') }}" class="btn btn-outline-primary btn-sm">
-                            <i class="bi bi-person-circle me-2"></i>아바타 변경
-                        </a>
-                        <a href="{{ route('home.profile.phone') }}" class="btn btn-outline-primary btn-sm">
-                            <i class="bi bi-telephone me-2"></i>전화번호 관리
-                        </a>
-                        <a href="{{ route('home.profile.address') }}" class="btn btn-outline-primary btn-sm">
-                            <i class="bi bi-geo-alt me-2"></i>주소 관리
-                        </a>
-                        <a href="{{ route('home.account.logs') }}" class="btn btn-outline-primary btn-sm">
-                            <i class="bi bi-clock-history me-2"></i>활동 로그
-                        </a>
-                        <a href="{{ route('account.terms.index') }}" class="btn btn-outline-primary btn-sm">
-                            <i class="bi bi-file-text me-2"></i>약관 동의 관리
-                        </a>
-                        <a href="{{ route('account.deletion.show') }}" class="btn btn-outline-danger btn-sm">
-                            <i class="bi bi-trash me-2"></i>회원 탈퇴
-                        </a>
-                    </div>
-                </div>
-            </div>
+            @include('jiny-auth::home.user-edit.partials.links')
         </div>
     </div>
 </div>
@@ -333,22 +212,139 @@
 
 @push('scripts')
 <script>
-// 비밀번호 강도 체크 (선택사항)
-document.getElementById('password')?.addEventListener('input', function(e) {
-    const password = e.target.value;
+document.addEventListener('DOMContentLoaded', () => {
+    const forms = [
+        { form: document.getElementById('profileForm'), alert: document.getElementById('profileAlert'), resetOnSuccess: false },
+        { form: document.getElementById('passwordForm'), alert: document.getElementById('passwordAlert'), resetOnSuccess: true },
+    ];
 
-    if (password.length > 0 && password.length < 8) {
-        console.warn('비밀번호는 최소 8자 이상이어야 합니다.');
+    forms.forEach(({ form, alert, resetOnSuccess }) => {
+        if (!form) {
+            return;
+        }
+
+        form.addEventListener('submit', async (event) => {
+            event.preventDefault();
+            clearAlert(alert);
+            setLoading(form, true);
+
+            const formData = new FormData(form);
+            if (!formData.has('_method')) {
+                formData.append('_method', 'PUT');
+            }
+
+            try {
+                const response = await fetch(form.action, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                        'Accept': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest',
+                    },
+                    body: formData,
+                });
+
+                const result = await response.json();
+
+                if (!response.ok || !result.success) {
+                    const message = extractErrors(result) || result.message || '요청을 처리하지 못했습니다.';
+                    throw new Error(message);
+                }
+
+                showAlert(alert, 'success', result.message);
+
+                if (result.user) {
+                    updateProfilePreview(result.user);
+                }
+
+                if (resetOnSuccess) {
+                    form.reset();
+                }
+            } catch (error) {
+                showAlert(alert, 'danger', error.message || '알 수 없는 오류가 발생했습니다.');
+            } finally {
+                setLoading(form, false);
+            }
+        });
+    });
+
+    function extractErrors(result) {
+        if (!result || !result.errors) {
+            return '';
+        }
+
+        return Object.values(result.errors)
+            .flat()
+            .join('<br>');
     }
-});
 
-// 비밀번호 일치 확인
-document.getElementById('password_confirmation')?.addEventListener('input', function(e) {
-    const password = document.getElementById('password').value;
-    const confirmation = e.target.value;
+    function showAlert(container, type, message) {
+        if (!container) {
+            return;
+        }
 
-    if (confirmation.length > 0 && password !== confirmation) {
-        console.warn('비밀번호가 일치하지 않습니다.');
+        container.innerHTML = `
+            <div class="alert alert-${type} alert-dismissible fade show" role="alert">
+                ${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        `;
+    }
+
+    function clearAlert(container) {
+        if (container) {
+            container.innerHTML = '';
+        }
+    }
+
+    function setLoading(form, isLoading) {
+        const submitButton = form.querySelector('button[type="submit"]');
+        if (!submitButton) {
+            return;
+        }
+
+        if (isLoading) {
+            submitButton.dataset.originalText = submitButton.innerHTML;
+            const loadingText = submitButton.dataset.loadingText || '처리 중...';
+            submitButton.innerHTML = `<span class="spinner-border spinner-border-sm me-2"></span>${loadingText}`;
+            submitButton.disabled = true;
+        } else {
+            submitButton.innerHTML = submitButton.dataset.originalText || submitButton.innerHTML;
+            submitButton.disabled = false;
+        }
+    }
+
+    function updateProfilePreview(user) {
+        updateField('name', user.name);
+        updateField('email', user.email);
+        updateField('status', user.status ?? 'active', (value, el) => {
+            el.textContent = value;
+            el.classList.remove('bg-success', 'bg-secondary');
+            el.classList.add(value === 'active' ? 'bg-success' : 'bg-secondary');
+        });
+
+        if (user.last_login_at) {
+            const formatted = formatDate(user.last_login_at);
+            updateField('last_login_at', formatted);
+        }
+    }
+
+    function updateField(field, value, callback) {
+        document.querySelectorAll(`[data-profile-field="${field}"]`).forEach((el) => {
+            if (typeof callback === 'function') {
+                callback(value, el);
+            } else {
+                el.textContent = value ?? '-';
+            }
+        });
+    }
+
+    function formatDate(isoString) {
+        try {
+            return new Date(isoString).toLocaleString();
+        } catch (e) {
+            return isoString;
+        }
     }
 });
 </script>

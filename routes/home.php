@@ -66,9 +66,9 @@ Route::middleware(['web', 'jwt.auth'])->group(function () {
     // 계정 관리
     Route::prefix('home/account')->name('home.account.')->group(function () {
         // 프로필 수정
-        Route::get('/edit', \Jiny\Auth\Http\Controllers\Home\Account\Edit\EditController::class)
+        Route::get('/edit', \Jiny\Auth\Http\Controllers\UserEdit\EditController::class)
             ->name('edit');
-        Route::put('/update', \Jiny\Auth\Http\Controllers\Home\Account\Edit\UpdateController::class)
+        Route::put('/update', \Jiny\Auth\Http\Controllers\UserEdit\UpdateController::class)
             ->name('update');
 
         // 아바타 관리

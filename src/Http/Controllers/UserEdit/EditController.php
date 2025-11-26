@@ -1,6 +1,6 @@
 <?php
 
-namespace Jiny\Auth\Http\Controllers\Home\Account\Edit;
+namespace Jiny\Auth\Http\Controllers\UserEdit;
 
 use Illuminate\Routing\Controller;
 use Illuminate\Http\Request;
@@ -25,7 +25,7 @@ class EditController extends Controller
         // 기본 주소 가져오기
         $defaultAddress = $this->getDefaultAddress($user->uuid);
 
-        return view('jiny-auth::home.account.edit', [
+        return view('jiny-auth::home.user-edit.index', [
             'user' => $user,
             'primaryPhone' => $primaryPhone,
             'defaultAddress' => $defaultAddress,

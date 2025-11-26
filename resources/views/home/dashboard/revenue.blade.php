@@ -228,3 +228,9 @@
         </div>
     </div>
 </div>
+
+@push('scripts')
+    <script src="../assets/libs/apexcharts/dist/apexcharts.min.js"></script>
+    <script src="../assets/js/vendors/chart.js"></script>
+    <script src="../assets/js/vendors/navbar-nav.js"></script>
+@endpush
