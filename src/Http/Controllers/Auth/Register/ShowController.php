@@ -7,6 +7,8 @@ use Illuminate\Routing\Controller;
 use Jiny\Auth\Facades\Shard;
 use Jiny\Auth\Services\TermsService;
 use Jiny\Auth\Services\ValidationService;
+use Jiny\Locale\Models\Country;
+use Jiny\Locale\Models\Language;
 
 /**
  * 회원가입 폼 표시 컨트롤러 (약관 동의 체크 기능 포함)
@@ -25,6 +27,8 @@ class ShowController extends Controller
     protected $validationService;
     protected $config;
     protected $configPath;
+    protected $serverConfig;
+    protected $serverConfigPath;
 
     /**
      * 생성자
@@ -39,7 +43,9 @@ class ShowController extends Controller
         $this->termsService = $termsService;
         $this->validationService = $validationService;
         $this->configPath = dirname(__DIR__, 5) . '/config/setting.json';
+        $this->serverConfigPath = dirname(__DIR__, 5) . '/config/server.json';
         $this->config = $this->loadSettings();
+        $this->serverConfig = $this->loadServerConfig();
     }
 
     /**
@@ -65,6 +71,26 @@ class ShowController extends Controller
         // JSON 파일이 없거나 파싱 실패 시 빈 배열 반환
         // 기본값 초기화 기능이 제거되어 설정 파일이 완전해야 함
         return [];
+    }
+
+    /**
+     * server.json 파일에서 설정 읽기
+     */
+    private function loadServerConfig()
+    {
+        if (file_exists($this->serverConfigPath)) {
+            try {
+                $jsonContent = file_get_contents($this->serverConfigPath);
+                $settings = json_decode($jsonContent, true);
+
+                if (json_last_error() === JSON_ERROR_NONE) {
+                    return $settings;
+                }
+            } catch (\Exception $e) {
+                // 무시
+            }
+        }
+        return ['api_url' => ''];
     }
 
     /**
@@ -103,7 +129,10 @@ class ShowController extends Controller
         // 2단계: 가입 모드 확인
         $mode = $this->checkRegistrationMode();
 
-        // 3단계: 약관 로드 - 약관 동의가 완료되었거나 에러가 있으면 빈 배열로 설정
+        // 3단계: 약관 데이터 로드 (항상 로드하여 존재 여부 및 필수 약관 ID 확인)
+        $allTermsData = $this->loadTerms();
+
+        // 뷰에 표시할 약관 데이터 설정
         if ($hasErrors || $this->hasAgreedToTerms()) {
             $terms = [
                 'mandatory' => collect([]),
@@ -112,15 +141,27 @@ class ShowController extends Controller
                 'all' => collect([]),
             ];
         } else {
-            $terms = $this->loadTerms();
+            $terms = $allTermsData;
         }
 
         // 4단계: 폼 데이터 준비
         $formData = $this->prepareFormData($terms);
 
-        // 타임라인 표시 여부 추가 (에러가 있거나 약관 동의가 완료된 경우, 그리고 실제 약관이 존재하는 경우에만)
-        $hasActualTerms = !empty($terms['all']) && count($terms['all']) > 0;
+        // 타임라인 표시 여부 추가
+        $hasActualTerms = !empty($allTermsData['all']) && count($allTermsData['all']) > 0;
         $formData['show_timeline'] = $hasActualTerms && ($hasErrors || $this->hasAgreedToTerms());
+
+        // 이미 동의한 경우, 약관 ID들을 뷰에 전달 (AJAX 요청 시 전송하기 위함)
+        if ($this->hasAgreedToTerms()) {
+            $agreedTermsIds = session('agreed_terms', []);
+            
+            // 세션에 없는 경우(쿠키 등), 필수 약관이라도 포함
+            if (empty($agreedTermsIds) && $hasActualTerms) {
+                $agreedTermsIds = $allTermsData['mandatory']->pluck('id')->toArray();
+            }
+            
+            $formData['agreed_terms_ids'] = $agreedTermsIds;
+        }
 
         // 5단계: 뷰 렌더링
         return $this->renderView($mode, $formData);
@@ -153,7 +194,7 @@ class ShowController extends Controller
 
             // 활성화된 약관이 있으면 약관 동의 페이지로 리다이렉션
             if ($mandatoryTerms->isNotEmpty() || $optionalTerms->isNotEmpty()) {
-                return redirect()->route('register.terms');
+                return redirect()->route('signup.terms');
             }
 
             // 약관이 활성화되어 있지만 실제 약관이 없는 경우, 자동으로 동의한 것으로 처리
@@ -347,6 +388,12 @@ class ShowController extends Controller
      */
     protected function prepareFormData(array $terms)
     {
+        // 활성화된 국가 목록
+        $countries = Country::where('enable', true)->orderBy('name')->get();
+
+        // 활성화된 언어 목록
+        $languages = Language::where('enable', true)->orderBy('name')->get();
+
         return [
             'terms' => $terms,
             'password_rules' => $this->getPasswordRules(),
@@ -355,6 +402,8 @@ class ShowController extends Controller
             'form_config' => $this->getFormConfig(),
             'validation_messages' => $this->getValidationMessages(),
             'dev_info' => $this->getDevInfo(),
+            'countries' => $countries,
+            'languages' => $languages,
         ];
     }
 
@@ -431,6 +480,9 @@ class ShowController extends Controller
             'terms_enable' => $this->config['terms']['enable'],
             'terms_require_agreement' => $this->config['terms']['require_agreement'],
             'terms_show_version' => $this->config['terms']['show_version'],
+            'terms_require_agreement' => $this->config['terms']['require_agreement'],
+            'terms_show_version' => $this->config['terms']['show_version'],
+            'api_url' => $this->serverConfig['api_url'] ?? '',
         ];
     }
 

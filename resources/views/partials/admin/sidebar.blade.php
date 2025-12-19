@@ -76,11 +76,11 @@
                                 국가
                             </a>
                         </li>
-                        {{-- <li class="nav-item">
+                        <li class="nav-item">
                             <a class="nav-link" href="{{ route('admin.auth.user.languages.index') }}">
                                 언어
                             </a>
-                        </li> --}}
+                        </li>
                     </ul>
                 </div>
             </li>

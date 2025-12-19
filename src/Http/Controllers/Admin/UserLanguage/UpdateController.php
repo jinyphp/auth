@@ -40,7 +40,14 @@ class UpdateController extends Controller
             return redirect()->route('admin.auth.user.languages.index')
                 ->with('error', '언어를 찾을 수 없습니다.');
         }
-        $validator = Validator::make($request->all(), $this->actions['validation']);
+        
+        // Validation 규칙에서 {id}를 실제 ID로 치환
+        $validationRules = $this->actions['validation'];
+        if (isset($validationRules['code']) && strpos($validationRules['code'], '{id}') !== false) {
+            $validationRules['code'] = str_replace('{id}', $id, $validationRules['code']);
+        }
+        
+        $validator = Validator::make($request->all(), $validationRules);
         if ($validator->fails()) {
             return redirect()
                 ->route($this->actions['routes']['error'], $id)
@@ -50,7 +57,8 @@ class UpdateController extends Controller
         \DB::table('user_language')->where('id', $id)->update([
             'code' => $request->code,
             'name' => $request->name,
-            'flag' => $request->flag,
+            'flag' => $request->flag ?? null,
+            'description' => $request->description ?? null,
             'enable' => $request->enable ?? '1',
             'updated_at' => now(),
         ]);

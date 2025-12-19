@@ -17,6 +17,8 @@ use Jiny\Emoney\Services\PointService;
 use Jiny\Auth\Facades\Shard;
 use Jiny\Auth\Models\UserProfile;
 use Jiny\Auth\Models\ShardedUser;
+use Jiny\Locale\Models\Country;
+use Jiny\Locale\Models\Language;
 
 /**
  * 회원가입 처리 컨트롤러
@@ -714,6 +716,8 @@ class StoreController extends Controller
             'utype' => 'USR', // 일반 사용자
             'status' => $status,
             'email_verified_at' => $emailVerifiedAt,
+            'country' => $request->country ?? null,
+            'language' => $request->language ?? null,
         ];
 
         // 샤딩 활성화 여부에 따라 사용자 생성
@@ -740,6 +744,22 @@ class StoreController extends Controller
         // 자동 승인된 경우 승인 로그 기록
         if (($this->config['approval']['require_approval'] ?? false) && ($this->config['approval']['approval_auto'] ?? false) && $status === 'active') {
             $this->recordApprovalLog($user, 'auto_approved', '시스템 자동 승인');
+        }
+
+        // 국가 카운트 증가
+        if ($request->country) {
+            $country = Country::where('code', $request->country)->first();
+            if ($country) {
+                $country->incrementUsers();
+            }
+        }
+
+        // 언어 카운트 증가
+        if ($request->language) {
+            $language = Language::where('code', $request->language)->first();
+            if ($language) {
+                $language->incrementUsers();
+            }
         }
 
         return $user;

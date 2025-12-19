@@ -45,8 +45,10 @@ class StoreController extends Controller
         \DB::table('user_language')->insert([
             'code' => $request->code,
             'name' => $request->name,
-            'flag' => $request->flag,
+            'flag' => $request->flag ?? null,
+            'description' => $request->description ?? null,
             'enable' => $request->enable ?? '1',
+            'users' => 0,
             'created_at' => now(),
             'updated_at' => now(),
         ]);

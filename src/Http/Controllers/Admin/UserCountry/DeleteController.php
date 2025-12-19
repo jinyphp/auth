@@ -3,6 +3,7 @@
 namespace Jiny\Auth\Http\Controllers\Admin\UserCountry;
 
 use Illuminate\Routing\Controller;
+use Illuminate\Support\Facades\DB;
 
 class DeleteController extends Controller
 {
@@ -31,12 +32,12 @@ class DeleteController extends Controller
 
     public function __invoke($id)
     {
-        $country = \DB::table('user_country')->where('id', $id)->first();
+        $country = DB::table('user_country')->where('id', $id)->first();
         if (!$country) {
             return redirect()->route('admin.auth.user.countries.index')
                 ->with('error', '국가를 찾을 수 없습니다.');
         }
-        \DB::table('user_country')->where('id', $id)->delete();
+        DB::table('user_country')->where('id', $id)->delete();
         return redirect()
             ->route($this->actions['routes']['success'])
             ->with('success', $this->actions['messages']['success']);

@@ -6,6 +6,8 @@ use Illuminate\Routing\Controller;
 use Jiny\Auth\Models\AuthUser;
 use Jiny\Auth\Models\ShardTable;
 use Jiny\Auth\Models\UserType;
+use Jiny\Locale\Models\Country;
+use Jiny\Locale\Models\Language;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Http\Request;
 
@@ -78,6 +80,12 @@ class EditController extends Controller
             'require_symbols' => false,
         ]);
 
-        return view($this->config['view'], compact('user', 'shardId', 'userTypes', 'passwordRules'));
+        // 활성화된 국가 목록
+        $countries = Country::where('enable', true)->orderBy('name')->get();
+
+        // 활성화된 언어 목록
+        $languages = Language::where('enable', true)->orderBy('name')->get();
+
+        return view($this->config['view'], compact('user', 'shardId', 'userTypes', 'passwordRules', 'countries', 'languages'));
     }
 }

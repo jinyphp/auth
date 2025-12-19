@@ -7,6 +7,8 @@ use Illuminate\Http\Request;
 use Jiny\Auth\Models\AuthUser;
 use Jiny\Auth\Models\ShardTable;
 use Jiny\Auth\Models\UserType;
+use Jiny\Locale\Models\Country;
+use Jiny\Locale\Models\Language;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
@@ -98,6 +100,8 @@ class UpdateController extends Controller
             ],
             'utype' => 'required|string|exists:user_type,type',
             'account_status' => 'required|string|in:active,inactive,suspended',
+            'country' => 'nullable|string|exists:user_country,code',
+            'language' => 'nullable|string|exists:user_language,code',
         ];
 
         // 비밀번호가 제공된 경우에만 validation 추가
@@ -187,6 +191,50 @@ class UpdateController extends Controller
                 $newUserType = UserType::where('type', $newUtype)->first();
                 if ($newUserType) {
                     $newUserType->incrementUsers();
+                }
+            }
+        }
+
+        // 국가 변경 시 카운트 조정
+        $oldCountry = $user->country;
+        $newCountry = $request->get('country');
+
+        if ($oldCountry !== $newCountry) {
+            // 이전 국가 카운트 감소
+            if ($oldCountry) {
+                $oldCountryModel = Country::where('code', $oldCountry)->first();
+                if ($oldCountryModel) {
+                    $oldCountryModel->decrementUsers();
+                }
+            }
+
+            // 새 국가 카운트 증가
+            if ($newCountry) {
+                $newCountryModel = Country::where('code', $newCountry)->first();
+                if ($newCountryModel) {
+                    $newCountryModel->incrementUsers();
+                }
+            }
+        }
+
+        // 언어 변경 시 카운트 조정
+        $oldLanguage = $user->language;
+        $newLanguage = $request->get('language');
+
+        if ($oldLanguage !== $newLanguage) {
+            // 이전 언어 카운트 감소
+            if ($oldLanguage) {
+                $oldLanguageModel = Language::where('code', $oldLanguage)->first();
+                if ($oldLanguageModel) {
+                    $oldLanguageModel->decrementUsers();
+                }
+            }
+
+            // 새 언어 카운트 증가
+            if ($newLanguage) {
+                $newLanguageModel = Language::where('code', $newLanguage)->first();
+                if ($newLanguageModel) {
+                    $newLanguageModel->incrementUsers();
                 }
             }
         }

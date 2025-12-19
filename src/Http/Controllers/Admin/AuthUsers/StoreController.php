@@ -6,6 +6,8 @@ use Illuminate\Routing\Controller;
 use Illuminate\Http\Request;
 use Jiny\Auth\Models\AuthUser;
 use Jiny\Auth\Models\UserType;
+use Jiny\Locale\Models\Country;
+use Jiny\Locale\Models\Language;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
 
@@ -158,6 +160,10 @@ class StoreController extends Controller
         $data['isAdmin'] = ($data['utype'] === 'ADM') ? '1' : '0';
 
         try {
+            // 국가/언어 코드 저장 (데이터에서 추출)
+            $countryCode = $request->get('country');
+            $languageCode = $request->get('language');
+
             // 사용자 생성 (샤딩 자동 처리)
             $user = AuthUser::create($data);
 
@@ -166,6 +172,22 @@ class StoreController extends Controller
                 $userType = UserType::where('type', $data['utype'])->first();
                 if ($userType) {
                     $userType->incrementUsers();
+                }
+            }
+
+            // 국가 카운트 증가
+            if ($countryCode) {
+                $country = Country::where('code', $countryCode)->first();
+                if ($country) {
+                    $country->incrementUsers();
+                }
+            }
+
+            // 언어 카운트 증가
+            if ($languageCode) {
+                $language = Language::where('code', $languageCode)->first();
+                if ($language) {
+                    $language->incrementUsers();
                 }
             }
 

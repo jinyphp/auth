@@ -5,6 +5,7 @@ namespace Jiny\Auth\Http\Controllers\Admin\UserCountry;
 use Illuminate\Routing\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\DB;
 
 class StoreController extends Controller
 {
@@ -42,11 +43,16 @@ class StoreController extends Controller
                 ->withErrors($validator)
                 ->withInput();
         }
-        \DB::table('user_country')->insert([
+        DB::table('user_country')->insert([
             'code' => $request->code,
             'name' => $request->name,
-            'flag' => $request->flag,
+            'emoji' => $request->emoji ?? null,
+            'flag' => $request->flag ?? null,
+            'description' => $request->description ?? null,
+            'latitude' => $request->latitude ?? null,
+            'longitude' => $request->longitude ?? null,
             'enable' => $request->enable ?? '1',
+            'users' => 0,
             'created_at' => now(),
             'updated_at' => now(),
         ]);

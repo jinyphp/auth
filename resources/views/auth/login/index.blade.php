@@ -41,7 +41,7 @@
                                 <h1 class="mb-0 fw-bold">로그인</h1>
                                 <span>
                                     계정이 없으신가요?
-                                    <a href="{{ route('register') }}" class="ms-1">회원가입</a>
+                                    <a href="{{ route('signup.index') }}" class="ms-1">회원가입</a>
                                 </span>
                             </div>
                         </div>
@@ -192,4 +192,73 @@
     <!-- Theme JS -->
 
     <script src="{{ asset('assets/js/vendors/validation.js') }}"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const loginForm = document.querySelector('form');
+            if (loginForm) {
+                loginForm.addEventListener('submit', function(e) {
+                    e.preventDefault();
+
+                    if (!this.checkValidity()) {
+                        e.stopPropagation();
+                        this.classList.add('was-validated');
+                        return;
+                    }
+
+                    const submitBtn = this.querySelector('button[type="submit"]');
+                    const originalBtnText = submitBtn.innerHTML;
+                    submitBtn.disabled = true;
+                    submitBtn.innerHTML =
+                        '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> 로그인 중...';
+
+                    // Clear previous alerts
+                    const existingAlerts = document.querySelectorAll('.alert');
+                    existingAlerts.forEach(alert => alert.remove());
+
+                    const formData = new FormData(this);
+
+                    fetch(this.action, {
+                            method: 'POST',
+                            headers: {
+                                'X-Requested-With': 'XMLHttpRequest',
+                                'Accept': 'application/json',
+                                'X-CSRF-TOKEN': document.querySelector('input[name="_token"]').value
+                            },
+                            body: formData
+                        })
+                        .then(response => response.json().then(data => ({
+                            status: response.status,
+                            body: data
+                        })))
+                        .then(({
+                            status,
+                            body
+                        }) => {
+                            if (status >= 200 && status < 300 && body.success) {
+                                // 리다이렉트 처리
+                                window.location.href = body.redirect_to || body.redirect || '/home';
+                            } else {
+                                // 에러 처리
+                                throw new Error(body.message || '로그인에 실패했습니다.');
+                            }
+                        })
+                        .catch(error => {
+                            const alertDiv = document.createElement('div');
+                            alertDiv.className = 'alert alert-danger';
+                            alertDiv.role = 'alert';
+                            alertDiv.innerHTML = error.message;
+
+                            // 카드 바디 내 폼 위에 삽입
+                            const cardBody = document.querySelector('.card-body');
+                            const formElement = document.querySelector('form');
+                            cardBody.insertBefore(alertDiv, formElement);
+                        })
+                        .finally(() => {
+                            submitBtn.disabled = false;
+                            submitBtn.innerHTML = originalBtnText;
+                        });
+                });
+            }
+        });
+    </script>
 @endsection

@@ -3,6 +3,7 @@
 namespace Jiny\Auth\Http\Controllers\Admin\UserCountry;
 
 use Illuminate\Routing\Controller;
+use Illuminate\Support\Facades\DB;
 
 class ShowController extends Controller
 {
@@ -27,7 +28,7 @@ class ShowController extends Controller
 
     public function __invoke($id)
     {
-        $country = \DB::table('user_country')->where('id', $id)->first();
+        $country = DB::table('user_country')->where('id', $id)->first();
         if (!$country) {
             return redirect()->route('admin.auth.user.countries.index')
                 ->with('error', '국가를 찾을 수 없습니다.');

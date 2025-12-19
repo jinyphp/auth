@@ -5,6 +5,7 @@ namespace Jiny\Auth\Http\Controllers\Admin\UserCountry;
 use Illuminate\Routing\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\DB;
 
 class UpdateController extends Controller
 {
@@ -35,22 +36,32 @@ class UpdateController extends Controller
 
     public function __invoke(Request $request, $id)
     {
-        $country = \DB::table('user_country')->where('id', $id)->first();
+        $country = DB::table('user_country')->where('id', $id)->first();
         if (!$country) {
             return redirect()->route('admin.auth.user.countries.index')
                 ->with('error', '국가를 찾을 수 없습니다.');
         }
-        $validator = Validator::make($request->all(), $this->actions['validation']);
+        // Validation 규칙에서 {id}를 실제 ID로 치환
+        $validationRules = $this->actions['validation'];
+        if (isset($validationRules['code']) && strpos($validationRules['code'], '{id}') !== false) {
+            $validationRules['code'] = str_replace('{id}', $id, $validationRules['code']);
+        }
+        
+        $validator = Validator::make($request->all(), $validationRules);
         if ($validator->fails()) {
             return redirect()
                 ->route($this->actions['routes']['error'], $id)
                 ->withErrors($validator)
                 ->withInput();
         }
-        \DB::table('user_country')->where('id', $id)->update([
+        DB::table('user_country')->where('id', $id)->update([
             'code' => $request->code,
             'name' => $request->name,
-            'flag' => $request->flag,
+            'emoji' => $request->emoji ?? null,
+            'flag' => $request->flag ?? null,
+            'description' => $request->description ?? null,
+            'latitude' => $request->latitude ?? null,
+            'longitude' => $request->longitude ?? null,
             'enable' => $request->enable ?? '1',
             'updated_at' => now(),
         ]);

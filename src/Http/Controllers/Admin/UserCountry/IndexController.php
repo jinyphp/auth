@@ -4,7 +4,7 @@ namespace Jiny\Auth\Http\Controllers\Admin\UserCountry;
 
 use Illuminate\Routing\Controller;
 use Illuminate\Http\Request;
-use Jiny\Auth\Models\UserCountry;
+use Jiny\Locale\Models\Country;
 
 /**
  * 관리자 - 국가 목록 컨트롤러
@@ -44,7 +44,7 @@ class IndexController extends Controller
      */
     public function __invoke(Request $request)
     {
-        $query = UserCountry::query();
+        $query = Country::query();
 
         // 검색 필터
         if ($this->config['filter_search'] && $request->filled('search')) {
@@ -63,6 +63,13 @@ class IndexController extends Controller
         // 페이지네이션
         $countries = $query->paginate($this->config['per_page'])->withQueryString();
 
-        return view($this->config['view'], compact('countries'));
+        // 지도 표시를 위한 모든 국가 데이터 (위도/경도가 있는 것만)
+        $mapCountries = Country::whereNotNull('latitude')
+            ->whereNotNull('longitude')
+            ->where('enable', true)
+            ->select('id', 'code', 'name', 'emoji', 'description', 'latitude', 'longitude', 'users')
+            ->get();
+
+        return view($this->config['view'], compact('countries', 'mapCountries'));
     }
 }

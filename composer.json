@@ -28,7 +28,7 @@
             "Jiny\\Auth\\":"src/"
         },
         "files" : [
-            "src/Helpers/Helper.php"
+            "Helpers/Helper.php"
         ]
     },
     "autoload-dev": {

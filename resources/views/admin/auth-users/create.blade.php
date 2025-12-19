@@ -156,6 +156,48 @@
 
                             <hr class="my-4">
 
+                            <!-- Country & Language -->
+                            <h5 class="mb-3">국가 및 언어</h5>
+
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <label for="country" class="form-label">국가</label>
+                                    <select class="form-select @error('country') is-invalid @enderror"
+                                            id="country"
+                                            name="country">
+                                        <option value="">선택하세요</option>
+                                        @foreach($countries as $country)
+                                            <option value="{{ $country->code }}" {{ old('country') == $country->code ? 'selected' : '' }}>
+                                                {{ $country->emoji }} {{ $country->name }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                    <small class="text-muted">사용자의 국가를 선택하세요</small>
+                                    @error('country')
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="language" class="form-label">언어</label>
+                                    <select class="form-select @error('language') is-invalid @enderror"
+                                            id="language"
+                                            name="language">
+                                        <option value="">선택하세요</option>
+                                        @foreach($languages as $language)
+                                            <option value="{{ $language->code }}" {{ old('language') == $language->code ? 'selected' : '' }}>
+                                                {{ $language->name }} ({{ $language->code }})
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                    <small class="text-muted">사용자의 언어를 선택하세요</small>
+                                    @error('language')
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
+                                </div>
+                            </div>
+
+                            <hr class="my-4">
+
                             <!-- User Type & Status -->
                             <h5 class="mb-3">사용자 유형 및 상태</h5>
 

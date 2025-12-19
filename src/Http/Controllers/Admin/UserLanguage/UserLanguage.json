@@ -48,6 +48,7 @@
             "code": "required|string|max:10|unique:user_language,code",
             "name": "required|string|max:255",
             "flag": "nullable|string|max:255",
+            "description": "nullable|string|max:1000",
             "enable": "nullable|in:0,1"
         },
         "messages": {
@@ -62,9 +63,10 @@
             "error": "admin.auth.user.languages.edit"
         },
         "validation": {
-            "code": "required|string|max:10",
+            "code": "required|string|max:10|unique:user_language,code,{id}",
             "name": "required|string|max:255",
             "flag": "nullable|string|max:255",
+            "description": "nullable|string|max:1000",
             "enable": "nullable|in:0,1"
         },
         "messages": {

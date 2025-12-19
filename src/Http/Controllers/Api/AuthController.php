@@ -43,7 +43,12 @@ class AuthController extends Controller
      */
     protected function loadConfig()
     {
-        $configPath = base_path('vendor/jiny/auth/config/setting.json');
+
+        // 로컬 개발 환경 우선 체크
+        $configPath = base_path('jiny/auth/config/setting.json');
+        if (!file_exists($configPath)) {
+            $configPath = base_path('vendor/jiny/auth/config/setting.json');
+        }
 
         if (file_exists($configPath)) {
             try {
@@ -139,7 +144,7 @@ class AuthController extends Controller
                 $this->createUserProfile($user, $request->all());
 
                 // 약관 동의 기록
-                $this->termsService->recordAgreement($user->id, $request->terms, $request);
+                $this->termsService->recordTermsAgreement($user->id, $request->terms, $request->ip(), $request->userAgent());
 
                 // 이메일 인증 토큰 생성 (선택적)
                 if ($this->config['register']['require_email_verification'] ?? true) {
@@ -199,6 +204,10 @@ class AuthController extends Controller
         $validator = Validator::make($request->all(), [
             'email' => 'required|email',
             'password' => 'required',
+        ], [
+            'email.required' => '이메일을 입력해주세요.',
+            'email.email' => '유효한 이메일 형식을 입력해주세요.',
+            'password.required' => '비밀번호를 입력해주세요.',
         ]);
 
         if ($validator->fails()) {
@@ -422,6 +431,19 @@ class AuthController extends Controller
             'password' => 'required|min:8|confirmed',
             'terms' => 'required|array',
             'terms.*' => 'required|exists:user_terms,id',
+        ], [
+            'name.required' => '이름을 입력해주세요.',
+            'name.string' => '이름은 문자열이어야 합니다.',
+            'name.max' => '이름은 255자를 초과할 수 없습니다.',
+            'email.required' => '이메일을 입력해주세요.',
+            'email.email' => '유효한 이메일 형식을 입력해주세요.',
+            'email.unique' => '이미 사용 중인 이메일입니다.',
+            'password.required' => '비밀번호를 입력해주세요.',
+            'password.min' => '비밀번호는 최소 8자 이상이어야 합니다.',
+            'password.confirmed' => '비밀번호 확인이 일치하지 않습니다.',
+            'terms.required' => '약관에 동의해야 합니다.',
+            'terms.array' => '약관 동의 형식이 올바르지 않습니다.',
+            'terms.*.exists' => '유효하지 않은 약관이 포함되어 있습니다.',
         ]);
     }
 

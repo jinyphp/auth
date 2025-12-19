@@ -56,6 +56,12 @@ class ShowController extends Controller
      */
     public function __invoke(Request $request)
     {
+        // 로그인 페이지 진입 시 약관 동의 상태 초기화
+        // 이렇게 하면 로그인 페이지에서 회원가입으로 이동할 때 항상 약관 동의부터 시작하게 됨
+        if ($request->hasSession()) {
+            $request->session()->forget(['agreed_terms', 'terms_agreed']);
+        }
+        cookie()->queue(cookie()->forget('terms_agreed'));
 
 
         // 1. 시스템 활성화 확인

@@ -4,6 +4,8 @@ namespace Jiny\Auth\Http\Controllers\Admin\AuthUsers;
 
 use Illuminate\Routing\Controller;
 use Jiny\Auth\Models\UserType;
+use Jiny\Locale\Models\Country;
+use Jiny\Locale\Models\Language;
 
 /**
  * 관리자 - 사용자 생성 폼 컨트롤러
@@ -64,6 +66,12 @@ class CreateController extends Controller
             'require_symbols' => false,
         ]);
 
-        return view($this->config['view'], compact('userTypes', 'defaultType', 'passwordRules'));
+        // 활성화된 국가 목록
+        $countries = Country::where('enable', true)->orderBy('name')->get();
+
+        // 활성화된 언어 목록
+        $languages = Language::where('enable', true)->orderBy('name')->get();
+
+        return view($this->config['view'], compact('userTypes', 'defaultType', 'passwordRules', 'countries', 'languages'));
     }
 }

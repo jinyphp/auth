@@ -22,6 +22,7 @@ return new class extends Migration
             $table->string('enable')->default(1);
 
             $table->string('code')->nullable();
+            $table->string('emoji')->nullable()->comment('국가 이모지 플래그');
             $table->string('flag')->nullable();
             $table->string('name')->nullable();
 

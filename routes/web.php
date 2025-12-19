@@ -4,22 +4,58 @@ use Illuminate\Support\Facades\Route;
 
 /*
 |--------------------------------------------------------------------------
-| Authentication Routes
+| Authentication Web Routes (인증 웹 라우트)
 |--------------------------------------------------------------------------
 |
-| 인증 관련 라우트를 정의합니다.
-| config('admin.auth.login.enable') 설정에 따라 활성화/비활성화 됩니다.
+| 인증 관련 화면 인터페이스를 제공하는 웹 라우트입니다.
+| 사용자 회원가입, 로그인, 비밀번호 재설정 등의 화면을 제공합니다.
+|
+| 아키텍처 구조:
+| ==============
+| 이 파일은 화면 인터페이스(UI) 제공에 집중합니다.
+| 실제 데이터 처리(저장, 갱신, 조회)는 routes/api.php에서 처리됩니다.
+|
+| 역할 분리:
+| ----------
+| 1. web.php (이 파일)
+|    - 화면 표시: GET 요청으로 뷰를 반환
+|    - 폼 제출: POST 요청을 받지만, 뷰에서 AJAX로 API를 호출
+|    - 리다이렉트: 성공/실패 후 적절한 페이지로 이동
+|
+| 2. api.php
+|    - 데이터 처리: 저장, 갱신, 조회 등 실제 비즈니스 로직
+|    - JSON 응답: AJAX 요청에 대한 JSON 형식 응답
+|    - 검증 및 보안: 입력값 검증, 권한 확인 등
+|
+| 3. resources/views/auth/*
+|    - 화면 템플릿: Blade 템플릿 파일
+|    - AJAX 호출: JavaScript로 API 엔드포인트 호출
+|    - 사용자 인터랙션: 폼 입력, 버튼 클릭 등 처리
+|
+| 사용 흐름 예시 (회원가입):
+| --------------------------
+| 1. 사용자가 GET /signup 요청
+|    → web.php의 signup.index 라우트
+|    → Register/ShowController가 뷰 반환
+|    → resources/views/auth/register/index.blade.php 표시
+|
+| 2. 사용자가 폼 작성 후 제출
+|    → JavaScript가 폼 제출 이벤트 감지
+|    → AJAX로 POST /api/auth/v1/signup 호출
+|    → api.php의 AuthController::register 처리
+|    → JSON 응답 반환
+|
+| 3. JavaScript가 응답 처리
+|    → 성공: 적절한 페이지로 리다이렉트
+|    → 실패: 에러 메시지 표시
 |
 | 컨트롤러-뷰 매칭:
 | - Login/ShowController → jiny-auth::auth.login.index
-| - Login/SubmitController → (로그인 처리, 뷰 없음)
 | - Password/ForgotController → jiny-auth::auth.password.forgot
-| - Password/SendResetLinkController → (이메일 전송, 뷰 없음)
-| - Register/ShowController → jiny-auth::auth.register.form, jiny-auth::auth.register.terms
-| - Register/StoreController → (회원가입 처리, 뷰 없음)
-| - Social/LoginController → (소셜 로그인 리다이렉트, 뷰 없음)
-| - Social/CallbackController → (소셜 로그인 콜백, 뷰 없음)
-| - Logout/SubmitController → (로그아웃 처리, 뷰 없음)
+| - Register/ShowController → jiny-auth::auth.register.index
+|
+| 설정:
+| - config('admin.auth.login.enable') 설정에 따라 활성화/비활성화 됩니다.
 |
 */
 
@@ -47,18 +83,23 @@ Route::middleware(['web', 'guest.jwt'])->group(function () {
         ->name('login.approval.refresh');
 
     // 회원가입 (앱 레벨에서 오버라이드됨)
-    // Route::get('/register', \Jiny\Auth\Http\Controllers\Auth\Register\ShowController::class)
-    //     ->name('register');
-    // Route::post('/register', \Jiny\Auth\Http\Controllers\Auth\Register\StoreController::class)
-    //     ->name('register.store');
+    // 회원가입 라우트는 하단의 signup 라우트 그룹에서 정의됩니다.
+    // Route::get('/signup', \Jiny\Auth\Http\Controllers\Auth\Register\ShowController::class)
+    //     ->name('signup.index');
+    // Route::post('/signup', \Jiny\Auth\Http\Controllers\Auth\Register\StoreController::class)
+    //     ->name('signup.store');
 
     // 비밀번호 찾기 / 재설정
-    Route::get('/password/reset', \Jiny\Auth\Http\Controllers\Auth\Password\ForgotController::class)
+    Route::get('/signin/password/reset', \Jiny\Auth\Http\Controllers\Auth\Password\ForgotController::class)
         ->name('password.request');
-    Route::get('/password/forgot', \Jiny\Auth\Http\Controllers\Auth\Password\ForgotController::class)
+    Route::get('/signin/password/forgot', \Jiny\Auth\Http\Controllers\Auth\Password\ForgotController::class)
         ->name('password.forgot');
-    Route::post('/password/email', \Jiny\Auth\Http\Controllers\Auth\Password\SendResetLinkController::class)
+    Route::post('/signin/password/email', \Jiny\Auth\Http\Controllers\Auth\Password\SendResetLinkController::class)
         ->name('password.email');
+    Route::get('/signin/password/reset/{token}', [\Jiny\Auth\Http\Controllers\Auth\Password\ResetController::class, 'showResetForm'])
+        ->name('password.reset');
+    Route::post('/signin/password/reset', [\Jiny\Auth\Http\Controllers\Auth\Password\ResetController::class, 'reset'])
+        ->name('password.update');
 
 });
 
@@ -143,27 +184,112 @@ Route::middleware('web')->group(function () {
     })->name('login.unregist.notice');
 });
 
-// 회원가입 약관 동의 (우선 처리)
+/*
+|--------------------------------------------------------------------------
+| 회원가입 라우트 그룹 (Signup Routes)
+|--------------------------------------------------------------------------
+|
+| 회원가입 관련 웹 라우트를 /signup 경로로 그룹화합니다.
+| 게스트 사용자만 접근 가능하며, 약관 동의 및 회원가입 폼을 제공합니다.
+|
+| 라우트 구조:
+| - GET  /signup/terms     : 약관 동의 페이지 (라우트 이름: signup.terms)
+| - POST /signup/terms     : 약관 동의 처리 (라우트 이름: signup.terms.accept)
+| - GET  /signup           : 회원가입 폼 페이지 (라우트 이름: signup.index)
+|
+| 회원가입 처리는 API로 분리되어 있습니다.
+| API 엔드포인트 및 상세 정보는 routes/api.php를 참조하세요.
+|
+| 사용 흐름:
+| 1. GET /signup/terms → 약관 동의 페이지 표시
+| 2. POST /signup/terms → 약관 동의 처리 (세션/쿠키에 저장)
+| 3. GET /signup → 회원가입 폼 표시
+| 4. POST /api/signup → 회원가입 처리 (AJAX 요청, api.php 참조)
+|
+*/
+Route::middleware(['web', 'guest.jwt'])
+    ->prefix('signup')
+    ->name('signup.')
+    ->group(function () {
+        /**
+         * 약관 동의 페이지
+         *
+         * 회원가입 전 필수 약관 및 선택 약관을 표시합니다.
+         * 사용자가 약관에 동의하면 세션 또는 쿠키에 저장됩니다.
+         *
+         * 경로: GET /signup/terms
+         * 라우트 이름: signup.terms
+         * 컨트롤러: Jiny\Auth\Http\Controllers\Auth\Terms\TermsController
+         */
+        Route::get('/terms', \Jiny\Auth\Http\Controllers\Auth\Terms\TermsController::class)
+            ->name('terms');
+
+        Route::post('/terms', [\Jiny\Auth\Http\Controllers\Auth\Terms\TermsController::class, 'store'])
+            ->name('terms.accept');
+
+        /**
+         * 약관 동의 처리
+         *
+         * 사용자가 약관에 동의한 정보를 세션 또는 쿠키에 저장합니다.
+         * 동의한 약관 ID 목록을 저장하여 회원가입 시 검증에 사용됩니다.
+         *
+         * 경로: POST /signup/terms
+         * 라우트 이름: signup.terms.accept
+         * 컨트롤러: Jiny\Auth\Http\Controllers\Auth\Terms\TermsAcceptController
+         *
+         * 요청 데이터:
+         * - terms: array (동의한 약관 ID 배열)
+         */
+        Route::post('/terms', \Jiny\Auth\Http\Controllers\Auth\Terms\TermsAcceptController::class)
+            ->name('terms.accept');
+
+        /**
+         * 회원가입 폼 페이지
+         *
+         * 회원가입 입력 폼을 표시합니다.
+         * 약관 동의 여부를 확인하고, 동의하지 않은 경우 약관 페이지로 리다이렉트합니다.
+         *
+         * 경로: GET /signup
+         * 라우트 이름: signup.index
+         * 컨트롤러: Jiny\Auth\Http\Controllers\Auth\Register\ShowController
+         *
+         * 뷰: jiny-auth::auth.register.index
+         */
+        Route::get('/', \Jiny\Auth\Http\Controllers\Auth\Register\ShowController::class)
+            ->name('index');
+
+        /**
+         * 회원가입 처리 (API로 분리됨)
+         *
+         * 회원가입 처리는 API 엔드포인트로 분리되었습니다.
+         * API 엔드포인트 및 상세 정보는 routes/api.php를 참조하세요.
+         *
+         * 주요 API 엔드포인트:
+         * - POST /api/signup (라우트 이름: api.signup)
+         * - POST /api/auth/v1/signup (라우트 이름: api.auth.v1.signup)
+         */
+
+        /**
+         * 회원가입 성공 페이지
+         *
+         * 회원가입이 성공적으로 완료된 후 표시되는 페이지입니다.
+         * 샤딩된 회원 테이블에 저장된 사용자 정보를 확인하고 성공 메시지를 표시합니다.
+         *
+         * 경로: GET /signup/success
+         * 라우트 이름: signup.success
+         * 컨트롤러: Jiny\Auth\Http\Controllers\Auth\Register\SuccessController
+         *
+         * 뷰: jiny-auth::auth.register.success
+         */
+        Route::get('/success', \Jiny\Auth\Http\Controllers\Auth\Register\SuccessController::class)
+            ->name('success');
+    });
+
+
+// 약관 상세 페이지 (회원가입 그룹 외부, 공개 접근)
 Route::middleware(['web', 'guest.jwt'])->group(function () {
-    // 약관 동의 페이지
-    Route::get('/register/terms', \Jiny\Auth\Http\Controllers\Auth\Terms\TermsController::class)
-        ->name('register.terms');
-
-    // 약관 동의 처리
-    Route::post('/register/terms', \Jiny\Auth\Http\Controllers\Auth\Terms\TermsAcceptController::class)
-        ->name('register.terms.accept');
-
-    // 약관 상세 페이지
     Route::get('/terms/{term}', \Jiny\Auth\Http\Controllers\Auth\Terms\TermsDetailController::class)
         ->name('terms.show');
-
-    // 회원가입 폼 (약관 체크 기능 추가)
-    Route::get('/register', \Jiny\Auth\Http\Controllers\Auth\Register\ShowController::class)
-        ->name('register');
-
-    // 회원가입 처리 (약관 처리 확장)
-    Route::post('/register', \Jiny\Auth\Http\Controllers\Auth\Register\StoreController::class)
-        ->name('register.store');
 });
 
 
@@ -214,3 +340,8 @@ Route::get('/logout', function () {
         ->withCookie($refreshTokenCookie)
         ->withCookie($tokenCookie);
 })->name('logout.get');
+
+// Alias for the view which uses register.terms.accept (Outside of signup. prefix group)
+Route::post('/signup/terms/accept', [\Jiny\Auth\Http\Controllers\Auth\Terms\TermsController::class, 'store'])
+    ->middleware(['web', 'guest.jwt'])
+    ->name('register.terms.accept');

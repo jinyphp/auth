@@ -4,7 +4,7 @@ namespace Jiny\Auth\Http\Controllers\Admin\UserLanguage;
 
 use Illuminate\Routing\Controller;
 use Illuminate\Http\Request;
-use Jiny\Auth\Models\UserLanguage;
+use Jiny\Locale\Models\Language;
 
 /**
  * 관리자 - 언어 목록 컨트롤러
@@ -15,14 +15,27 @@ class IndexController extends Controller
 
     public function __construct()
     {
+        $this->loadConfig();
+    }
+
+    /**
+     * JSON 설정 파일 로드
+     */
+    protected function loadConfig()
+    {
+        $configPath = __DIR__ . '/UserLanguage.json';
+        $jsonConfig = json_decode(file_get_contents($configPath), true);
+
+        $indexConfig = $jsonConfig['index'] ?? [];
+
         $this->config = [
-            'view' => 'jiny-auth::admin.user-language.index',
-            'title' => '언어 관리',
-            'subtitle' => '언어 목록',
-            'per_page' => 20,
-            'sort_column' => 'name',
-            'sort_order' => 'asc',
-            'filter_search' => true,
+            'view' => $indexConfig['view'] ?? 'jiny-auth::admin.user-language.index',
+            'title' => $indexConfig['title'] ?? '언어 관리',
+            'subtitle' => $indexConfig['subtitle'] ?? '언어 목록',
+            'per_page' => $indexConfig['pagination']['per_page'] ?? 20,
+            'sort_column' => $jsonConfig['table']['sort']['column'] ?? 'name',
+            'sort_order' => $jsonConfig['table']['sort']['order'] ?? 'asc',
+            'filter_search' => $indexConfig['filter']['search'] ?? true,
         ];
     }
 
@@ -31,7 +44,7 @@ class IndexController extends Controller
      */
     public function __invoke(Request $request)
     {
-        $query = \DB::table('site_languages');
+        $query = Language::query();
 
         // 검색 필터
         if ($this->config['filter_search'] && $request->filled('search')) {
