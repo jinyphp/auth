@@ -66,11 +66,18 @@ use Illuminate\Support\Facades\Route;
 */
 Route::middleware(['web', 'guest.jwt'])->group(function () {
 
-    // 로그인
+    // 로그인 (signin과 login 모두 동일한 컨트롤러 사용)
     Route::get('/login', \Jiny\Auth\Http\Controllers\Auth\Login\ShowController::class)
         ->name('login');
     Route::post('/login', \Jiny\Auth\Http\Controllers\Auth\Login\SubmitController::class)
         ->name('login.submit');
+    
+    // signin은 login과 동일한 컨트롤러로 리다이렉트
+    Route::get('/signin', \Jiny\Auth\Http\Controllers\Auth\Login\ShowController::class)
+        ->name('signin');
+    Route::post('/signin', \Jiny\Auth\Http\Controllers\Auth\Login\SubmitController::class)
+        ->name('signin.submit');
+
     Route::get('/login/2fa', \Jiny\Auth\Http\Controllers\Auth\TwoFactor\ChallengeController::class)
         ->name('login.2fa');
     Route::post('/login/2fa', \Jiny\Auth\Http\Controllers\Auth\TwoFactor\VerifyController::class)
@@ -110,9 +117,13 @@ Route::middleware(['web', 'guest.jwt'])->group(function () {
 */
 Route::middleware(['web'])->group(function () {
 
-    // 로그아웃
+    // 로그아웃 (signout과 동일한 컨트롤러 사용)
     Route::post('/logout', \Jiny\Auth\Http\Controllers\Auth\Logout\SubmitController::class)
         ->name('logout');
+    
+    // signout은 logout과 동일한 컨트롤러 사용
+    Route::post('/signout', \Jiny\Auth\Http\Controllers\Auth\Logout\SubmitController::class)
+        ->name('signout');
 
     // 이메일 인증 안내 페이지 (경로: /signin/email/verify)
     Route::get('/signin/email/verify', function () {
@@ -221,11 +232,18 @@ Route::middleware(['web', 'guest.jwt'])
          * 라우트 이름: signup.terms
          * 컨트롤러: Jiny\Auth\Http\Controllers\Auth\Terms\TermsController
          */
+        /**
+         * 약관 동의 페이지
+         *
+         * 회원가입 전 필수 약관 및 선택 약관을 표시합니다.
+         * 사용자가 약관에 동의하면 세션 또는 쿠키에 저장됩니다.
+         *
+         * 경로: GET /signup/terms
+         * 라우트 이름: signup.terms
+         * 컨트롤러: Jiny\Auth\Http\Controllers\Auth\Terms\TermsController
+         */
         Route::get('/terms', \Jiny\Auth\Http\Controllers\Auth\Terms\TermsController::class)
             ->name('terms');
-
-        Route::post('/terms', [\Jiny\Auth\Http\Controllers\Auth\Terms\TermsController::class, 'store'])
-            ->name('terms.accept');
 
         /**
          * 약관 동의 처리
@@ -235,12 +253,12 @@ Route::middleware(['web', 'guest.jwt'])
          *
          * 경로: POST /signup/terms
          * 라우트 이름: signup.terms.accept
-         * 컨트롤러: Jiny\Auth\Http\Controllers\Auth\Terms\TermsAcceptController
+         * 컨트롤러: Jiny\Auth\Http\Controllers\Auth\Terms\TermsController::store
          *
          * 요청 데이터:
          * - terms: array (동의한 약관 ID 배열)
          */
-        Route::post('/terms', \Jiny\Auth\Http\Controllers\Auth\Terms\TermsAcceptController::class)
+        Route::post('/terms', [\Jiny\Auth\Http\Controllers\Auth\Terms\TermsController::class, 'store'])
             ->name('terms.accept');
 
         /**
@@ -285,6 +303,36 @@ Route::middleware(['web', 'guest.jwt'])
             ->name('success');
     });
 
+/*
+|--------------------------------------------------------------------------
+| 회원가입 라우트 그룹 (Register Routes) - signup과 동일한 컨트롤러 사용
+|--------------------------------------------------------------------------
+|
+| register는 signup과 동일한 컨트롤러를 사용합니다.
+| 호환성을 위해 별도의 라우트 그룹으로 제공합니다.
+|
+*/
+Route::middleware(['web', 'guest.jwt'])
+    ->prefix('register')
+    ->name('register.')
+    ->group(function () {
+        // 약관 동의 페이지 (signup과 동일한 컨트롤러)
+        Route::get('/terms', \Jiny\Auth\Http\Controllers\Auth\Terms\TermsController::class)
+            ->name('terms');
+        
+        // 약관 동의 처리 (signup과 동일한 컨트롤러)
+        Route::post('/terms', [\Jiny\Auth\Http\Controllers\Auth\Terms\TermsController::class, 'store'])
+            ->name('terms.accept');
+
+        // 회원가입 폼 페이지 (signup과 동일한 컨트롤러)
+        Route::get('/', \Jiny\Auth\Http\Controllers\Auth\Register\ShowController::class)
+            ->name('index');
+
+        // 회원가입 성공 페이지 (signup과 동일한 컨트롤러)
+        Route::get('/success', \Jiny\Auth\Http\Controllers\Auth\Register\SuccessController::class)
+            ->name('success');
+    });
+
 
 // 약관 상세 페이지 (회원가입 그룹 외부, 공개 접근)
 Route::middleware(['web', 'guest.jwt'])->group(function () {
@@ -294,10 +342,11 @@ Route::middleware(['web', 'guest.jwt'])->group(function () {
 
 
 
-// 로그아웃 (GET)
-Route::get('/logout', function () {
+// 로그아웃 (GET) - logout과 signout 모두 동일한 처리
+$logoutHandler = function () {
     // JWT 토큰 해제
-    if ($jwtService = app(\Jiny\Auth\Services\JwtAuthService::class)) {
+    // Jiny\Auth\Services\JwtAuthService는 deprecated되었으며, Jiny\Jwt\Services\JwtAuthService를 사용합니다.
+    if ($jwtService = app(\Jiny\Jwt\Services\JwtAuthService::class)) {
         $token = $jwtService->getTokenFromRequest(request());
         if ($token) {
             try {
@@ -339,7 +388,10 @@ Route::get('/logout', function () {
         ->withCookie($accessTokenCookie)
         ->withCookie($refreshTokenCookie)
         ->withCookie($tokenCookie);
-})->name('logout.get');
+};
+
+Route::get('/logout', $logoutHandler)->name('logout.get');
+Route::get('/signout', $logoutHandler)->name('signout.get');
 
 // Alias for the view which uses register.terms.accept (Outside of signup. prefix group)
 Route::post('/signup/terms/accept', [\Jiny\Auth\Http\Controllers\Auth\Terms\TermsController::class, 'store'])

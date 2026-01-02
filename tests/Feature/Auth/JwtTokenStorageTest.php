@@ -29,8 +29,9 @@ class JwtTokenStorageTest extends TestCase
         parent::setUp();
         
         // jwt_tokens 테이블이 없으면 migration 실행
+        // JWT 토큰 테이블은 jiny/jwt 패키지에서 관리하므로 해당 경로 사용
         if (!DB::getSchemaBuilder()->hasTable('jwt_tokens')) {
-            $this->artisan('migrate', ['--path' => 'jiny/auth/database/migrations/2025_01_16_000001_create_jwt_tokens_table.php']);
+            $this->artisan('migrate', ['--path' => 'jiny/jwt/database/migrations/2025_01_16_000001_create_jwt_tokens_table.php']);
         }
     }
 

@@ -16,11 +16,24 @@ class HomeDashboardController extends HomeController
         // dump('home dash');
 
         // Step1. JWT 인증 처리
-        $user = $this->auth($request);
-        if (! $user) {
-            \Log::warning('HomeDashboard: User not authenticated');
+        // jwt.auth 미들웨어에서 이미 인증된 사용자를 가져옴
+        // 미들웨어에서 설정한 사용자 우선 사용 (auth_user 또는 user() 리졸버)
+        $user = $request->get('auth_user')
+            ?? $request->user()
+            ?? (method_exists($request, 'user') ? $request->user() : null)
+            ?? (\Illuminate\Support\Facades\Auth::check() ? \Illuminate\Support\Facades\Auth::user() : null);
 
-            // dd('jwt 인증 실패');
+        // 미들웨어에서 사용자를 찾지 못한 경우에만 직접 인증 시도
+        if (! $user) {
+            $user = $this->auth($request);
+        }
+
+        if (! $user) {
+            \Log::warning('HomeDashboard: User not authenticated', [
+                'has_auth_user' => $request->has('auth_user'),
+                'has_user_resolver' => $request->hasUserResolver(),
+                'auth_check' => \Illuminate\Support\Facades\Auth::check(),
+            ]);
 
             return redirect()->route('login')
                 ->with('error', 'JWT 인증이 필요합니다. 로그인해 주세요.')
@@ -36,18 +49,9 @@ class HomeDashboardController extends HomeController
 
         $userUuid = $user->uuid ?? '';
 
-        // Step2. 최근 로그인 기록 조회
-        $recentLogins = [];
-        try {
-            $recentLogins = DB::table('auth_login_attempts')
-                ->where('email', $user->email)
-                ->where('successful', true)
-                ->orderBy('attempted_at', 'desc')
-                ->limit(5)
-                ->get();
-        } catch (\Exception $e) {
-            // 테이블이 없으면 무시
-        }
+        // Step2. 최근 로그인 기록 조회 (API로 이동됨)
+        // AuthLogHistoryController 사용
+
 
         // Step3. 이머니 정보 조회
         $emoney = null;
@@ -140,7 +144,9 @@ class HomeDashboardController extends HomeController
 
         return view('jiny-auth::home.dashboard.index', [
             'user' => $user,
-            'recentLogins' => $recentLogins,
+            'user' => $user,
+            // 'recentLogins' => $recentLogins, // API로 변경
+
             'connectionInfo' => $connectionInfo,
             'jwtInfo' => $jwtInfo,
             'socialProvider' => $socialProvider,

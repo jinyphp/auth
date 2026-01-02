@@ -4,18 +4,18 @@ namespace Jiny\Auth\Http\Middleware;
 
 use Closure;
 use Illuminate\Http\Request;
-use Jiny\Auth\Services\JwtAuthService;
+use Jiny\Jwt\Facades\JwtAuth;
 use Jiny\Auth\Facades\Shard;
 use Illuminate\Support\Facades\Auth;
 
+/**
+ * JWT 인증 미들웨어
+ *
+ * 주의: 이 미들웨어는 레거시 호환성을 위해 유지됩니다.
+ * 새로운 프로젝트에서는 jiny/jwt 패키지의 JwtAuthenticate 미들웨어를 사용하세요.
+ */
 class JwtAuthenticate
 {
-    protected $jwtService;
-
-    public function __construct(JwtAuthService $jwtService)
-    {
-        $this->jwtService = $jwtService;
-    }
 
     /**
      * JWT 토큰 인증 미들웨어
@@ -45,9 +45,14 @@ class JwtAuthenticate
                 return $next($request);
             }
 
-            // 토큰 추출
-            $token = $this->jwtService->getTokenFromRequest($request);
+            // 토큰 추출 (jiny/jwt 패키지 사용)
+            $token = JwtAuth::getTokenFromRequest($request);
             if (! $token) {
+                // 토큰이 없더라도 이미 웹 세션으로 로그인되어 있다면 통과 (하이브리드 지원)
+                if (Auth::check()) {
+                    return $next($request);
+                }
+
                 // 세션 인증이 남아있을 수 있으므로 안전하게 로그아웃 및 세션 무효화
                 $this->forceLogout($request);
                 return redirect('/login')
@@ -56,11 +61,11 @@ class JwtAuthenticate
                     ->withCookie(cookie()->forget('refresh_token'));
             }
 
-            // 토큰 검증
-            $decoded = $this->jwtService->validateToken($token);
+            // 토큰 검증 (jiny/jwt 패키지 사용)
+            $decoded = JwtAuth::validateToken($token);
 
-            // 1차: 기본 JWT 서비스로 유저 조회
-            $user = $this->jwtService->getUserFromToken($token);
+            // 1차: 기본 JWT 서비스로 유저 조회 (jiny/jwt 패키지 사용)
+            $user = JwtAuth::getUserFromToken($token);
 
             // 2차: 샤드 파사드 존재 시 샤딩 DB에서 조회 (이메일 등 고유키 기반)
             if (! $user) {

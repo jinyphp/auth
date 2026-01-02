@@ -74,7 +74,19 @@ class VerificationController extends Controller
         }
 
         // 인증 상세 뷰 렌더링
-        $canResendVerification = !$user->email_verified_at;
+        // email_verified_at이 null이거나 빈 문자열인지 확인
+        $isEmailVerified = !empty($user->email_verified_at);
+        $canResendVerification = !$isEmailVerified;
+
+        // 디버깅을 위한 로그 추가
+        \Log::info('Admin::VerificationController: 사용자 인증 상태 확인', [
+            'user_id' => $user->id,
+            'email' => $user->email,
+            'uuid' => $user->uuid ?? null,
+            'shard_id' => $shardId,
+            'email_verified_at' => $user->email_verified_at ?? null,
+            'is_email_verified' => $isEmailVerified,
+        ]);
 
         return view('jiny-auth::admin.auth-users.verification.index', [
             'user' => $user,

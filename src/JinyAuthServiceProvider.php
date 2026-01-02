@@ -68,15 +68,25 @@ class JinyAuthServiceProvider extends ServiceProvider
             __DIR__.'/../config/setting.php' => config_path('admin/auth.php'),
         ]);
 
+        // 회원가입 보안 설정 파일 병합
+        $this->mergeConfigFrom(
+            __DIR__.'/../config/registration.php',
+            'jiny-auth.registration'
+        );
+
+        // 회원가입 보안 설정 파일 복사
+        $this->publishes([
+            __DIR__.'/../config/registration.php' => config_path('jiny-auth/registration.php'),
+        ], 'auth-registration-config');
+
         // 샤딩 설정 파일 복사
         $this->publishes([
             __DIR__.'/../config/shard.json' => config_path('shard.json'),
         ], 'auth-shard-config');
 
-        // JWT 설정 파일 복사
-        $this->publishes([
-            __DIR__.'/../config/jwt.json' => config_path('jwt.json'),
-        ], 'auth-jwt-config');
+        // JWT 설정 파일은 jiny/jwt 패키지에서 관리됩니다.
+        // 레거시 호환성을 위해 config/jwt.json이 있으면 유지하지만,
+        // 새로운 프로젝트에서는 jiny/jwt 패키지의 설정을 사용하세요.
 
         $this->publishes([
             __DIR__.'/../resources/actions/' => resource_path('actions')
@@ -86,14 +96,23 @@ class JinyAuthServiceProvider extends ServiceProvider
 
     /**
      * 미들웨어 등록
+     *
+     * 주의: JWT 미들웨어는 jiny/jwt 패키지에서 등록됩니다.
+     * 레거시 호환성을 위해 jiny/auth의 미들웨어도 등록하지만,
+     * jiny/jwt 패키지가 로드되면 해당 미들웨어가 우선됩니다.
      */
     protected function registerMiddleware()
     {
         $router = $this->app->make(Router::class);
 
-        // JWT 인증 미들웨어
-        $router->aliasMiddleware('jwt.auth', \Jiny\Auth\Http\Middleware\JwtAuthenticate::class);
-        $router->aliasMiddleware('jwt', \Jiny\Auth\Http\Middleware\JwtAuthenticate::class);
+        // JWT 인증 미들웨어는 jiny/jwt 패키지에서 등록됩니다.
+        // 레거시 호환성을 위해 jiny/auth의 미들웨어도 등록 (jiny/jwt가 없을 경우에만 사용)
+        if (!class_exists(\Jiny\Jwt\Http\Middleware\JwtAuthenticate::class)) {
+            if (class_exists(\Jiny\Auth\Http\Middleware\JwtAuthenticate::class)) {
+                $router->aliasMiddleware('jwt.auth', \Jiny\Auth\Http\Middleware\JwtAuthenticate::class);
+                $router->aliasMiddleware('jwt', \Jiny\Auth\Http\Middleware\JwtAuthenticate::class);
+            }
+        }
 
         // JWT 기반 guest 체크 미들웨어
         $router->aliasMiddleware('guest.jwt', \Jiny\Auth\Http\Middleware\RedirectIfAuthenticated::class);
@@ -164,21 +183,38 @@ class JinyAuthServiceProvider extends ServiceProvider
             return new \Jiny\Auth\Services\ShardingService();
         });
 
-        // JwtAuth 서비스 바인딩
-        $this->app->singleton('jiny.auth.jwt', function ($app) {
-            return new \Jiny\Auth\Services\JwtAuthService();
-        });
+        // UserResolverInterface 구현체 바인딩 (jiny/jwt 패키지용)
+        // jiny/jwt 패키지가 샤딩된 사용자 테이블에서 사용자 정보를 조회할 수 있도록 합니다.
+        if (interface_exists(\Jiny\Jwt\Contracts\UserResolverInterface::class)) {
+            $this->app->singleton(\Jiny\Jwt\Contracts\UserResolverInterface::class, function ($app) {
+                return new \Jiny\Auth\Services\ShardingUserResolver();
+            });
+        }
 
         // TwoFactor 서비스 바인딩
         $this->app->singleton(\Jiny\Auth\Services\TwoFactorService::class, function ($app) {
             return new \Jiny\Auth\Services\TwoFactorService();
         });
 
+        // 레거시 호환성: Jiny\Auth\Services\JwtAuthService를 Jiny\Jwt\Services\JwtAuthService로 별칭 바인딩
+        // 기존 코드에서 Jiny\Auth\Services\JwtAuthService를 사용하는 경우를 위해 호환성 유지
+        if (class_exists(\Jiny\Jwt\Services\JwtAuthService::class)) {
+            $this->app->singleton(\Jiny\Auth\Services\JwtAuthService::class, function ($app) {
+                // UserResolverInterface를 주입하여 샤딩된 사용자 테이블에서 사용자 정보를 조회할 수 있도록 합니다.
+                $userResolver = null;
+                if ($app->bound(\Jiny\Jwt\Contracts\UserResolverInterface::class)) {
+                    $userResolver = $app->make(\Jiny\Jwt\Contracts\UserResolverInterface::class);
+                }
+                return new \Jiny\Jwt\Services\JwtAuthService($userResolver);
+            });
+        }
+
         // 파사드 별칭 등록
         $this->app->booting(function () {
             $loader = \Illuminate\Foundation\AliasLoader::getInstance();
             $loader->alias('Shard', \Jiny\Auth\Facades\Shard::class);
-            $loader->alias('JwtAuth', \Jiny\Auth\Facades\JwtAuth::class);
+            // JwtAuth 파사드는 jiny/jwt 패키지에서 등록됩니다.
+            // jiny/jwt 패키지가 로드되면 자동으로 등록되므로 여기서는 등록하지 않습니다.
         });
     }
 

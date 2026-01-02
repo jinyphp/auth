@@ -6,7 +6,7 @@ use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\Auth;
 use Jiny\Auth\Models\UserLogs;
-use Jiny\Auth\Services\JwtAuthService;
+use Jiny\Jwt\Facades\JwtAuth;
 
 /**
  * 로그아웃 처리 컨트롤러
@@ -29,30 +29,24 @@ use Jiny\Auth\Services\JwtAuthService;
 class SubmitController extends Controller
 {
     /**
-     * JWT 서비스
-     *
-     * @var JwtAuthService
-     */
-    protected $jwtService;
-
-    /**
      * 생성자
      *
-     * @param  JwtAuthService  $jwtService  JWT 서비스 인스턴스
+     * 주의: JWT 서비스는 jiny/jwt 패키지의 JwtAuth 파사드를 사용합니다.
      */
-    public function __construct(JwtAuthService $jwtService)
+    public function __construct()
     {
-        $this->jwtService = $jwtService;
+        // JWT 서비스는 파사드로 접근
     }
 
     /**
      * 로그아웃 처리
      *
-     * JWT 토큰을 무효화하고 사용자를 로그아웃시킵니다.
+     * jiny/jwt 패키지의 로그아웃 API를 호출하여 JWT 토큰을 무효화하고 사용자를 로그아웃시킵니다.
+     * 향후 MSA로 분리될 때 jiny/jwt 서비스를 독립적으로 호출할 수 있도록 설계되었습니다.
      *
      * 처리 순서:
-     * 1. 현재 JWT 토큰 무효화
-     * 2. 사용자의 모든 JWT 토큰 무효화
+     * 1. jiny/jwt 로그아웃 API 호출 (JWT 토큰 폐기)
+     * 2. 소셜 로그인 여부 확인 및 OAuth 제공자 로그아웃
      * 3. 로그아웃 로그 기록
      * 4. Laravel Auth 로그아웃
      * 5. 세션 무효화
@@ -66,22 +60,80 @@ class SubmitController extends Controller
     {
         $userId = Auth::id();
 
-        // 1. 현재 JWT 토큰 무효화 (로그 기록 전에 처리)
-        // 요청에서 JWT 토큰 추출 (쿠키, Authorization 헤더, 쿼리 파라미터)
-        $token = $this->jwtService->getTokenFromRequest($request);
-        if ($token) {
-            try {
-                // JWT 토큰 검증 및 파싱
-                $parsedToken = $this->jwtService->validateToken($token);
-                // 토큰 ID (jti claim) 추출
-                $tokenId = $parsedToken->claims()->get('jti');
+        // 1. jiny/jwt 로그아웃 API 호출
+        // 향후 MSA로 분리될 때 독립적인 서비스로 호출할 수 있도록 설계
+        // 현재는 모놀리식 환경이므로 내부 API를 호출하지만,
+        // MSA 분리 시에는 HTTP 클라이언트를 사용하여 외부 서비스 호출
+        try {
+            // 내부 API 호출 (같은 애플리케이션 내에서 호출)
+            // Request::create()를 사용하여 내부 API 호출 시뮬레이션
+            $jwtLogoutUrl = route('api.jwt.logout');
 
-                // 특정 토큰을 블랙리스트에 추가하여 폐기
-                $revokeResult = $this->jwtService->revokeToken($tokenId);
-                \Log::info('JWT token revoked', ['token_id' => $tokenId, 'result' => $revokeResult]);
-            } catch (\Exception $e) {
-                // 토큰 무효화 실패는 로그만 남기고 계속 진행
-                \Log::warning('JWT token revoke failed', ['error' => $e->getMessage()]);
+            // 현재 요청의 쿠키와 헤더를 포함하여 API 호출
+            // 로그아웃 시 항상 모든 JWT 토큰을 해제하도록 설정 (기본값: true)
+            $jwtLogoutRequest = Request::create($jwtLogoutUrl, 'POST', [
+                'revoke_all' => true, // 모든 토큰 폐기 (기본값 변경)
+            ]);
+
+            // 현재 요청의 쿠키와 헤더 복사
+            foreach ($request->cookies->all() as $name => $value) {
+                $jwtLogoutRequest->cookies->set($name, $value);
+            }
+
+            foreach ($request->headers->all() as $key => $values) {
+                if (!in_array(strtolower($key), ['host', 'content-length'])) {
+                    $jwtLogoutRequest->headers->set($key, $values);
+                }
+            }
+
+            // 현재 요청의 IP와 User Agent 복사
+            $jwtLogoutRequest->server->set('REMOTE_ADDR', $request->ip());
+            $jwtLogoutRequest->server->set('HTTP_USER_AGENT', $request->userAgent());
+
+            // API 호출 실행
+            $jwtLogoutResponse = app()->handle($jwtLogoutRequest);
+            $jwtLogoutData = json_decode($jwtLogoutResponse->getContent(), true);
+
+            if ($jwtLogoutData && ($jwtLogoutData['success'] ?? false)) {
+                \Log::info('JWT logout API called successfully', [
+                    'user_id' => $userId,
+                ]);
+            } else {
+                \Log::warning('JWT logout API call failed', [
+                    'user_id' => $userId,
+                    'response' => $jwtLogoutData,
+                ]);
+            }
+        } catch (\Exception $e) {
+            // API 호출 실패는 로그만 남기고 계속 진행
+            // (jiny/jwt 패키지가 없거나 API가 사용 불가능한 경우 대비)
+            \Log::warning('JWT logout API call error', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+
+            // Fallback: 직접 JWT 토큰 폐기 시도 (모든 토큰 해제)
+            try {
+                $token = JwtAuth::getTokenFromRequest($request);
+                if ($token) {
+                    $parsedToken = JwtAuth::validateToken($token);
+                    $tokenId = $parsedToken->claims()->get('jti');
+                    $userId = $parsedToken->claims()->get('sub') ?? $parsedToken->claims()->get('uuid');
+                    
+                    // 현재 토큰 폐기
+                    if ($tokenId) {
+                        JwtAuth::revokeToken($tokenId);
+                    }
+                    
+                    // 사용자의 모든 토큰 폐기
+                    if ($userId) {
+                        JwtAuth::revokeAllUserTokens($userId);
+                    }
+                }
+            } catch (\Exception $fallbackError) {
+                \Log::warning('JWT token revoke fallback failed', [
+                    'error' => $fallbackError->getMessage(),
+                ]);
             }
         }
 
@@ -107,34 +159,40 @@ class SubmitController extends Controller
                     ]);
                 }
             } else {
-                // 이메일 로그인인 경우: JWT 토큰 무효화만 수행
+                // 이메일 로그인인 경우
                 \Log::info('Email logout detected', ['user_id' => $user->id]);
             }
         }
 
-        // 3. 로그아웃 로그 기록 및 사용자의 모든 토큰 폐기
+        // 3. 로그아웃 로그 기록
         if (Auth::check()) {
-            // 사용자의 모든 JWT 토큰 폐기
-            // 다른 디바이스/브라우저에서 발급받은 토큰도 모두 무효화
-            $revokeAllResult = $this->jwtService->revokeAllUserTokens(Auth::id());
-            \Log::info('All user JWT tokens revoked', ['user_id' => Auth::id(), 'count' => $revokeAllResult]);
-
             // 로그아웃 로그 기록
-            UserLogs::create([
-                'user_id' => Auth::id(),
-                'email' => Auth::user()->email,
-                'action' => 'logout',
-                'description' => '사용자 로그아웃',
-                'ip' => $request->ip(),
-                'user_agent' => $request->userAgent(),
-                'session_id' => $request->hasSession() ? $request->session()->getId() : null,
-            ]);
+            try {
+                UserLogs::create([
+                    'user_id' => Auth::id(),
+                    'email' => Auth::user()->email,
+                    'action' => 'logout',
+                    'description' => '사용자 로그아웃',
+                    'ip' => $request->ip(),
+                    'user_agent' => $request->userAgent(),
+                    'session_id' => $request->hasSession() ? $request->session()->getId() : null,
+                ]);
+            } catch (\Exception $e) {
+                // 로그 기록 실패는 무시
+                \Log::warning('User logout log creation failed', [
+                    'error' => $e->getMessage(),
+                ]);
+            }
 
             // API 토큰 삭제 (Sanctum 사용 시)
             // API 요청인 경우 Sanctum 토큰도 삭제
             if ($request->expectsJson()) {
-                if (method_exists($request->user(), 'currentAccessToken')) {
-                    $request->user()->currentAccessToken()->delete();
+                try {
+                    if (method_exists($request->user(), 'currentAccessToken')) {
+                        $request->user()->currentAccessToken()->delete();
+                    }
+                } catch (\Exception $e) {
+                    // Sanctum 토큰 삭제 실패는 무시
                 }
             }
         }

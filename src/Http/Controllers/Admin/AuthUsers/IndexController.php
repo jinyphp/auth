@@ -96,7 +96,54 @@ class IndexController extends Controller
             ? ($shardStatistics['total_users'] ?? 0)
             : $users->total();
 
-        return view($this->config['view'], compact('users', 'shardingEnabled', 'shardStatistics', 'selectedShard', 'totalUsers'));
+        // 역할별 분포 통계 계산
+        $roleStats = [
+            'admin' => 0,
+            'user' => 0,
+            'other' => 0
+        ];
+
+        if ($shardingEnabled && $shardTable) {
+            // 모든 활성 샤드 테이블에서 집계
+            for ($i = 1; $i <= $shardTable->shard_count; $i++) {
+                $tName = $shardTable->getShardTableName($i);
+                if (DB::getSchemaBuilder()->hasTable($tName)) {
+                    $stats = DB::table($tName)
+                        ->select('utype', DB::raw('count(*) as count'))
+                        ->groupBy('utype')
+                        ->get();
+                    
+                    foreach ($stats as $stat) {
+                        $utype = strtoupper($stat->utype ?? 'USR');
+                        if ($utype === 'ADM' || $utype === 'ADMIN') {
+                            $roleStats['admin'] += $stat->count;
+                        } elseif ($utype === 'USR' || $utype === 'USER') {
+                            $roleStats['user'] += $stat->count;
+                        } else {
+                            $roleStats['other'] += $stat->count;
+                        }
+                    }
+                }
+            }
+        } else {
+            // 단일 테이블에서 집계
+            $stats = AuthUser::select('utype', DB::raw('count(*) as count'))
+                ->groupBy('utype')
+                ->get();
+
+            foreach ($stats as $stat) {
+                $utype = strtoupper($stat->utype ?? 'USR');
+                if ($utype === 'ADM' || $utype === 'ADMIN') {
+                    $roleStats['admin'] += $stat->count;
+                } elseif ($utype === 'USR' || $utype === 'USER') {
+                    $roleStats['user'] += $stat->count;
+                } else {
+                    $roleStats['other'] += $stat->count;
+                }
+            }
+        }
+
+        return view($this->config['view'], compact('users', 'shardingEnabled', 'shardStatistics', 'selectedShard', 'totalUsers', 'roleStats'));
     }
 
     /**

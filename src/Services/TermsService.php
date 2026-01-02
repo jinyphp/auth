@@ -42,9 +42,9 @@ class TermsService
     /**
      * 선택 약관 목록 조회
      */
-    public function getOptionalTerms()
+    public function getOptionalTerms($forceRefresh = false)
     {
-        return $this->getActiveTerms()
+        return $this->getActiveTerms($forceRefresh)
             ->filter(function($term) {
                 return !$term->isMandatory();
             });

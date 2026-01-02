@@ -21,6 +21,9 @@ class TermsController extends Controller
 
     /**
      * 약관 동의 페이지 표시
+     * 
+     * 약관 목록은 프론트엔드에서 API를 호출하여 동적으로 로드합니다.
+     * 서버에서는 약관 동의 페이지만 렌더링하고, 약관 데이터는 클라이언트에서 처리합니다.
      */
     public function __invoke(Request $request)
     {
@@ -38,30 +41,15 @@ class TermsController extends Controller
             return $response;
         }
 
-        // 필수 약관 로드
-        $mandatoryTerms = $this->termsService->getMandatoryTerms();
-        \Log::info('Mandatory Terms:', ['count' => $mandatoryTerms->count(), 'terms' => $mandatoryTerms->toArray()]);
-
-        // 선택 약관 로드
-        $optionalTerms = $this->termsService->getOptionalTerms();
-        \Log::info('Optional Terms:', ['count' => $optionalTerms->count(), 'terms' => $optionalTerms->toArray()]);
-
-        // 활성화된 약관이 없으면 바로 회원가입 페이지로
-        if ($mandatoryTerms->isEmpty() && $optionalTerms->isEmpty()) {
-            \Log::info('No active terms found.');
-            session()->put('terms_agreed', true);
-            $response = redirect()->route('signup.index');
-            $response->cookie('terms_agreed', '1', 60 * 24 * 30); // 30일
-            return $response;
-        }
-
         // 약관 설정에 맞는 뷰 사용
+        // 약관 목록은 프론트엔드에서 API를 호출하여 동적으로 로드하므로
+        // 서버에서는 빈 배열을 전달합니다.
         $viewName = $settings['terms']['list_view'] ?? 'jiny-auth::auth.register.terms';
         \Log::info('Rendering View:', ['view' => $viewName]);
         
         return view($viewName, [
-            'mandatoryTerms' => $mandatoryTerms,
-            'optionalTerms' => $optionalTerms,
+            'mandatoryTerms' => collect([]), // 프론트엔드에서 API로 로드
+            'optionalTerms' => collect([]), // 프론트엔드에서 API로 로드
             'settings' => $settings,
             'agreedTerms' => session('agreed_terms', []),
         ]);
@@ -74,27 +62,37 @@ class TermsController extends Controller
     {
         $request->validate([
             'terms' => 'required|array',
+            'terms.*' => 'required|integer',
         ]);
+
+        // 동의한 약관 ID 목록
+        $agreedTermIds = array_map('intval', $request->terms);
 
         // 세션에 동의 상태 저장
         session()->put('terms_agreed', true);
-        session()->put('agreed_terms', $request->terms);
+        session()->put('agreed_term_ids', $agreedTermIds);
+        session()->put('agreed_terms', $agreedTermIds); // 호환성을 위해 유지
 
         // 쿠키 설정 (30일)
-        cookie()->queue('terms_agreed', '1', 60 * 24 * 30);
+        $termsAgreedCookie = cookie('terms_agreed', '1', 60 * 24 * 30);
+        $agreedTermIdsCookie = cookie('agreed_term_ids', json_encode($agreedTermIds), 60 * 24 * 30);
         
         // AJAX 요청인 경우 JSON 응답
-        if ($request->wantsJson() || $request->ajax()) {
+        if ($request->wantsJson() || $request->ajax() || $request->header('X-Requested-With') === 'XMLHttpRequest') {
             return response()->json([
                 'success' => true,
                 'message' => '약관에 동의하셨습니다.',
-                'redirect' => route('signup.index')
-            ])->withCookie(cookie('terms_agreed', '1', 60 * 24 * 30));
+                'redirect' => route('signup.index'),
+                'agreed_term_ids' => $agreedTermIds
+            ])
+            ->withCookie($termsAgreedCookie)
+            ->withCookie($agreedTermIdsCookie);
         }
 
         // 일반 요청인 경우 리다이렉트
         return redirect()->route('signup.index')
-            ->withCookie('terms_agreed', '1', 60 * 24 * 30);
+            ->withCookie($termsAgreedCookie)
+            ->withCookie($agreedTermIdsCookie);
     }
     private function loadSettings()
     {

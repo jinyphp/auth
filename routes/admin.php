@@ -24,8 +24,11 @@ Route::prefix('admin')->middleware(['web', 'admin'])->group(function () {
         Route::post('/', \Jiny\Auth\Http\Controllers\Admin\AuthUsers\StoreController::class)->name('store');
         Route::get('/shard/{shardId}', \Jiny\Auth\Http\Controllers\Admin\AuthUsers\ShardController::class)->name('shard');
         Route::get('/{id}', \Jiny\Auth\Http\Controllers\Admin\AuthUsers\ShowController::class)->name('show');
-        Route::get('/{id}/mail', [\Jiny\Mail\Http\Controllers\Admin\AuthUsers\MailController::class, 'create'])->name('mail');
-        Route::post('/{id}/mail', [\Jiny\Mail\Http\Controllers\Admin\AuthUsers\MailController::class, 'send'])->name('mail.send');
+        // Mail 모듈이 있는 경우에만 라우트 등록
+        if (class_exists(\Jiny\Mail\Http\Controllers\Admin\AuthUsers\MailController::class)) {
+            Route::get('/{id}/mail', [\Jiny\Mail\Http\Controllers\Admin\AuthUsers\MailController::class, 'create'])->name('mail');
+            Route::post('/{id}/mail', [\Jiny\Mail\Http\Controllers\Admin\AuthUsers\MailController::class, 'send'])->name('mail.send');
+        }
         Route::prefix('/{id}/two-factor')->name('two-factor.')->group(function () {
             Route::get('/', \Jiny\Auth\Http\Controllers\Admin\AuthUsers\TwoFactor\ShowController::class)->name('show');
             Route::post('/setup', \Jiny\Auth\Http\Controllers\Admin\AuthUsers\TwoFactor\SetupController::class)->name('setup');
@@ -252,21 +255,8 @@ Route::prefix('admin')->middleware(['web', 'admin'])->group(function () {
         Route::get('/{id}', \Jiny\Auth\Http\Controllers\Admin\UserApproval\Logs\UserApprovalLogsController::class . '@show')->name('show');
     });
 
-    // JWT 설정 관리
-    Route::prefix('auth/jwt')->name('admin.auth.jwt.')->group(function () {
-        Route::get('/', \Jiny\Auth\Http\Controllers\Admin\Jwt\IndexController::class)->name('index');
-        Route::post('/update', \Jiny\Auth\Http\Controllers\Admin\Jwt\UpdateController::class)->name('update');
-        Route::post('/reset', \Jiny\Auth\Http\Controllers\Admin\Jwt\ResetController::class)->name('reset');
-    });
-
-    // JWT 토큰 관리 (발급된 토큰 목록)
-    Route::prefix('auth/token')->name('admin.auth.token.')->group(function () {
-        Route::get('/', \Jiny\Auth\Http\Controllers\Admin\UserToken\IndexController::class)->name('index');
-        // 단일 토큰 폐기
-        Route::post('/revoke', [\Jiny\Auth\Http\Controllers\Admin\UserToken\IndexController::class, 'revokeToken'])->name('revoke');
-        // 사용자의 모든 토큰 폐기
-        Route::post('/revoke-all', [\Jiny\Auth\Http\Controllers\Admin\UserToken\IndexController::class, 'revokeAllUserTokens'])->name('revoke-all');
-    });
+    // JWT 관련 라우트는 jiny/jwt 패키지에서 관리됩니다.
+    // jiny/jwt/routes/admin.php 파일을 참조하세요.
 
 });
 

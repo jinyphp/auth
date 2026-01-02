@@ -22,11 +22,16 @@ return new class extends Migration
             $table->string('enable')->default(1);
 
             $table->string('code')->nullable();
-            $table->string('emoji')->nullable()->comment('국가 이모지 플래그');
+            // 국가를 나타내는 이모지 플래그를 저장하는 컬럼
+            $table->string('emoji', 10)->nullable()->comment('국가 이모지 플래그');
             $table->string('flag')->nullable();
             $table->string('name')->nullable();
 
             $table->text('description')->nullable();
+
+            // 국가의 위치 정보를 저장하여 지도에 표시하기 위한 컬럼
+            $table->decimal('latitude', 10, 8)->nullable()->comment('위도');
+            $table->decimal('longitude', 11, 8)->nullable()->comment('경도');
 
             $table->unsignedBigInteger('users')->default(0);
 

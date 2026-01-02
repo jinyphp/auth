@@ -111,6 +111,17 @@
 
         {{-- @include('jiny-auth::home.dashboard.partner') --}}
 
+        <!-- Passkey 관리 -->
+        @php
+            // Passkey 패키지가 설치되어 있는지 확인
+            $passkeyEnabled = class_exists('\Jiny\Passkey\Contracts\PasskeyServiceInterface')
+                || file_exists(base_path('jiny/passkey/src/Contracts/PasskeyServiceInterface.php'));
+        @endphp
+
+        @if($passkeyEnabled && isset($user))
+            @include('jiny-passkey::components.passkey-register')
+        @endif
+
         <!-- Recent Login History -->
         @include('jiny-auth::home.dashboard.partials.history')
 

@@ -22,6 +22,31 @@ class ExtendUsersTableForAuth extends Migration
                 $table->string('grade')->nullable()->comment('사용자 등급');
             }
 
+            // User Type field
+            if (!Schema::hasColumn('users', 'utype')) {
+                $table->string('utype', 10)->default('USR')->comment('사용자 타입');
+            }
+
+            // Account Status
+            if (!Schema::hasColumn('users', 'account_status')) {
+                $table->string('account_status', 20)->default('active')->comment('계정 상태');
+            }
+
+            // Is Admin
+            if (!Schema::hasColumn('users', 'isAdmin')) {
+                $table->string('isAdmin', 1)->default('0')->comment('관리자 여부');
+            }
+
+            // Username
+            if (!Schema::hasColumn('users', 'username')) {
+                $table->string('username')->nullable()->unique()->comment('사용자명');
+            }
+
+            // UUID
+            if (!Schema::hasColumn('users', 'uuid')) {
+                $table->uuid('uuid')->nullable()->unique()->comment('UUID');
+            }
+
             // Redirect field
             if (!Schema::hasColumn('users', 'redirect')) {
                 $table->string('redirect')->nullable()->comment('로그인 후 리다이렉트 URL');

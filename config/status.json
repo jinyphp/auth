@@ -1,0 +1,22 @@
+{
+  "account_status": {
+    "active": "active",
+    "inactive": "inactive",
+    "suspended": "suspended",
+    "banned": "banned"
+  },
+  "validation": {
+    "require_email_verification": true,
+    "require_approval": false,
+    "check_deleted_at": true,
+    "strict_mode": true
+  },
+  "messages": {
+    "ACCOUNT_SUSPENDED": "계정이 정지되었습니다.",
+    "ACCOUNT_BANNED": "계정이 차단되었습니다.",
+    "EMAIL_NOT_VERIFIED": "이메일 인증이 필요합니다.",
+    "ACCOUNT_NOT_APPROVED": "계정 승인이 필요합니다.",
+    "ACCOUNT_DELETED": "탈퇴한 계정입니다.",
+    "ACCOUNT_INACTIVE": "비활성화된 계정입니다."
+  }
+}

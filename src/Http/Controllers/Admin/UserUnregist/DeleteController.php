@@ -9,7 +9,7 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\DB;
 use Jiny\Auth\Models\UserUnregist;
 use Jiny\Auth\Services\ShardingService;
-use Jiny\Auth\Services\JwtAuthService;
+use Jiny\Jwt\Facades\JwtAuth;
 
 /**
  * 관리자: 탈퇴 요청 상태를 "탈퇴 완료"로 변경
@@ -29,20 +29,15 @@ class DeleteController extends Controller
     protected $shardingService;
 
     /**
-     * @var JwtAuthService JWT 인증 서비스 인스턴스
-     */
-    protected $jwtService;
-
-    /**
      * 생성자: 필요한 서비스들을 의존성 주입
      *
+     * 주의: JWT 서비스는 jiny/jwt 패키지의 JwtAuth 파사드를 사용합니다.
+     *
      * @param ShardingService $shardingService 샤딩 서비스
-     * @param JwtAuthService $jwtService JWT 인증 서비스
      */
-    public function __construct(ShardingService $shardingService, JwtAuthService $jwtService)
+    public function __construct(ShardingService $shardingService)
     {
         $this->shardingService = $shardingService;
-        $this->jwtService = $jwtService;
     }
 
     /**
@@ -98,8 +93,8 @@ class DeleteController extends Controller
             }
 
             // Step 4: 저장된 모든 JWT 토큰을 폐기합니다.
-            // JwtAuthService의 revokeAllUserTokens 메서드는 UUID를 기반으로 모든 토큰을 폐기합니다.
-            $revokeResult = $this->jwtService->revokeAllUserTokens($userUuid);
+            // jiny/jwt 패키지의 JwtAuth 파사드를 사용하여 모든 토큰을 폐기합니다.
+            $revokeResult = JwtAuth::revokeAllUserTokens($userUuid);
 
             if (!$revokeResult) {
                 // 토큰이 없거나 이미 폐기된 경우에도 계속 진행

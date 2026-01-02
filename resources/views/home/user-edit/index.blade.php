@@ -196,6 +196,14 @@
 
             <!-- 비밀번호 카드 -->
             @include('jiny-auth::home.user-edit.partials.password')
+
+            <!-- Passkey 관리 카드 -->
+            @php
+                $passkeyEnabled = file_exists(base_path('jiny/passkey/src/Contracts/PasskeyServiceInterface.php'));
+            @endphp
+            @if ($passkeyEnabled)
+                @include('jiny-passkey::components.passkey-register')
+            @endif
         </div>
 
         <!-- 사이드 정보 -->

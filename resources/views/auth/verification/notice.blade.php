@@ -63,13 +63,11 @@
                     <!-- Action Buttons -->
                     <div class="d-grid gap-2 mt-4">
                         @if(auth()->check() || $pendingEmail)
-                            <form action="{{ route('verification.resend') }}" method="POST">
-                                @csrf
-                                <button type="submit" class="btn btn-primary w-100">
-                                    <i class="bi bi-envelope-arrow-up me-2"></i>
-                                    인증 이메일 재발송
-                                </button>
-                            </form>
+                            <button type="button" id="btn-resend-verification" class="btn btn-primary w-100">
+                                <i class="bi bi-envelope-arrow-up me-2"></i>
+                                <span class="btn-text">인증 이메일 재발송</span>
+                                <span class="btn-spinner spinner-border spinner-border-sm d-none" role="status" aria-hidden="true"></span>
+                            </button>
                         @endif
 
                         @if(auth()->check())
@@ -100,4 +98,116 @@
         </div>
     </div>
 </section>
+
+@push('scripts')
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const resendBtn = document.getElementById('btn-resend-verification');
+    if (!resendBtn) return;
+
+    resendBtn.addEventListener('click', async function() {
+        const btnText = resendBtn.querySelector('.btn-text');
+        const btnSpinner = resendBtn.querySelector('.btn-spinner');
+        
+        // 버튼 비활성화 및 로딩 표시
+        resendBtn.disabled = true;
+        btnText.style.display = 'none';
+        btnSpinner.classList.remove('d-none');
+
+        try {
+            const response = await fetch('{{ route("api.auth.v1.email.resend") }}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '{{ csrf_token() }}'
+                },
+                credentials: 'same-origin'
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
+                // 성공 메시지 표시
+                const alertHtml = `
+                    <div class="alert alert-success alert-dismissible fade show" role="alert">
+                        <i class="bi bi-check-circle me-2"></i>
+                        ${data.message || '인증 이메일이 재발송되었습니다. 이메일을 확인해주세요.'}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                `;
+                
+                // 기존 알림 제거 후 새 알림 추가
+                const existingAlerts = document.querySelectorAll('.alert');
+                existingAlerts.forEach(alert => alert.remove());
+                
+                const cardBody = resendBtn.closest('.card-body');
+                if (cardBody) {
+                    cardBody.insertAdjacentHTML('afterbegin', alertHtml);
+                }
+
+                // 3초 후 버튼 다시 활성화
+                setTimeout(() => {
+                    resendBtn.disabled = false;
+                    btnText.style.display = 'inline';
+                    btnSpinner.classList.add('d-none');
+                }, 3000);
+            } else {
+                // 오류 메시지 표시
+                const errorCode = data.code || 'UNKNOWN_ERROR';
+                const errorMessage = data.message || '인증 이메일 재발송에 실패했습니다.';
+                
+                const alertHtml = `
+                    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                        <i class="bi bi-exclamation-triangle me-2"></i>
+                        <strong>오류 코드: ${errorCode}</strong><br>
+                        ${errorMessage}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                `;
+                
+                // 기존 알림 제거 후 새 알림 추가
+                const existingAlerts = document.querySelectorAll('.alert');
+                existingAlerts.forEach(alert => alert.remove());
+                
+                const cardBody = resendBtn.closest('.card-body');
+                if (cardBody) {
+                    cardBody.insertAdjacentHTML('afterbegin', alertHtml);
+                }
+
+                // 버튼 다시 활성화
+                resendBtn.disabled = false;
+                btnText.style.display = 'inline';
+                btnSpinner.classList.add('d-none');
+            }
+        } catch (error) {
+            console.error('인증 이메일 재발송 오류:', error);
+            
+            const alertHtml = `
+                <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                    <i class="bi bi-exclamation-triangle me-2"></i>
+                    네트워크 오류가 발생했습니다. 잠시 후 다시 시도해주세요.
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            `;
+            
+            // 기존 알림 제거 후 새 알림 추가
+            const existingAlerts = document.querySelectorAll('.alert');
+            existingAlerts.forEach(alert => alert.remove());
+            
+            const cardBody = resendBtn.closest('.card-body');
+            if (cardBody) {
+                cardBody.insertAdjacentHTML('afterbegin', alertHtml);
+            }
+
+            // 버튼 다시 활성화
+            resendBtn.disabled = false;
+            btnText.style.display = 'inline';
+            btnSpinner.classList.add('d-none');
+        }
+    });
+});
+</script>
+@endpush
 @endsection

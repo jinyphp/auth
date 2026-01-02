@@ -20,8 +20,9 @@
         "jiny/fortify": "^0.0.2",
         "jiny/auth-profile": "^0.8",
         "jiny/auth-social": "^0.4",
-        "jiny/auth-users": "^0.6"
-
+        "jiny/auth-users": "^0.6",
+        "jiny/jwt": "^0.1.0",
+        "jiny/passkey": "^0.1.0"
     },
     "autoload": {
         "psr-4": {

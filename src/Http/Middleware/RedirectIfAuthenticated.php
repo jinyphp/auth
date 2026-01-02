@@ -5,12 +5,15 @@ namespace Jiny\Auth\Http\Middleware;
 use Closure;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Jiny\Jwt\Facades\JwtAuth;
 
 /**
  * JWT 기반 인증 체크 미들웨어
  *
  * 로그인 페이지 등 guest 페이지에 인증된 사용자가 접근할 때
  * JWT 토큰 유무를 확인하여 리다이렉트 처리
+ *
+ * 주의: JWT 관련 기능은 jiny/jwt 패키지에서 제공됩니다.
  */
 class RedirectIfAuthenticated
 {
@@ -26,11 +29,10 @@ class RedirectIfAuthenticated
             // JWT 토큰이 있는지 확인하고 유효성 검사
             if ($request->hasCookie('access_token')) {
                 try {
-                    // JWT 서비스를 통해 토큰 유효성 검사
-                    $jwtService = app(\Jiny\Auth\Services\JwtAuthService::class);
+                    // jiny/jwt 패키지를 통해 토큰 유효성 검사
                     $token = $request->cookie('access_token');
 
-                    if ($token && $jwtService->validateToken($token)) {
+                    if ($token && JwtAuth::validateToken($token)) {
                         // 유효한 토큰이면 홈으로 리다이렉트
                         return redirect('/home');
                     }

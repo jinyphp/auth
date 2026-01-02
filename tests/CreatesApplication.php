@@ -12,7 +12,7 @@ trait CreatesApplication
      */
     public function createApplication(): Application
     {
-        $app = require __DIR__.'/../../../jinyphp/jinysite_recruit/bootstrap/app.php';
+        $app = require __DIR__.'/../../../bootstrap/app.php';
 
         $app->make(Kernel::class)->bootstrap();
 

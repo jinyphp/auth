@@ -154,12 +154,12 @@ class ShowController extends Controller
         // 이미 동의한 경우, 약관 ID들을 뷰에 전달 (AJAX 요청 시 전송하기 위함)
         if ($this->hasAgreedToTerms()) {
             $agreedTermsIds = session('agreed_terms', []);
-            
+
             // 세션에 없는 경우(쿠키 등), 필수 약관이라도 포함
             if (empty($agreedTermsIds) && $hasActualTerms) {
                 $agreedTermsIds = $allTermsData['mandatory']->pluck('id')->toArray();
             }
-            
+
             $formData['agreed_terms_ids'] = $agreedTermsIds;
         }
 
@@ -169,40 +169,103 @@ class ShowController extends Controller
 
     /**
      * 약관 요구사항 확인 및 리다이렉트 처리
+     *
+     * 회원가입 전 약관 동의가 필요한지 확인하고, 필요한 경우 약관 동의 페이지로 리다이렉트합니다.
+     * 
+     * 확인 조건:
+     * 1. 약관 기능이 활성화되어 있는지 (`terms.enable`)
+     * 2. 약관 동의가 필수인지 (`terms.require_agreement`)
+     * 3. 활성화된 약관이 존재하는지
+     * 4. 이미 약관에 동의했는지
+     *
+     * @param Request $request HTTP 요청 객체
+     * @param bool $hasErrors 에러가 있는지 여부 (에러가 있으면 약관 체크 건너뛰기)
+     * @return \Illuminate\Http\RedirectResponse|null 약관 페이지로 리다이렉트하거나 null 반환
      */
     protected function checkTermsRequirement(Request $request, bool $hasErrors = false)
     {
-        // 약관 기능이 비활성화되어 있으면 null 반환 (계속 진행)
-        if (!$this->config['terms']['enable']) {
-            return null;
-        }
-
         // 에러가 있으면 약관 체크 건너뛰기 (에러 메시지 표시를 위해)
+        // 사용자가 약관 동의 후 가입 폼에서 에러가 발생한 경우를 처리하기 위함
         if ($hasErrors) {
             return null;
         }
 
-        // 이미 약관에 동의했으면 null 반환 (계속 진행)
-        if ($this->hasAgreedToTerms()) {
+        // 약관 기능이 비활성화되어 있으면 null 반환 (계속 진행)
+        if (!isset($this->config['terms']['enable']) || !$this->config['terms']['enable']) {
+            \Log::info('약관 기능이 비활성화되어 있습니다. 약관 동의 없이 진행합니다.');
             return null;
         }
 
-        // 활성화된 약관이 있는지 확인
+        // 약관 동의가 필수가 아니면 null 반환 (계속 진행)
+        // require_agreement가 false이면 약관 동의 없이 회원가입 가능
+        if (!isset($this->config['terms']['require_agreement']) || !$this->config['terms']['require_agreement']) {
+            \Log::info('약관 동의가 필수가 아닙니다. 약관 동의 없이 진행합니다.', [
+                'require_agreement' => $this->config['terms']['require_agreement'] ?? false
+            ]);
+            return null;
+        }
+
+        // 활성화된 약관이 있는지 먼저 확인
+        // 캐시를 강제로 새로고침하여 최신 약관 정보를 가져옴
         try {
-            $mandatoryTerms = $this->termsService->getMandatoryTerms();
-            $optionalTerms = $this->termsService->getOptionalTerms();
+            $mandatoryTerms = $this->termsService->getMandatoryTerms(true); // 캐시 강제 새로고침
+            $optionalTerms = $this->termsService->getOptionalTerms(true); // 캐시 강제 새로고침
 
-            // 활성화된 약관이 있으면 약관 동의 페이지로 리다이렉션
-            if ($mandatoryTerms->isNotEmpty() || $optionalTerms->isNotEmpty()) {
-                return redirect()->route('signup.terms');
-            }
-
-            // 약관이 활성화되어 있지만 실제 약관이 없는 경우, 자동으로 동의한 것으로 처리
+            // 약관이 하나도 없으면 약관 동의가 필요 없음
             if ($mandatoryTerms->isEmpty() && $optionalTerms->isEmpty()) {
-                \Log::info('약관이 활성화되어 있지만 등록된 약관이 없습니다. 자동으로 약관 동의 처리합니다.');
+                \Log::info('약관이 활성화되어 있지만 등록된 약관이 없습니다. 약관 동의 없이 진행합니다.', [
+                    'terms_enable' => $this->config['terms']['enable'] ?? false,
+                    'require_agreement' => $this->config['terms']['require_agreement'] ?? false
+                ]);
+                return null;
             }
+
+            // 약관이 있으면, 이미 동의했는지 확인
+            // 세션 또는 쿠키에서 동의 여부 확인
+            $sessionAgreed = session()->has('terms_agreed') && session()->get('terms_agreed') === true;
+            $cookieAgreed = request()->cookie('terms_agreed') === '1';
+            
+            // 동의한 약관 ID 목록 확인 (필수 약관 모두 동의했는지 확인)
+            $agreedTermIds = session()->get('agreed_term_ids', []);
+            if (empty($agreedTermIds) && $request->cookie('agreed_term_ids')) {
+                $cookieTermIds = json_decode($request->cookie('agreed_term_ids'), true);
+                $agreedTermIds = is_array($cookieTermIds) ? $cookieTermIds : [];
+            }
+            
+            // 필수 약관 ID 목록
+            $mandatoryTermIds = $mandatoryTerms->pluck('id')->toArray();
+            
+            // 필수 약관이 모두 동의되었는지 확인
+            $allMandatoryAgreed = !empty($mandatoryTermIds) && 
+                                  empty(array_diff($mandatoryTermIds, $agreedTermIds));
+
+            // 이미 약관에 동의했고 필수 약관도 모두 동의했으면 null 반환 (계속 진행)
+            if (($sessionAgreed || $cookieAgreed) && $allMandatoryAgreed) {
+                \Log::info('약관에 이미 동의했습니다. 가입 폼으로 진행합니다.', [
+                    'session_agreed' => $sessionAgreed,
+                    'cookie_agreed' => $cookieAgreed,
+                    'mandatory_terms_count' => count($mandatoryTermIds),
+                    'agreed_terms_count' => count($agreedTermIds),
+                    'all_mandatory_agreed' => $allMandatoryAgreed
+                ]);
+                return null;
+            }
+
+            // 약관이 있고 아직 동의하지 않았거나 필수 약관을 모두 동의하지 않았으면 약관 동의 페이지로 리다이렉션
+            \Log::info('약관 동의가 필요합니다. 약관 동의 페이지로 리다이렉트합니다.', [
+                'mandatory_count' => $mandatoryTerms->count(),
+                'optional_count' => $optionalTerms->count(),
+                'require_agreement' => $this->config['terms']['require_agreement'],
+                'session_agreed' => $sessionAgreed,
+                'cookie_agreed' => $cookieAgreed,
+                'mandatory_term_ids' => $mandatoryTermIds,
+                'agreed_term_ids' => $agreedTermIds,
+                'all_mandatory_agreed' => $allMandatoryAgreed ?? false
+            ]);
+            return redirect()->route('signup.terms');
         } catch (\Exception $e) {
             // 약관 서비스 오류 시 로그만 남기고 계속 진행
+            // 약관 서비스에 문제가 있어도 회원가입은 진행할 수 있도록 함
             \Log::warning('약관 확인 중 오류 발생', [
                 'error' => $e->getMessage(),
                 'request_url' => $request->url()
@@ -328,7 +391,8 @@ class ShowController extends Controller
      */
     protected function loadMandatoryTerms()
     {
-        return $this->termsService->getMandatoryTerms();
+        // 캐시를 강제로 새로고침하여 최신 약관 정보를 가져옴
+        return $this->termsService->getMandatoryTerms(true);
     }
 
     /**
@@ -346,7 +410,8 @@ class ShowController extends Controller
      */
     protected function loadOptionalTerms()
     {
-        return $this->termsService->getOptionalTerms();
+        // 캐시를 강제로 새로고침하여 최신 약관 정보를 가져옴
+        return $this->termsService->getOptionalTerms(true);
     }
 
     /**

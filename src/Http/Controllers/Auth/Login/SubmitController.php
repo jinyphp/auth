@@ -11,9 +11,12 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 use Jiny\Auth\Services\ActivityLogService;
 use Jiny\Auth\Services\AccountLockoutService;
-use Jiny\Auth\Services\JwtAuthService;
 use Jiny\Auth\Services\TwoFactorService;
 use Jiny\Auth\Facades\Shard;
+use Jiny\Passkey\Contracts\PasskeyServiceInterface;
+
+// JWT 파사드는 런타임에서 동적으로 로드 (패키지 분리 대응)
+// use 문 대신 완전한 네임스페이스 사용 또는 헬퍼 메서드 사용
 
 /**
  * 로그인 처리 컨트롤러 (JWT + 샤딩 지원)
@@ -22,26 +25,35 @@ class SubmitController extends Controller
 {
     protected $activityLogService;
     protected $lockoutService;
-    protected $jwtService;
-    protected $shardingService;
     protected $twoFactorService;
+    protected $passkeyService;
     protected $config;
     protected $configPath;
     protected $jwtConfig;
     protected $jwtConfigPath;
 
+    /**
+     * 생성자
+     *
+     * @param ActivityLogService $activityLogService
+     * @param AccountLockoutService $lockoutService
+     * @param TwoFactorService $twoFactorService
+     * @param PasskeyServiceInterface|null $passkeyService Passkey 서비스 (선택적)
+     */
     public function __construct(
         ActivityLogService $activityLogService,
         AccountLockoutService $lockoutService,
-        JwtAuthService $jwtService,
-        TwoFactorService $twoFactorService
+        TwoFactorService $twoFactorService,
+        ?PasskeyServiceInterface $passkeyService = null
     ) {
         $this->activityLogService = $activityLogService;
         $this->lockoutService = $lockoutService;
-        $this->jwtService = $jwtService;
         $this->twoFactorService = $twoFactorService;
+        $this->passkeyService = $passkeyService ?? (interface_exists(\Jiny\Passkey\Contracts\PasskeyServiceInterface::class)
+            ? app(\Jiny\Passkey\Contracts\PasskeyServiceInterface::class)
+            : null);
         $this->configPath = dirname(__DIR__, 5) . '/config/setting.json';
-        $this->jwtConfigPath = dirname(__DIR__, 5) . '/config/jwt.json';
+        $this->jwtConfigPath = config_path('jwt.json');
         $this->config = $this->loadSettings();
         $this->jwtConfig = $this->loadJwtSettings();
     }
@@ -68,6 +80,44 @@ class SubmitController extends Controller
 
         // JSON 파일이 없거나 파싱 실패 시 빈 배열 반환
         return [];
+    }
+
+    /**
+     * JWT 토큰 생성 헬퍼 메서드
+     *
+     * jiny/jwt 패키지가 로드되지 않은 경우를 대비한 헬퍼 메서드입니다.
+     *
+     * @param object $user 사용자 객체
+     * @param bool $remember 로그인 상태 유지 여부
+     * @return array 토큰 쌍 (access_token, refresh_token)
+     * @throws \Exception JWT 서비스를 사용할 수 없는 경우
+     */
+    protected function generateJwtTokens($user, $remember)
+    {
+        // JWT 파사드가 로드된 경우 사용
+        if (class_exists('Jiny\Jwt\Facades\JwtAuth')) {
+            return \Jiny\Jwt\Facades\JwtAuth::generateTokenPair($user, $remember, $this->jwtConfig);
+        }
+
+        // 서비스 컨테이너에서 직접 가져오기
+        if (app()->bound('jiny.jwt')) {
+            $jwtService = app('jiny.jwt');
+            if (method_exists($jwtService, 'generateTokenPair')) {
+                return $jwtService->generateTokenPair($user, $remember, $this->jwtConfig);
+            }
+        }
+
+        // Fallback: 클래스 직접 로드 시도
+        $jwtServiceClass = 'Jiny\Jwt\Services\JwtAuthService';
+        if (class_exists($jwtServiceClass)) {
+            $userResolver = app()->bound('Jiny\Jwt\Contracts\UserResolverInterface')
+                ? app('Jiny\Jwt\Contracts\UserResolverInterface')
+                : null;
+            $jwtService = new $jwtServiceClass($userResolver);
+            return $jwtService->generateTokenPair($user, $remember, $this->jwtConfig);
+        }
+
+        throw new \Exception('JWT 서비스를 사용할 수 없습니다. jiny/jwt 패키지가 설치되어 있는지 확인하세요.');
     }
 
     /**
@@ -123,8 +173,11 @@ class SubmitController extends Controller
      */
     public function __invoke(Request $request)
     {
+        \Log::info('Login Attempt', ['email' => $request->email, 'ip' => $request->ip()]);
+
         // 1. 시스템 활성화 확인
         if (!($this->config['enable'] ?? true) || !($this->config['login']['enable'] ?? true)) {
+            \Log::warning('Login: System disabled');
             return $this->errorResponse([
                 'code' => 'SYSTEM_DISABLED',
                 'message' => '로그인 서비스가 중단되었습니다.',
@@ -132,16 +185,32 @@ class SubmitController extends Controller
         }
 
         // 2. 입력값 검증
+        // Passkey 로그인인지 확인
+        $isPasskeyLogin = $request->has('credential_id') && $request->has('authenticator_response');
+
         try {
-            $request->validate([
-                'email' => 'required|email',
-                'password' => 'required|string',
-            ], [
-                'email.required' => '이메일을 입력해주세요.',
-                'email.email' => '올바른 이메일 형식이 아닙니다.',
-                'password.required' => '비밀번호를 입력해주세요.',
-            ]);
+            if ($isPasskeyLogin) {
+                // Passkey 로그인 검증
+                $request->validate([
+                    'credential_id' => 'required|string',
+                    'authenticator_response' => 'required|array',
+                ], [
+                    'credential_id.required' => 'Passkey 정보가 필요합니다.',
+                    'authenticator_response.required' => '인증 응답이 필요합니다.',
+                ]);
+            } else {
+                // 일반 로그인 검증
+                $request->validate([
+                    'email' => 'required|email',
+                    'password' => 'required|string',
+                ], [
+                    'email.required' => '이메일을 입력해주세요.',
+                    'email.email' => '올바른 이메일 형식이 아닙니다.',
+                    'password.required' => '비밀번호를 입력해주세요.',
+                ]);
+            }
         } catch (ValidationException $e) {
+            \Log::warning('Login: Validation failed', ['errors' => $e->errors()]);
             return back()->withErrors($e->errors())->withInput();
         }
 
@@ -150,20 +219,33 @@ class SubmitController extends Controller
             $lockoutStatus = $this->lockoutService->checkLockout($request->email);
 
             if ($lockoutStatus['locked']) {
+                \Log::warning('Login: Account locked', ['email' => $request->email]);
                 return $this->handleLockout($lockoutStatus, $request);
             }
         }
 
         // 4. 사용자 인증 (샤딩 지원)
-        $user = $this->authenticateUser($request);
+        // Passkey 로그인인 경우 Passkey 인증 처리
+        if ($isPasskeyLogin && $this->passkeyService) {
+            $user = $this->authenticateWithPasskey($request);
+        } else {
+            $user = $this->authenticateUser($request);
+        }
 
         if (!$user) {
-            return $this->handleFailedLogin($request, '이메일 또는 비밀번호가 올바르지 않습니다.');
+            \Log::warning('Login: Authentication failed', [
+                'email' => $request->email ?? null,
+                'is_passkey' => $isPasskeyLogin,
+            ]);
+            return $this->handleFailedLogin($request, $isPasskeyLogin
+                ? 'Passkey 인증에 실패했습니다.'
+                : '이메일 또는 비밀번호가 올바르지 않습니다.');
         }
 
         // 5. 계정 상태 확인
         $statusCheck = $this->checkAccountStatus($user);
         if ($statusCheck !== true) {
+            \Log::warning('Login: Status check failed', ['email' => $user->email, 'status' => $statusCheck]);
             $this->recordFailedAttempt($request, 'account_status_invalid');
             return $this->errorResponse($statusCheck, $request);
         }
@@ -204,6 +286,14 @@ class SubmitController extends Controller
             }
             $user->exists = true;
 
+            // 로그인 시 사용자 정보 로깅 (디버깅용)
+            \Log::debug('Login::authenticateUser: 사용자 조회 완료', [
+                'email' => $user->email,
+                'uuid' => $user->uuid ?? null,
+                'email_verified_at' => $user->email_verified_at ?? null,
+                'has_verified_email' => !empty($user->email_verified_at),
+            ]);
+
             if (!Hash::check($request->password, $user->password)) {
                 return null;
             }
@@ -219,6 +309,83 @@ class SubmitController extends Controller
         }
 
         return $user;
+    }
+
+    /**
+     * Passkey 인증 처리
+     *
+     * Passkey를 사용한 로그인을 처리합니다.
+     *
+     * @param Request $request
+     * @return object|null 사용자 객체 또는 null
+     */
+    protected function authenticateWithPasskey(Request $request)
+    {
+        try {
+            // 세션에서 Challenge 가져오기
+            $challenge = session('passkey_challenge');
+
+            if (!$challenge) {
+                \Log::warning('Passkey login: Challenge not found');
+                return null;
+            }
+
+            // Passkey 검증
+            $isValid = $this->passkeyService->verifyCredential(
+                $request->credential_id,
+                array_merge($request->authenticator_response, ['challenge' => $challenge])
+            );
+
+            if (!$isValid) {
+                \Log::warning('Passkey login: Verification failed', [
+                    'credential_id' => $request->credential_id,
+                ]);
+                return null;
+            }
+
+            // 자격 증명 조회하여 user_uuid 획득
+            $credential = $this->passkeyService->getCredentialById($request->credential_id);
+
+            if (!$credential || !isset($credential->user_uuid)) {
+                \Log::warning('Passkey login: Credential not found', [
+                    'credential_id' => $request->credential_id,
+                ]);
+                return null;
+            }
+
+            // user_uuid로 샤딩된 테이블에서 사용자 조회
+            $user = Shard::getUserByUuid($credential->user_uuid);
+
+            if (!$user) {
+                \Log::warning('Passkey login: User not found', [
+                    'user_uuid' => $credential->user_uuid,
+                ]);
+                return null;
+            }
+
+            // StdClass를 User 모델로 변환 (모든 속성 포함)
+            $userModel = new User();
+            foreach ((array) $user as $key => $value) {
+                $userModel->$key = $value;
+            }
+            $userModel->exists = true;
+
+            // 세션에서 Challenge 제거
+            session()->forget('passkey_challenge');
+
+            \Log::info('Passkey login: Authentication successful', [
+                'user_uuid' => $credential->user_uuid,
+                'credential_id' => $request->credential_id,
+            ]);
+
+            return $userModel;
+        } catch (\Exception $e) {
+            \Log::error('Passkey login: Exception', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+            return null;
+        }
     }
 
     /**
@@ -268,7 +435,18 @@ class SubmitController extends Controller
         }
 
         // 이메일 인증 필요
-        if (($this->config['register']['require_email_verification'] ?? true) && empty($user->email_verified_at)) {
+        $requireEmailVerification = $this->config['register']['require_email_verification'] ?? true;
+        $isEmailVerified = !empty($user->email_verified_at);
+
+        \Log::info('Login::checkAccountStatus: 이메일 인증 확인', [
+            'email' => $user->email ?? null,
+            'uuid' => $user->uuid ?? null,
+            'require_email_verification' => $requireEmailVerification,
+            'email_verified_at' => $user->email_verified_at ?? null,
+            'is_email_verified' => $isEmailVerified,
+        ]);
+
+        if ($requireEmailVerification && !$isEmailVerified) {
             $this->storePendingVerificationSession($user);
             return [
                 'code' => 'EMAIL_VERIFICATION_REQUIRED',
@@ -350,7 +528,9 @@ class SubmitController extends Controller
                 'remember' => $remember,
             ]);
 
-            $tokens = $this->jwtService->generateTokenPair($user, $remember, $this->jwtConfig);
+            // jiny/jwt 패키지의 JWT 토큰 생성
+            // 클래스가 로드되지 않은 경우 서비스 컨테이너에서 직접 가져오기
+            $tokens = $this->generateJwtTokens($user, $remember);
 
             \Log::info('Login: JWT token pair generated', [
                 'has_access_token' => !empty($tokens['access_token']),
@@ -383,13 +563,36 @@ class SubmitController extends Controller
         $this->twoFactorService->clearPendingChallenge();
 
         // 5. 응답 생성
+        $redirectTo = $this->config['login']['redirect_after_login'] ?? '/home';
+
         if (($this->config['method'] ?? 'jwt') === 'jwt') {
             // JWT 모드
-            if ($request->expectsJson()) {
-                // API 요청: JSON으로 토큰 반환
+            // AJAX 요청 확인 (X-Requested-With 헤더 또는 Accept: application/json)
+            $isAjaxRequest = $request->ajax() ||
+                            $request->wantsJson() ||
+                            $request->expectsJson() ||
+                            $request->header('X-Requested-With') === 'XMLHttpRequest';
+
+            \Log::info('Login Success - Response type check', [
+                'is_ajax' => $isAjaxRequest,
+                'wants_json' => $request->wantsJson(),
+                'expects_json' => $request->expectsJson(),
+                'x_requested_with' => $request->header('X-Requested-With'),
+                'accept' => $request->header('Accept'),
+            ]);
+
+            if ($isAjaxRequest) {
+                // AJAX 요청: JSON으로 토큰과 리다이렉트 정보 반환
+                \Log::info('Login Success - Returning JSON response for AJAX', [
+                    'user_email' => $user->email,
+                    'redirect_to' => $redirectTo,
+                ]);
+
                 return response()->json([
                     'success' => true,
                     'message' => '로그인되었습니다.',
+                    'redirect_to' => $redirectTo,
+                    'redirect' => $redirectTo, // 호환성을 위해 추가
                     'user' => [
                         'id' => $user->id ?? null,
                         'uuid' => $user->uuid ?? null,
@@ -397,13 +600,33 @@ class SubmitController extends Controller
                         'name' => $user->name,
                     ],
                     'tokens' => $tokens,
-                ]);
+                ])->cookie(
+                    $this->jwtConfig['cookies']['access_token']['name'] ?? 'access_token',
+                    $tokens['access_token'],
+                    ($remember && ($this->jwtConfig['remember']['extend_access_token'] ?? true))
+                        ? (($this->jwtConfig['cookies']['access_token']['lifetime'] ?? 60) * 24)
+                        : ($this->jwtConfig['cookies']['access_token']['lifetime'] ?? 60),
+                    $this->jwtConfig['cookies']['access_token']['path'] ?? '/',
+                    $this->jwtConfig['cookies']['access_token']['domain'] ?? null,
+                    $this->jwtConfig['cookies']['access_token']['secure'] ?? false,
+                    $this->jwtConfig['cookies']['access_token']['httponly'] ?? false
+                )->cookie(
+                    $this->jwtConfig['cookies']['refresh_token']['name'] ?? 'refresh_token',
+                    $tokens['refresh_token'],
+                    ($remember && ($this->jwtConfig['remember']['extend_refresh_token'] ?? true))
+                        ? (($this->jwtConfig['cookies']['refresh_token']['lifetime'] ?? 43200) * 3)
+                        : ($this->jwtConfig['cookies']['refresh_token']['lifetime'] ?? 43200),
+                    $this->jwtConfig['cookies']['refresh_token']['path'] ?? '/',
+                    $this->jwtConfig['cookies']['refresh_token']['domain'] ?? null,
+                    $this->jwtConfig['cookies']['refresh_token']['secure'] ?? false,
+                    $this->jwtConfig['cookies']['refresh_token']['httponly'] ?? true
+                );
             } else {
                 // 웹 요청: 토큰을 쿠키에 저장하고 리다이렉트
-                \Log::info('Login Success - Setting JWT cookies', [
+                \Log::info('Login Success - Setting JWT cookies and redirecting', [
                     'user_email' => $user->email,
                     'access_token_preview' => substr($tokens['access_token'], 0, 50) . '...',
-                    'redirect_to' => $this->config['login']['redirect_after_login'] ?? '/home',
+                    'redirect_to' => $redirectTo,
                     'remember' => $remember ?? false,
                 ]);
 
@@ -420,7 +643,7 @@ class SubmitController extends Controller
                     ? ($refreshCookieConfig['lifetime'] ?? 43200) * 3  // remember 시 3배 연장
                     : ($refreshCookieConfig['lifetime'] ?? 43200);
 
-                return redirect()->intended($this->config['login']['redirect_after_login'] ?? '/home')
+                return redirect()->intended($redirectTo)
                     ->with('success', '로그인되었습니다.')
                     ->cookie(
                         $accessCookieConfig['name'] ?? 'access_token',

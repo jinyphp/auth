@@ -32,7 +32,20 @@ return new class extends Migration
 
         // 기본 샤드 테이블 등록
         $now = now();
-        $shardCount = config('admin.auth.sharding.shard_count', 2);
+        // shard.json 파일에서 샤드 개수 로드 (우선순위 높음)
+        $shardCount = 2;
+        $packageConfigPath = dirname(__DIR__, 2) . '/config/shard.json';
+        $publishedConfigPath = config_path('shard.json');
+        
+        if (file_exists($publishedConfigPath)) {
+            $config = json_decode(file_get_contents($publishedConfigPath), true);
+            $shardCount = $config['shard_count'] ?? config('admin.auth.sharding.shard_count', 2);
+        } elseif (file_exists($packageConfigPath)) {
+            $config = json_decode(file_get_contents($packageConfigPath), true);
+            $shardCount = $config['shard_count'] ?? config('admin.auth.sharding.shard_count', 2);
+        } else {
+            $shardCount = config('admin.auth.sharding.shard_count', 2);
+        }
 
         DB::table('shard_tables')->insert([
             [
@@ -43,39 +56,55 @@ return new class extends Migration
                 'shard_count' => $shardCount,
                 'shard_key' => 'uuid',
                 'strategy' => 'hash',
+                'sharding_enabled' => true,
                 'created_at' => $now,
                 'updated_at' => $now,
             ],
             [
-                'table_name' => 'profiles',
-                'table_prefix' => 'profiles_',
+                'table_name' => 'user_profile',
+                'table_prefix' => 'user_profile_',
                 'description' => '회원 프로필 샤딩 테이블',
                 'is_active' => true,
                 'shard_count' => $shardCount,
                 'shard_key' => 'user_uuid',
                 'strategy' => 'hash',
+                'sharding_enabled' => true,
                 'created_at' => $now,
                 'updated_at' => $now,
             ],
             [
-                'table_name' => 'addresses',
-                'table_prefix' => 'addresses_',
+                'table_name' => 'user_address',
+                'table_prefix' => 'user_address_',
                 'description' => '회원 주소 샤딩 테이블',
                 'is_active' => true,
                 'shard_count' => $shardCount,
                 'shard_key' => 'user_uuid',
                 'strategy' => 'hash',
+                'sharding_enabled' => true,
                 'created_at' => $now,
                 'updated_at' => $now,
             ],
             [
-                'table_name' => 'phones',
-                'table_prefix' => 'phones_',
+                'table_name' => 'user_phone',
+                'table_prefix' => 'user_phone_',
                 'description' => '회원 전화번호 샤딩 테이블',
                 'is_active' => true,
                 'shard_count' => $shardCount,
                 'shard_key' => 'user_uuid',
                 'strategy' => 'hash',
+                'sharding_enabled' => true,
+                'created_at' => $now,
+                'updated_at' => $now,
+            ],
+            [
+                'table_name' => 'social_identities',
+                'table_prefix' => 'social_identities_',
+                'description' => '소셜 로그인 식별자 샤딩 테이블',
+                'is_active' => true,
+                'shard_count' => $shardCount,
+                'shard_key' => 'user_uuid',
+                'strategy' => 'hash',
+                'sharding_enabled' => true,
                 'created_at' => $now,
                 'updated_at' => $now,
             ],

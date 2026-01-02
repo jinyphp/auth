@@ -582,6 +582,13 @@
                     } else {
                         // 에러 처리
                         let errorMessage = data.message || '회원가입 중 오류가 발생했습니다.';
+                        let errorCode = data.code || 'UNKNOWN_ERROR';
+                        let errorDetails = '';
+
+                        // 오류 코드 표시
+                        if (errorCode && errorCode !== 'UNKNOWN_ERROR') {
+                            errorDetails = `<div class="small text-muted mt-1">오류 코드: <code>${errorCode}</code></div>`;
+                        }
 
                         // 검증 에러가 있는 경우
                         if (data.errors) {
@@ -589,7 +596,27 @@
                             errorMessage = errorList;
                         }
 
-                        showMessage(errorMessage, 'danger');
+                        // 원본 오류 메시지가 있으면 표시 (디버깅용)
+                        if (data.error && data.error !== errorMessage) {
+                            errorDetails += `<div class="small text-muted mt-1">상세: ${data.error}</div>`;
+                        }
+
+                        // 디버그 정보가 있으면 표시
+                        if (data.debug && data.debug.file) {
+                            errorDetails += `<div class="small text-muted mt-1">파일: ${data.debug.file}:${data.debug.line}</div>`;
+                        }
+
+                        // 오류 메시지와 상세 정보 함께 표시
+                        showMessage(errorMessage + errorDetails, 'danger');
+
+                        // 콘솔에 상세 오류 정보 출력 (디버깅용)
+                        console.error('회원가입 오류:', {
+                            code: errorCode,
+                            message: errorMessage,
+                            error: data.error,
+                            errors: data.errors,
+                            debug: data.debug
+                        });
 
                         // 제출 버튼 다시 활성화
                         submitBtn.disabled = false;
@@ -598,7 +625,14 @@
                     }
                 } catch (error) {
                     console.error('회원가입 요청 실패:', error);
-                    showMessage('네트워크 오류가 발생했습니다. 잠시 후 다시 시도해주세요.', 'danger');
+                    
+                    // 네트워크 오류 상세 정보 표시
+                    let networkErrorMsg = '네트워크 오류가 발생했습니다. 잠시 후 다시 시도해주세요.';
+                    if (error.message) {
+                        networkErrorMsg += `<div class="small text-muted mt-1">상세: ${error.message}</div>`;
+                    }
+                    
+                    showMessage(networkErrorMsg, 'danger');
 
                     // 제출 버튼 다시 활성화
                     submitBtn.disabled = false;

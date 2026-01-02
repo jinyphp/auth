@@ -1,0 +1,15 @@
+/**
+ * DEPRECATED: 이 파일은 더 이상 사용되지 않습니다.
+ *
+ * JWT 관련 기능은 jiny/jwt 패키지로 이동되었습니다.
+ * 새로운 코드에서는 Jiny\Jwt\Facades\JwtAuth 또는 Jiny\Jwt\Services\JwtAuthService를 사용하세요.
+ *
+ * 이 파일은 레거시 호환성을 위해 유지되지만, 향후 버전에서 제거될 예정입니다.
+ *
+ * 마이그레이션 가이드:
+ * - Jiny\Auth\Services\JwtAuthService → Jiny\Jwt\Services\JwtAuthService
+ * - Jiny\Auth\Facades\JwtAuth → Jiny\Jwt\Facades\JwtAuth
+ *
+ * @deprecated Use Jiny\Jwt\Services\JwtAuthService instead
+ */
+

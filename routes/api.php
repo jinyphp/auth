@@ -2,7 +2,9 @@
 
 use Illuminate\Support\Facades\Route;
 use Jiny\Auth\Http\Controllers\Api\AuthController;
+use Jiny\Auth\Http\Controllers\Api\TermsController;
 use Jiny\Auth\Http\Middleware\JwtAuthenticate;
+use Jiny\Auth\Http\Middleware\FlutterApiKey;
 use Jiny\Social\Http\Controllers\OAuthController;
 
 /*
@@ -12,6 +14,7 @@ use Jiny\Social\Http\Controllers\OAuthController;
 |
 | 인증 관련 데이터 처리를 담당하는 API 라우트입니다.
 | 저장, 갱신, 조회 등의 실제 비즈니스 로직을 처리합니다.
+| 포트 8010에서 실행되는 통합 인증 서비스입니다.
 |
 | 아키텍처 구조:
 | ==============
@@ -57,19 +60,30 @@ use Jiny\Social\Http\Controllers\OAuthController;
 */
 
 // JWT 인증 API 라우트 (v1)
-Route::prefix('api/auth/jwt/v1')->name('api.jwt.v1.')->group(function () {
+// Flutter 앱은 API 키 검증 미들웨어를 통해 보호됩니다.
+Route::prefix('api/auth/jwt/v1')->name('api.jwt.v1.')
+    ->middleware([FlutterApiKey::class])
+    ->group(function () {
 
     // 인증 불필요 라우트
     Route::post('/register', [AuthController::class, 'register'])->name('register');
     Route::post('/login', [AuthController::class, 'login'])->name('login');
     Route::post('/refresh', [AuthController::class, 'refresh'])->name('refresh');
 
+    // signin은 login과 동일한 컨트롤러 사용
+    Route::post('/signin', [AuthController::class, 'login'])->name('signin');
+
     // 약관 조회 (회원가입 시 필요)
     Route::get('/terms', [AuthController::class, 'getTerms'])->name('terms');
 
     // 인증 필요 라우트
     Route::middleware(JwtAuthenticate::class)->group(function () {
-        Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
+        // 로그아웃 (jiny/jwt 패키지의 LogoutController 사용)
+        Route::post('/logout', \Jiny\Jwt\Http\Controllers\Api\LogoutController::class)->name('logout');
+
+        // signout은 logout과 동일한 컨트롤러 사용
+        Route::post('/signout', \Jiny\Jwt\Http\Controllers\Api\LogoutController::class)->name('signout');
+
         Route::get('/me', [AuthController::class, 'me'])->name('me');
 
         // 이메일 인증
@@ -112,7 +126,10 @@ Route::prefix('api/auth/jwt/v1')->name('api.jwt.v1.')->group(function () {
 |         HTTP 403 Forbidden (블랙리스트)
 |
 */
-Route::prefix('api/auth/v1')->name('api.auth.v1.')->group(function () {
+// 회원가입 API 라우트 그룹 (Flutter 앱 API 키 검증 적용)
+Route::prefix('api/auth/v1')->name('api.auth.v1.')
+    ->middleware([FlutterApiKey::class])
+    ->group(function () {
     /**
      * 회원가입 API 엔드포인트 (버전 관리 경로)
      *
@@ -122,6 +139,8 @@ Route::prefix('api/auth/v1')->name('api.auth.v1.')->group(function () {
      * 경로: POST /api/auth/v1/signup
      * 라우트 이름: api.auth.v1.signup
      * 컨트롤러: Jiny\Auth\Http\Controllers\Api\AuthController::register
+     *
+     * register는 signup과 동일한 컨트롤러를 사용합니다.
      *
      * 요청 헤더:
      * - Content-Type: application/json
@@ -206,6 +225,151 @@ Route::prefix('api/auth/v1')->name('api.auth.v1.')->group(function () {
      */
     Route::post('/signup', [AuthController::class, 'register'])
         ->name('signup')
+        ->middleware([
+            'web',
+            'throttle:10,1',
+            \Jiny\Auth\Http\Middleware\RegistrationSecurity::class
+        ]);
+
+    // register는 signup과 동일한 컨트롤러 사용
+    Route::post('/register', [AuthController::class, 'register'])
+        ->name('register')
+        ->middleware([
+            'web',
+            'throttle:10,1',
+            \Jiny\Auth\Http\Middleware\RegistrationSecurity::class
+        ]);
+
+    /**
+     * 이메일 인증 재발송 API 엔드포인트
+     *
+     * 인증된 사용자 또는 세션에 저장된 이메일로 인증 이메일을 재발송합니다.
+     * 인증이 필요하지 않습니다 (세션의 pending_verification_email 사용 가능).
+     *
+     * 경로: POST /api/auth/v1/email/resend
+     * 라우트 이름: api.auth.v1.email.resend
+     * 컨트롤러: Jiny\Auth\Http\Controllers\Api\AuthController::resendVerificationEmail
+     *
+     * 요청 헤더:
+     * - Content-Type: application/json
+     * - Accept: application/json
+     * - X-Requested-With: XMLHttpRequest (AJAX 요청인 경우)
+     * - X-CSRF-TOKEN: CSRF 토큰
+     *
+     * 성공 응답 (HTTP 200):
+     * {
+     *   "success": true,
+     *   "message": "인증 이메일이 재발송되었습니다. 이메일을 확인해주세요.",
+     *   "email": "user@example.com"
+     * }
+     *
+     * 실패 응답 예시 (HTTP 401):
+     * {
+     *   "success": false,
+     *   "code": "USER_NOT_FOUND",
+     *   "message": "로그인이 필요하거나 이메일 정보를 찾을 수 없습니다."
+     * }
+     *
+     * 실패 응답 예시 (HTTP 400):
+     * {
+     *   "success": false,
+     *   "code": "ALREADY_VERIFIED",
+     *   "message": "이미 이메일 인증이 완료되었습니다."
+     * }
+     */
+    Route::post('/email/resend', [AuthController::class, 'resendVerificationEmail'])
+        ->name('email.resend')
+        ->middleware(['web', 'throttle:5,1']);
+
+    /**
+     * 약관 목록 조회 API 엔드포인트
+     *
+     * 회원가입 시 필요한 약관 목록을 JSON 형식으로 제공합니다.
+     * 필수 약관과 선택 약관을 분리하여 반환합니다.
+     *
+     * 경로: GET /api/auth/v1/terms
+     * 라우트 이름: api.auth.v1.terms
+     * 컨트롤러: Jiny\Auth\Http\Controllers\Api\TermsController::index
+     *
+     * 요청 헤더:
+     * - Accept: application/json
+     * - X-Requested-With: XMLHttpRequest (AJAX 요청인 경우)
+     *
+     * 쿼리 파라미터:
+     * - force_refresh (선택): 캐시를 무시하고 최신 데이터를 가져올지 여부 (true/false)
+     *
+     * 성공 응답 (HTTP 200):
+     * {
+     *   "success": true,
+     *   "data": {
+     *     "mandatory": [
+     *       {
+     *         "id": 1,
+     *         "title": "이용약관",
+     *         "slug": "terms-of-service",
+     *         "version": "1.0",
+     *         "description": "약관 설명",
+     *         "required": true,
+     *         "enable": true,
+     *         "valid_from": "2024-01-01 00:00:00",
+     *         "valid_to": null,
+     *         "route_key": "terms-of-service"
+     *       }
+     *     ],
+     *     "optional": [
+     *       {
+     *         "id": 2,
+     *         "title": "마케팅 수신 동의",
+     *         "slug": "marketing-consent",
+     *         "version": "1.0",
+     *         "description": "선택 약관 설명",
+     *         "required": false,
+     *         "enable": true,
+     *         "valid_from": "2024-01-01 00:00:00",
+     *         "valid_to": null,
+     *         "route_key": "marketing-consent"
+     *       }
+     *     ],
+     *     "settings": {
+     *       "enable": true,
+     *       "require_agreement": true,
+     *       "list_view": "jiny-auth::auth.register.terms"
+     *     }
+     *   }
+     * }
+     *
+     * 실패 응답 (HTTP 500):
+     * {
+     *   "success": false,
+     *   "message": "약관 목록을 불러오는 중 오류가 발생했습니다.",
+     *   "error": "에러 상세 메시지 (APP_DEBUG=true인 경우만)"
+     * }
+     */
+
+    /**
+     * 약관 동의 처리 API 엔드포인트
+     *
+     * 회원가입 전 약관 동의를 처리합니다.
+     * Flutter 및 모바일 앱에서도 사용할 수 있도록 JSON 응답을 제공합니다.
+     *
+     * 경로: POST /api/auth/v1/terms/accept
+     * 라우트 이름: api.auth.v1.terms.accept
+     * 컨트롤러: Jiny\Auth\Http\Controllers\Auth\Terms\TermsController::store
+     *
+     * 요청 본문 (JSON):
+     * {
+     *   "terms": [1, 2, 3]  // 동의한 약관 ID 배열
+     * }
+     *
+     * 성공 응답 (HTTP 200):
+     * {
+     *   "success": true,
+     *   "message": "약관에 동의하셨습니다.",
+     *   "agreed_term_ids": [1, 2, 3]
+     * }
+     */
+    Route::post('/terms/accept', [\Jiny\Auth\Http\Controllers\Auth\Terms\TermsController::class, 'store'])
+        ->name('terms.accept')
         ->middleware(['web', 'throttle:10,1']);
 });
 
@@ -249,10 +413,67 @@ Route::prefix('api/auth/v1')->name('api.auth.v1.')->group(function () {
  */
 Route::post('/api/signup', [AuthController::class, 'register'])
     ->name('api.signup')
-    ->middleware(['web', 'throttle:10,1']);
+    ->middleware([
+        'web',
+        'throttle:10,1',
+        \Jiny\Auth\Http\Middleware\RegistrationSecurity::class
+    ]);
 
-// OAuth 소셜 로그인 API 라우트 (v1)
-Route::prefix('api/auth/oauth/v1')->name('api.oauth.v1.')->group(function () {
+/**
+ * 간단한 경로의 회원가입 API (호환성을 위한 별칭)
+ *
+ * register는 signup과 동일한 컨트롤러를 사용합니다.
+ *
+ * 경로: POST /api/register
+ * 라우트 이름: api.register
+ * 컨트롤러: Jiny\Auth\Http\Controllers\Api\AuthController::register
+ *
+ * 요청/응답 형식은 /api/signup과 동일합니다.
+ */
+Route::post('/api/register', [AuthController::class, 'register'])
+    ->name('api.register')
+    ->middleware([
+        'web',
+        'throttle:10,1',
+        FlutterApiKey::class,
+        \Jiny\Auth\Http\Middleware\RegistrationSecurity::class
+    ]);
+
+/**
+ * 간단한 경로의 로그인 API (호환성을 위한 별칭)
+ *
+ * signin은 login과 동일한 컨트롤러를 사용합니다.
+ *
+ * 경로: POST /api/signin
+ * 라우트 이름: api.signin
+ * 컨트롤러: Jiny\Auth\Http\Controllers\Api\AuthController::login
+ *
+ * 요청/응답 형식은 /api/auth/jwt/v1/login과 동일합니다.
+ */
+Route::post('/api/signin', [AuthController::class, 'login'])
+    ->middleware([FlutterApiKey::class])
+    ->name('api.signin');
+
+/**
+ * 간단한 경로의 로그아웃 API (호환성을 위한 별칭)
+ *
+ * signout은 logout과 동일한 컨트롤러를 사용합니다.
+ * jiny/jwt 패키지의 LogoutController를 직접 사용합니다.
+ *
+ * 경로: POST /api/signout
+ * 라우트 이름: api.signout
+ * 컨트롤러: Jiny\Jwt\Http\Controllers\Api\LogoutController
+ *
+ * 요청/응답 형식은 /api/auth/jwt/v1/logout과 동일합니다.
+ */
+Route::post('/api/signout', \Jiny\Jwt\Http\Controllers\Api\LogoutController::class)
+    ->name('api.signout')
+    ->middleware(JwtAuthenticate::class);
+
+// OAuth 소셜 로그인 API 라우트 (v1) - Flutter 앱 API 키 검증 적용
+Route::prefix('api/auth/oauth/v1')->name('api.oauth.v1.')
+    ->middleware([FlutterApiKey::class])
+    ->group(function () {
 
     // 지원 제공자 목록
     Route::get('/providers', [OAuthController::class, 'getProviders'])->name('providers');
@@ -277,9 +498,29 @@ Route::prefix('api/auth/oauth/v1')->name('api.oauth.v1.')->group(function () {
     });
 });
 
+/**
+ * 약관 목록 조회 API 엔드포인트 (웹 브라우저 접근 허용)
+ *
+ * 회원가입 시 필요한 약관 목록을 JSON 형식으로 제공합니다.
+ * 웹 브라우저에서도 접근 가능해야 하므로 FlutterApiKey 미들웨어 그룹 밖에 배치합니다.
+ *
+ * 경로: GET /api/auth/v1/terms
+ * 라우트 이름: api.auth.v1.terms
+ * 컨트롤러: Jiny\Auth\Http\Controllers\Api\TermsController::index
+ */
+Route::prefix('api/auth/v1')->name('api.auth.v1.')
+    ->middleware(['web', 'throttle:30,1'])
+    ->group(function () {
+        Route::get('/terms', [TermsController::class, 'index'])->name('terms');
+    });
+
 // 인증된 사용자용 API 라우트
 Route::middleware(['web', JwtAuthenticate::class])->prefix('api')->group(function () {
     // 사용자 검색 (메시징용)
     Route::get('/users/search', \Jiny\Auth\Http\Controllers\Api\UserSearchController::class)
         ->name('api.users.search');
+
+    // 로그인 기록 조회 (v1)
+    Route::get('/auth/v1/log/history', \Jiny\Auth\Http\Controllers\Api\AuthLogHistoryController::class)
+        ->name('api.auth.v1.log.history');
 });

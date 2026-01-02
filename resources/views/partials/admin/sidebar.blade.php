@@ -110,18 +110,23 @@
                                 블랙리스트
                             </a>
                         </li>
+                        {{-- JWT 관련 메뉴는 jiny/jwt 패키지에서 관리됩니다 --}}
+                        @if (class_exists(\Jiny\Jwt\Http\Controllers\Admin\Jwt\IndexController::class))
                         <li class="nav-item">
                             <a class="nav-link {{ request()->routeIs('admin.auth.jwt.*') ? 'active' : '' }}"
                                 href="{{ route('admin.auth.jwt.index') }}">
-                                Jwt 로그인
+                                JWT 설정
                             </a>
                         </li>
+                        @endif
+                        @if (class_exists(\Jiny\Jwt\Http\Controllers\Admin\UserToken\IndexController::class))
                         <li class="nav-item">
                             <a class="nav-link {{ request()->routeIs('admin.auth.token.*') ? 'active' : '' }}"
                                 href="{{ route('admin.auth.token.index') }}">
                                 JWT 토큰 목록
                             </a>
                         </li>
+                        @endif
                     </ul>
                 </div>
             </li>

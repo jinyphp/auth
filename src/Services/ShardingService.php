@@ -162,6 +162,9 @@ class ShardingService
     /**
      * UUID로 사용자 조회
      */
+    /**
+     * UUID로 사용자 조회
+     */
     public function getUserByUuid($uuid)
     {
         if (! $this->enabled) {
@@ -178,6 +181,15 @@ class ShardingService
                 continue;
             }
         }
+
+        // [Fallback] 메인 테이블 확인
+        // 샤딩이 활성화되어 있어도 기존 사용자나 마이그레이션된 사용자가
+        // 메인 users 테이블에 남아있을 수 있음
+        try {
+            $user = DB::table('users')->where('uuid', $uuid)->first();
+            if ($user) return $user;
+        } catch (\Exception $e) {}
+
         return null;
     }
 
@@ -199,10 +211,37 @@ class ShardingService
         }
 
         // 이메일 인덱스 테이블 사용 (성능 최적화)
+        // 주의: 인덱스 테이블을 사용하더라도 샤드 테이블에서 직접 조회하여 최신 데이터 보장
         try {
             $indexRecord = DB::table('user_email_index')->where('email', $email)->first();
-            if ($indexRecord) {
-                return $this->getUserByUuid($indexRecord->uuid);
+            if ($indexRecord && isset($indexRecord->uuid)) {
+                // UUID를 사용하여 정확한 샤드 테이블에서 직접 조회 (최신 데이터 보장)
+                $tableName = $this->getShardTableName($indexRecord->uuid);
+                try {
+                    $user = DB::table($tableName)->where('uuid', $indexRecord->uuid)->first();
+                    if ($user) {
+                        \Log::debug('ShardingService::getUserByEmail: 인덱스를 통한 샤드 테이블 직접 조회 성공', [
+                            'email' => $email,
+                            'uuid' => $indexRecord->uuid,
+                            'table_name' => $tableName,
+                            'email_verified_at' => $user->email_verified_at ?? null,
+                        ]);
+                        return $user;
+                    }
+                } catch (\Exception $e) {
+                    \Log::warning('ShardingService::getUserByEmail: 샤드 테이블 조회 실패', [
+                        'email' => $email,
+                        'uuid' => $indexRecord->uuid,
+                        'table_name' => $tableName,
+                        'error' => $e->getMessage(),
+                    ]);
+                }
+
+                // 샤드 테이블 직접 조회 실패 시 전체 샤드 검색으로 폴백
+                \Log::debug('ShardingService::getUserByEmail: 인덱스 UUID로 샤드 테이블 조회 실패, 전체 샤드 검색', [
+                    'email' => $email,
+                    'index_uuid' => $indexRecord->uuid,
+                ]);
             }
         } catch (\Exception $e) {
             // 인덱스 테이블 없음 무시
@@ -222,6 +261,13 @@ class ShardingService
                 continue;
             }
         }
+
+        // [Fallback] 메인 테이블 확인
+        try {
+            $user = DB::table('users')->where('email', $email)->first();
+            if ($user) return $user;
+        } catch (\Exception $e) {}
+
         return null;
     }
 
@@ -255,6 +301,136 @@ class ShardingService
                 continue;
             }
         }
+
+        // [Fallback] 메인 테이블 확인
+        try {
+            $user = DB::table('users')->where('username', $username)->first();
+            if ($user) return $user;
+        } catch (\Exception $e) {}
+
+        return null;
+    }
+
+    /**
+     * Social Identity 저장 및 인덱스 업데이트
+     *
+     * @param string $uuid 사용자 UUID
+     * @param string $provider 제공자 (google, facebook ...)
+     * @param string $providerId 제공자 측 사용자 ID
+     * @param array $tokenData 토큰 및 메타데이터
+     * @return bool
+     */
+    public function saveSocialIdentity($uuid, $provider, $providerId, array $tokenData = [])
+    {
+        if (!$this->enabled) {
+            return false;
+        }
+
+        // 1. 샤드 테이블명 조회
+        $shardNum = $this->getShardNumber($uuid);
+        $tableName = $this->getTableNameByShardId($shardNum, 'social_identities_');
+
+        // 2. 테이블 생성 (필요 시)
+        if (!Schema::hasTable($tableName)) {
+            $this->createSocialIdentitiesTableSchema($tableName);
+        }
+
+        // 3. 데이터 저장 (Upsert)
+        try {
+            DB::table($tableName)->updateOrInsert(
+                [
+                    'user_uuid' => $uuid,
+                    'provider' => $provider,
+                ],
+                array_merge([
+                    'provider_id' => $providerId,
+                    'updated_at' => now(),
+                ], $tokenData)
+            );
+        } catch (\Exception $e) {
+            \Log::error("Failed to save social identity to shard", [
+                'uuid' => $uuid,
+                'table' => $tableName,
+                'error' => $e->getMessage()
+            ]);
+            return false;
+        }
+
+        // 4. 글로벌 인덱스 업데이트
+        try {
+            $this->addToSocialLoginIndex($provider, $providerId, $uuid);
+        } catch (\Exception $e) {
+            // 인덱스 실패는 로그만 남김
+            \Log::warning("Failed to update social login index", [
+                'provider' => $provider,
+                'id' => $providerId,
+                'error' => $e->getMessage()
+            ]);
+        }
+
+        return true;
+    }
+
+    /**
+     * 소셜 ID로 사용자 조회
+     */
+    public function getUserBySocialIdentity($provider, $providerId)
+    {
+        if (! $this->enabled) {
+            // 단일 테이블 모드에서는 social_identities 테이블에서 조회 후 users 조인
+            // 하지만 현재 구조상 users 테이블에 provider 정보가 있을 수도 있고 (레거시)
+            // social_identities 테이블에 있을 수도 있음.
+            // 우선 social_identities 테이블 확인
+            $identity = DB::table('social_identities')
+                ->where('provider', $provider)
+                ->where('provider_id', $providerId)
+                ->first();
+
+            if ($identity) {
+                return $this->getUserByUuid($identity->user_uuid);
+            }
+            
+            // 레거시 users 테이블 확인
+            return DB::table('users')
+                ->where('provider', $provider)
+                ->where('provider_id', $providerId)
+                ->first();
+        }
+
+        // 인덱스 테이블 확인
+        try {
+            $indexRecord = DB::table('social_login_index')
+                ->where('provider', $provider)
+                ->where('provider_id', $providerId)
+                ->first();
+                
+            if ($indexRecord) {
+                return $this->getUserByUuid($indexRecord->uuid);
+            }
+        } catch (\Exception $e) {}
+
+        // 전체 샤드 검색 (social_identities_{n} 테이블 검색)
+        for ($i = 1; $i <= $this->shardCount; $i++) {
+            $tableName = $this->getTableNameByShardId($i, 'social_identities_');
+            try {
+                // 테이블이 존재하는지 확인 필요 (동적 생성)
+                if (!Schema::hasTable($tableName)) continue;
+
+                $identity = DB::table($tableName)
+                    ->where('provider', $provider)
+                    ->where('provider_id', $providerId)
+                    ->first();
+
+                if ($identity) {
+                    // 인덱스 자동 복구
+                    try { $this->addToSocialLoginIndex($provider, $providerId, $identity->user_uuid); } catch (\Exception $e) {}
+                    return $this->getUserByUuid($identity->user_uuid);
+                }
+            } catch (\Exception $e) {
+                continue;
+            }
+        }
+
         return null;
     }
 
@@ -308,6 +484,12 @@ class ShardingService
 
     /**
      * 사용자 업데이트
+     *
+     * 샤딩 환경에서 UUID를 기반으로 올바른 샤드 테이블을 찾아서 사용자 정보를 업데이트합니다.
+     *
+     * @param string $uuid 사용자 UUID
+     * @param array $data 업데이트할 데이터
+     * @return int 업데이트된 레코드 수
      */
     public function updateUser($uuid, array $data)
     {
@@ -318,7 +500,77 @@ class ShardingService
         $tableName = $this->getShardTableName($uuid);
         $oldUser = DB::table($tableName)->where('uuid', $uuid)->first();
 
-        $result = DB::table($tableName)->where('uuid', $uuid)->update($data);
+        if (!$oldUser) {
+            \Log::warning('ShardingService::updateUser: 사용자를 찾을 수 없음', [
+                'uuid' => $uuid,
+                'table_name' => $tableName,
+            ]);
+            return 0;
+        }
+
+        \Log::info('ShardingService::updateUser: 사용자 업데이트 시작', [
+            'uuid' => $uuid,
+            'table_name' => $tableName,
+            'data' => $data,
+            'old_email_verified_at' => $oldUser->email_verified_at ?? null,
+        ]);
+
+        // 데이터베이스 호환성을 위해 Carbon 인스턴스를 문자열로 변환
+        $updateData = [];
+        foreach ($data as $key => $value) {
+            if ($value instanceof \Carbon\Carbon) {
+                $updateData[$key] = $value->format('Y-m-d H:i:s');
+            } else {
+                $updateData[$key] = $value;
+            }
+        }
+
+        $result = DB::table($tableName)->where('uuid', $uuid)->update($updateData);
+
+        \Log::info('ShardingService::updateUser: 사용자 업데이트 완료', [
+            'uuid' => $uuid,
+            'table_name' => $tableName,
+            'updated_rows' => $result,
+            'update_data' => $updateData,
+        ]);
+
+        // 업데이트 후 즉시 확인하여 데이터베이스에 실제로 반영되었는지 검증
+        if ($result > 0) {
+            // 업데이트 후 약간의 지연을 두고 조회 (트랜잭션 커밋 대기)
+            usleep(100000); // 0.1초 대기
+
+            $updatedUser = DB::table($tableName)->where('uuid', $uuid)->first();
+            if ($updatedUser) {
+                $isVerified = !empty($updatedUser->email_verified_at);
+                \Log::info('ShardingService::updateUser: 업데이트 검증', [
+                    'uuid' => $uuid,
+                    'email_verified_at' => $updatedUser->email_verified_at ?? null,
+                    'updated_at' => $updatedUser->updated_at ?? null,
+                    'is_verified' => $isVerified,
+                ]);
+
+                // 검증 실패 시 경고 로그
+                if (!$isVerified && isset($updateData['email_verified_at'])) {
+                    \Log::error('ShardingService::updateUser: email_verified_at 업데이트 실패 확인', [
+                        'uuid' => $uuid,
+                        'table_name' => $tableName,
+                        'expected' => $updateData['email_verified_at'],
+                        'actual' => $updatedUser->email_verified_at ?? null,
+                    ]);
+                }
+            } else {
+                \Log::error('ShardingService::updateUser: 업데이트 후 사용자 조회 실패', [
+                    'uuid' => $uuid,
+                    'table_name' => $tableName,
+                ]);
+            }
+        } else {
+            \Log::warning('ShardingService::updateUser: 업데이트된 레코드가 없음', [
+                'uuid' => $uuid,
+                'table_name' => $tableName,
+                'data' => $updateData,
+            ]);
+        }
 
         // 인덱스 업데이트
         if ($oldUser) {
@@ -422,6 +674,28 @@ class ShardingService
         $this->addToUsernameIndex($newUsername, $uuid);
     }
 
+    protected function addToSocialLoginIndex($provider, $providerId, $uuid)
+    {
+        if (Schema::hasTable('social_login_index')) {
+            DB::table('social_login_index')->insert([
+                'provider' => $provider,
+                'provider_id' => $providerId,
+                'uuid' => $uuid,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+        }
+    }
+
+    protected function updateSocialLoginIndex($oldProvider, $oldProviderId, $newProvider, $newProviderId, $uuid)
+    {
+        DB::table('social_login_index')
+            ->where('provider', $oldProvider)
+            ->where('provider_id', $oldProviderId)
+            ->delete();
+        $this->addToSocialLoginIndex($newProvider, $newProviderId, $uuid);
+    }
+
     // ==========================================================================
     // Table Management (DDL) - Merged from ShardTableService
     // ==========================================================================
@@ -438,7 +712,7 @@ class ShardingService
         for ($i = 1; $i <= $this->shardCount; $i++) {
             $tableName = $this->getTableNameByShardId($i, $prefix);
             $exists = Schema::hasTable($tableName);
-            
+
             $stats = [
                 'shard_id' => $i,
                 'table_name' => $tableName,
@@ -453,7 +727,7 @@ class ShardingService
             if ($exists) {
                 $stats['record_count'] = DB::table($tableName)->count();
                 $stats['user_count'] = $stats['record_count'];
-                
+
                 // users 테이블인 경우 추가 통계
                 if ($baseTableName === 'users') {
                     $stats['new_user_count'] = DB::table($tableName)->where('created_at', '>=', $oneHourAgo)->count();
@@ -484,7 +758,18 @@ class ShardingService
             case 'users':
                 $this->createUsersTableSchema($tableName);
                 break;
-            // 필요한 경우 다른 테이블 스키마 추가
+            case 'user_profile':
+                $this->createUserProfileTableSchema($tableName);
+                break;
+            case 'user_address':
+                $this->createUserAddressTableSchema($tableName);
+                break;
+            case 'user_phone':
+                $this->createUserPhoneTableSchema($tableName);
+                break;
+            case 'social_identities':
+                $this->createSocialIdentitiesTableSchema($tableName);
+                break;
             default:
                 $this->createGenericTableSchema($tableName);
                 break;
@@ -596,6 +881,190 @@ class ShardingService
             $table->string('user_uuid')->index();
             $table->text('data')->nullable();
             $table->timestamps();
+        });
+    }
+
+    /**
+     * user_profile 샤드 테이블 스키마 생성
+     * 
+     * 사용자 프로필 정보를 저장하는 샤드 테이블을 생성합니다.
+     * user_uuid를 기준으로 샤드가 결정됩니다.
+     */
+    protected function createUserProfileTableSchema($tableName)
+    {
+        Schema::create($tableName, function (Blueprint $table) {
+            $table->id();
+            
+            // 사용자 연결 (샤딩 환경에서는 user_uuid 사용)
+            $table->unsignedBigInteger('user_id')->default(0)->comment('더미값, 샤딩 환경에서는 user_uuid 사용');
+            // user_uuid에 인덱스가 이미 포함되어 있으므로 중복 인덱스 생성 제거
+            $table->string('user_uuid', 36)->index()->comment('사용자 UUID (샤딩 키)');
+            // shard_id에 인덱스가 이미 포함되어 있으므로 중복 인덱스 생성 제거
+            $table->integer('shard_id')->nullable()->index()->comment('샤드 ID');
+            
+            // 기본 정보
+            $table->string('email')->nullable();
+            $table->string('name')->nullable();
+            $table->string('firstname')->nullable();
+            $table->string('lastname')->nullable();
+            $table->string('image')->nullable();
+            
+            // 추가 정보
+            $table->string('description')->nullable();
+            $table->string('skill')->nullable();
+            
+            // 연락처
+            $table->string('phone')->nullable();
+            $table->string('mobile')->nullable();
+            $table->string('fax')->nullable();
+            
+            // 주소 정보
+            $table->string('post')->nullable()->comment('우편번호 (구버전)');
+            $table->string('zipcode')->nullable()->comment('우편번호 (신버전)');
+            $table->string('address1')->nullable()->comment('주소 1 (구버전)');
+            $table->string('address2')->nullable()->comment('주소 2 (구버전)');
+            $table->string('line1')->nullable()->comment('주소 라인 1 (신버전)');
+            $table->string('line2')->nullable()->comment('주소 라인 2 (신버전)');
+            $table->string('city')->nullable();
+            $table->string('province')->nullable();
+            $table->string('country')->nullable();
+            
+            // 환경 설정
+            $table->string('language')->nullable();
+            $table->string('timezone')->nullable();
+            
+            $table->timestamps();
+            
+            // 주의: user_uuid와 shard_id는 위에서 이미 ->index()로 인덱스가 생성되었으므로
+            // 여기서 중복 인덱스 생성하지 않음
+        });
+    }
+
+    /**
+     * user_address 샤드 테이블 스키마 생성
+     * 
+     * 사용자 주소 정보를 저장하는 샤드 테이블을 생성합니다.
+     * user_uuid를 기준으로 샤드가 결정됩니다.
+     */
+    protected function createUserAddressTableSchema($tableName)
+    {
+        Schema::create($tableName, function (Blueprint $table) {
+            $table->id();
+            $table->timestamps();
+            
+            // 활성화 여부
+            $table->string('enable')->default(1);
+            
+            // 사용자 연결 (샤딩 환경에서는 user_uuid 사용)
+            $table->unsignedBigInteger('user_id')->default(0)->comment('더미값, 샤딩 환경에서는 user_uuid 사용');
+            // user_uuid에 인덱스가 이미 포함되어 있으므로 중복 인덱스 생성 제거
+            $table->string('user_uuid', 36)->index()->comment('사용자 UUID (샤딩 키)');
+            // shard_id에 인덱스가 이미 포함되어 있으므로 중복 인덱스 생성 제거
+            $table->integer('shard_id')->nullable()->index()->comment('샤드 ID');
+            
+            // 기본 정보
+            $table->string('name')->nullable();
+            $table->string('email')->nullable();
+            
+            // 지역정보
+            $table->string('country')->nullable();
+            $table->string('state')->nullable();
+            $table->string('region')->nullable();
+            $table->string('address1')->nullable();
+            $table->string('address2')->nullable();
+            $table->string('zipcode')->nullable();
+            
+            // 기본설정값
+            $table->string('selected')->nullable();
+            
+            // 설명
+            $table->text('description')->nullable();
+            
+            // 관리 담당자
+            $table->unsignedBigInteger('manager_id')->default(0);
+            
+            // 주의: user_uuid와 shard_id는 위에서 이미 ->index()로 인덱스가 생성되었으므로
+            // 여기서 중복 인덱스 생성하지 않음
+        });
+    }
+
+    /**
+     * user_phone 샤드 테이블 스키마 생성
+     * 
+     * 사용자 전화번호 정보를 저장하는 샤드 테이블을 생성합니다.
+     * user_uuid를 기준으로 샤드가 결정됩니다.
+     */
+    protected function createUserPhoneTableSchema($tableName)
+    {
+        Schema::create($tableName, function (Blueprint $table) {
+            $table->id();
+            $table->timestamps();
+            
+            // 활성화 여부
+            $table->string('enable')->default(1);
+            
+            // 사용자 연결 (샤딩 환경에서는 user_uuid 사용)
+            $table->unsignedBigInteger('user_id')->default(0)->comment('더미값, 샤딩 환경에서는 user_uuid 사용');
+            // user_uuid에 인덱스가 이미 포함되어 있으므로 중복 인덱스 생성 제거
+            $table->string('user_uuid', 36)->index()->comment('사용자 UUID (샤딩 키)');
+            // shard_id에 인덱스가 이미 포함되어 있으므로 중복 인덱스 생성 제거
+            $table->integer('shard_id')->nullable()->index()->comment('샤드 ID');
+            
+            // 기본 정보
+            $table->string('name')->nullable();
+            $table->string('email')->nullable();
+            
+            // 전화번호 타입 (tel, mobile, fax 등)
+            $table->string('type')->nullable();
+            
+            // 지역정보
+            $table->string('country')->nullable();
+            
+            // 번호
+            $table->string('phone')->nullable();
+            $table->string('number')->nullable();
+            
+            // 기본설정값
+            $table->string('selected')->nullable();
+            
+            // 설명
+            $table->text('description')->nullable();
+            
+            // 관리 담당자
+            $table->unsignedBigInteger('manager_id')->default(0);
+            
+            // 주의: user_uuid와 shard_id는 위에서 이미 ->index()로 인덱스가 생성되었으므로
+            // 여기서 중복 인덱스 생성하지 않음
+        });
+    }
+
+    /**
+     * social_identities 샤드 테이블 스키마 생성
+     * 
+     * 소셜 로그인 식별자 정보를 저장하는 샤드 테이블을 생성합니다.
+     * user_uuid를 기준으로 샤드가 결정됩니다.
+     */
+    protected function createSocialIdentitiesTableSchema($tableName)
+    {
+        Schema::create($tableName, function (Blueprint $table) {
+            $table->id();
+            // user_uuid에 인덱스가 이미 포함되어 있으므로 중복 인덱스 생성 제거
+            $table->string('user_uuid', 36)->index();
+            $table->string('provider');
+            $table->string('provider_id');
+            // provider + provider_id는 글로벌 유니크해야 하지만, 
+            // 샤드 테이블 단위에서는 중복 방지만 체크
+            $table->unique(['provider', 'provider_id']);
+            $table->text('token')->nullable();
+            $table->text('refresh_token')->nullable();
+            $table->integer('expires_in')->nullable();
+            $table->string('token_secret')->nullable();
+            $table->json('meta')->nullable();
+            $table->timestamp('last_login_at')->nullable();
+            $table->timestamps();
+            
+            // 주의: user_uuid는 위에서 이미 ->index()로 인덱스가 생성되었으므로
+            // 여기서 중복 인덱스 생성하지 않음
         });
     }
 
